@@ -1,0 +1,21 @@
+{
+  "name": "Don't Skip Workout",
+  "short_name": "Don't Skip",
+  "description": "운동 출석 습관을 만드는 로컬 우선 앱",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#10283b",
+  "icons": [
+    {
+      "src": "/assets/app_icon_192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/assets/app_icon_512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

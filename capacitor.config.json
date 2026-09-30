@@ -1,0 +1,12 @@
+{
+  "appId": "com.donskip.attendancecheck",
+  "appName": "DON'T SKIP",
+  "webDir": "out",
+  "bundledWebRuntime": false,
+  "plugins": {
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_attendance",
+      "iconColor": "#b8f476"
+    }
+  }
+}

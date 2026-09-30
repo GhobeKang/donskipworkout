@@ -1,0 +1,30 @@
+services:
+  attendance_api:
+    image: ${DOCKER_IMAGE_NAME:?Set DOCKER_IMAGE_NAME to a pushed Docker Hub image}
+    env_file:
+      - ./server/.env
+    environment:
+      LOG_FILE: /app/logs/api.log
+      PHOTO_STORAGE_DIR: /app/media/photos
+      PHOTO_FRAME_DIR: /app/media/frames
+      NOTIFICATION_CATALOG_PATH: /app/notification-config/catalog.json
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - attendance_photo_storage:/app/media/photos
+      - ./server/photo-frames:/app/media/frames:ro
+      - ./server/notification-config:/app/notification-config:ro
+      - attendance_api_logs:/app/logs
+    restart: unless-stopped
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+volumes:
+  attendance_photo_storage:
+  attendance_api_logs:
