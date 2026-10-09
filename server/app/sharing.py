@@ -118,3 +118,58 @@ def weekly_share_output(database, user_id, today, week_offset):
             database, user_id, week_start, min(today, week_end), week_offset == 0
         ),
     }
+
+
+def period_report_output(database, user_id, today, period_type, selected_date):
+    if period_type == 'weekly':
+        period_start = monday_of(selected_date)
+        week_offset = (monday_of(today) - period_start).days // 7
+        report = weekly_share_output(database, user_id, today, week_offset)
+        return {
+            **report,
+            'period_type': period_type,
+            'period_start': report['week_start'],
+            'period_end': report['week_end'],
+            'is_current_period': report['is_current_week'],
+        }
+
+    period_start = selected_date.replace(day=1)
+    next_month = (period_start.replace(day=28) + timedelta(days=4)).replace(day=1)
+    period_end = next_month - timedelta(days=1)
+    as_of_date = min(today, period_end)
+    is_current_period = period_start == today.replace(day=1)
+    previous_month_end = period_start - timedelta(days=1)
+    previous_start = previous_month_end.replace(day=1)
+    previous_end = (
+        min(previous_month_end, previous_start + (as_of_date - period_start))
+        if is_current_period
+        else previous_month_end
+    )
+    insights = personal_report_output(
+        database,
+        user_id,
+        period_start,
+        as_of_date,
+        is_current_period,
+        period_type,
+        previous_start,
+        previous_end,
+    )
+    return {
+        'period_type': period_type,
+        'period_start': period_start.isoformat(),
+        'period_end': period_end.isoformat(),
+        'is_current_period': is_current_period,
+        'week_start': period_start.isoformat(),
+        'week_end': period_end.isoformat(),
+        'as_of_date': as_of_date.isoformat(),
+        'is_current_week': False,
+        'is_baseline_week': False,
+        'target_count': None,
+        'next_target_count': None,
+        'completed_count': insights['coverage']['completed_count'],
+        'promise_percent': None,
+        'extra_count': None,
+        'growth': {'status': 'insufficient_data'},
+        'insights': insights,
+    }

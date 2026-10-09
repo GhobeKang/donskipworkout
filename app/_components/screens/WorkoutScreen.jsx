@@ -1,4 +1,4 @@
-import { exercise_label } from '../../_lib/i18n';
+import { exercise_label, exercise_matches_query, exercise_secondary_label } from '../../_lib/i18n';
 import { useLanguage } from '../../_hooks/useLanguage';
 import { useState } from 'react';
 import useApiResource from '../../_hooks/useApiResource';
@@ -10,10 +10,13 @@ export default function WorkoutScreen({ on_unauthorized, on_back, on_catalog_cha
   const { t, language, localize_message } = useLanguage();
   const [revision, set_revision] = useState(0);
   const [name, set_name] = useState('');
+  const [search_query, set_search_query] = useState('');
+  const [target_area, set_target_area] = useState('');
   const [editing_id, set_editing_id] = useState(null);
   const [pending_id, set_pending_id] = useState(null);
   const [error_message, set_error_message] = useState('');
   const exercises = useApiResource('/exercises', revision, on_unauthorized);
+  const matching_exercises = exercises.data?.filter((exercise) => exercise_matches_query(exercise, search_query));
 
   const save_exercise = async (event) => {
     event.preventDefault();
@@ -23,9 +26,10 @@ export default function WorkoutScreen({ on_unauthorized, on_back, on_catalog_cha
     set_error_message('');
     try {
       await api_request(editing_id ? `/exercises/custom/${editing_id}` : '/exercises', {
-        method: editing_id ? 'PUT' : 'POST', body: { name: trimmed_name },
+        method: editing_id ? 'PUT' : 'POST', body: { name: trimmed_name, target_area },
       });
       set_name('');
+      set_target_area('');
       set_editing_id(null);
       set_revision((value) => value + 1);
       on_catalog_change();
@@ -46,6 +50,7 @@ export default function WorkoutScreen({ on_unauthorized, on_back, on_catalog_cha
       if (editing_id === exercise.exercise_id) {
         set_editing_id(null);
         set_name('');
+        set_target_area('');
       }
       set_revision((value) => value + 1);
       on_catalog_change();
@@ -70,21 +75,36 @@ export default function WorkoutScreen({ on_unauthorized, on_back, on_catalog_cha
       <label className="fieldLabel" htmlFor="exercise-name">{t("운동 종목 이름")}</label>
       <div className="exerciseEditorRow">
         <input id="exercise-name" className="timeInput" value={name} maxLength={100} disabled={pending_id !== null} onChange={(event) => set_name(event.target.value)} placeholder={t("예: 케이블 크런치")} required />
-        <button className="textButton" type="submit" disabled={!name.trim() || pending_id !== null}>{editing_id ? t("수정") : t("추가")}</button>
+        <button className="textButton" type="submit" disabled={!name.trim() || !target_area || pending_id !== null}>{editing_id ? t("수정") : t("추가")}</button>
       </div>
-      {editing_id && <button className="exerciseCancel textButton" type="button" onClick={() => { set_editing_id(null); set_name(''); }}>{t("취소")}</button>}
+      <label className="fieldLabel" htmlFor="exercise-target-area">{t("타겟 부위")}</label>
+      <select id="exercise-target-area" className="timeInput" value={target_area} disabled={pending_id !== null} onChange={(event) => set_target_area(event.target.value)} required>
+        <option value="">{t("부위를 선택하세요")}</option>
+        {['가슴', '등', '어깨', '이두', '삼두', '복근', '엉덩이', '허벅지', '종아리', '전신'].map((area) => <option key={area} value={area}>{t(area)}</option>)}
+      </select>
+      {editing_id && <button className="exerciseCancel textButton" type="button" onClick={() => { set_editing_id(null); set_name(''); set_target_area(''); }}>{t("취소")}</button>}
     </form>
     {error_message && <p className="errorText" role="alert">{localize_message(error_message)}</p>}
     <RequestState loading={exercises.loading} error={exercises.error} on_retry={() => set_revision((value) => value + 1)} />
     {exercises.data && <section className="exerciseLibrary" aria-label={t("운동 종목 목록")}>
+      <label className="fieldLabel" htmlFor="exercise-library-search">{t("운동 종목 검색")}</label>
+      <div className="exercisePickerSearch">
+        <MaterialIcon>search</MaterialIcon>
+        <input id="exercise-library-search" type="search" value={search_query} onChange={(event) => set_search_query(event.target.value)} placeholder={t("한글 또는 영문 이름으로 검색")} autoComplete="off" />
+      </div>
       <div className="recentHeading"><h2>{t("운동 종목")}</h2><span>{exercises.data.length}{t("개")}</span></div>
-      {exercises.data.length ? exercises.data.map((exercise) => <article className="exerciseLibraryItem" key={`${exercise.exercise_source}:${exercise.exercise_id}`}>
-        <div><strong>{exercise_label(exercise, language)} <span className="exerciseSourceBadge">{exercise.exercise_source === 'shared' ? t("기본") : t("내 종목")}</span></strong><small>{exercise.last_sets.length ? t("최근 {0}", [exercise.last_sets.map((item) => t("{0}kg × {1}회", [item.weight_kg, item.reps])).join(' · ')]) : t("아직 기록한 세트가 없습니다")}</small></div>
+      {matching_exercises.length ? matching_exercises.map((exercise) => {
+        const secondary_name = exercise_secondary_label(exercise, language);
+        return <article className="exerciseLibraryItem" key={`${exercise.exercise_source}:${exercise.exercise_id}`}>
+        <div><strong>{exercise_label(exercise, language)} <span className="exerciseSourceBadge">{exercise.exercise_source === 'shared' ? t("기본") : t("내 종목")}</span></strong>
+          {secondary_name && <small className="exerciseAlternateName">{secondary_name}</small>}
+          <small>{exercise.target_area ? t(exercise.target_area) : t("타겟 부위 미설정")}{exercise.last_sets.length ? ` · ${t("최근 {0}", [exercise.last_sets.map((item) => t("{0}kg × {1}회", [item.weight_kg, item.reps])).join(' · ')])}` : ` · ${t("아직 기록한 세트가 없습니다")}`}</small></div>
         {exercise.exercise_source === 'custom' && <div className="exerciseItemActions">
-          <button type="button" aria-label={t("{0} 이름 수정", [exercise.name])} disabled={pending_id !== null} onClick={() => { set_editing_id(exercise.exercise_id); set_name(exercise.name); }}><MaterialIcon>edit</MaterialIcon></button>
+          <button type="button" aria-label={t("{0} 이름 수정", [exercise.name])} disabled={pending_id !== null} onClick={() => { set_editing_id(exercise.exercise_id); set_name(exercise.name); set_target_area(exercise.target_area || ''); }}><MaterialIcon>edit</MaterialIcon></button>
           <button type="button" aria-label={t("{0} 삭제", [exercise.name])} disabled={pending_id !== null} onClick={() => remove_exercise(exercise)}><MaterialIcon>delete</MaterialIcon></button>
         </div>}
-      </article>) : <p className="emptyState">{t("등록한 운동 종목이 없습니다. 자주 하는 운동부터 추가해 보세요.")}</p>}
+      </article>;
+      }) : <p className="emptyState">{exercises.data.length ? t("검색 결과가 없습니다. 다른 이름으로 검색하거나 새 종목을 만들어 보세요.") : t("등록한 운동 종목이 없습니다. 자주 하는 운동부터 추가해 보세요.")}</p>}
     </section>}
   </section>;
 }

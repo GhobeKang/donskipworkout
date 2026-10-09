@@ -4,7 +4,7 @@ from zoneinfo import ZoneInfo
 
 from sqlalchemy import select
 
-from .database import attendanceSetting, scheduleDay, workoutSession
+from .database import attendanceSetting, scheduleDay, userAccount, workoutSession
 from .sharing import promise_for_week
 from .workouts import workout_groups_output
 
@@ -55,18 +55,21 @@ status_labels = {
 }
 
 
-def local_today():
-    return local_now().date()
+def local_today(timezone_name='Asia/Seoul'):
+    return local_now(timezone_name).date()
 
 
-def local_now():
-    return datetime.now(ZoneInfo('Asia/Seoul'))
+def local_now(timezone_name='Asia/Seoul'):
+    return datetime.now(ZoneInfo(timezone_name))
 
 
 def settings_output(database, user_id):
     settings = database.get(attendanceSetting, user_id)
+    account = database.get(userAccount, user_id)
     if settings is None:
         raise RuntimeError('Missing attendance settings')
+    if account is None:
+        raise RuntimeError('Missing user account')
     days = database.scalars(
         select(scheduleDay.day_of_week)
         .where(
@@ -76,6 +79,8 @@ def settings_output(database, user_id):
     ).all()
     roast_level = 'off' if settings.roast_level == 'mild' else settings.roast_level
     return {
+        'country_code': account.country_code,
+        'timezone': account.timezone,
         'schedule_days': list(days),
         'workout_time': settings.workout_time.strftime('%H:%M'),
         'roast_level': roast_level,
@@ -179,8 +184,8 @@ def calendar_output(sessions, year, month, today, schedule_days=(), account_crea
 
 
 def today_output(database, user_id):
-    today = local_today()
     settings = settings_output(database, user_id)
+    today = local_today(settings['timezone'])
     week_start = today - timedelta(days=today.weekday())
     sessions = database.scalars(
         select(workoutSession).where(
@@ -211,7 +216,7 @@ def today_output(database, user_id):
             memory = session_output(memory_session, today)
     return {
         'workout_date': today.isoformat(),
-        'timezone': 'Asia/Seoul',
+        'timezone': settings['timezone'],
         'workout_time': current_session.scheduled_time.strftime('%H:%M')
         if current_session
         else settings['workout_time'],

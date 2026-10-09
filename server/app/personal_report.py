@@ -3,9 +3,9 @@
 from collections import Counter, defaultdict
 from datetime import timedelta
 
-from sqlalchemy import select
+from sqlalchemy import and_, case, select
 
-from .database import weeklyPromise, workoutSession, workoutSet
+from .database import exerciseItem, sharedExerciseItem, weeklyPromise, workoutSession, workoutSet
 
 
 def exercise_key(workout_set):
@@ -74,24 +74,60 @@ def compare_conditions(previous_sets, current_sets):
 
 
 def comparison_summary(previous_sets, current_sets):
-    comparisons = compare_conditions(previous_sets, current_sets)
-    current_keys = {exercise_key(item) for item in current_sets if exercise_key(item)}
-    comparable_keys = {(item['exercise_source'], item['exercise_id']) for item in comparisons}
-    counts = {}
-    for direction in ('improved', 'maintained', 'declined'):
-        counts[f'{direction}_count'] = len(
+    previous_areas = area_totals(previous_sets)
+    current_areas = area_totals(current_sets)
+    comparisons = []
+    for target_area in sorted(previous_areas.keys() | current_areas.keys()):
+        previous = previous_areas.get(target_area, empty_area_totals())
+        current = current_areas.get(target_area, empty_area_totals())
+        delta = current['set_count'] - previous['set_count']
+        # Missing logs are not evidence of a decline or a zero-strength baseline.
+        direction = (
+            'uncomparable'
+            if not previous['set_count'] or not current['set_count']
+            else 'improved'
+            if delta > 0
+            else 'declined'
+            if delta < 0
+            else 'maintained'
+        )
+        comparisons.append(
             {
-                (item['exercise_source'], item['exercise_id'])
-                for item in comparisons
-                if item['direction'] == direction
+                'target_area': target_area,
+                'previous': previous,
+                'current': current,
+                'direction': direction,
             }
         )
+    comparable_count = sum(item['direction'] != 'uncomparable' for item in comparisons)
     return {
-        **counts,
-        'exercise_count': len(current_keys),
-        'comparable_count': len(comparable_keys),
-        'uncomparable_count': len(current_keys - comparable_keys),
+        **{
+            f'{direction}_count': sum(item['direction'] == direction for item in comparisons)
+            for direction in ('improved', 'maintained', 'declined')
+        },
+        'area_count': len(comparisons),
+        'comparable_count': comparable_count,
+        'uncomparable_count': len(comparisons) - comparable_count,
         'comparisons': comparisons,
+    }
+
+
+def empty_area_totals():
+    return {'session_count': 0, 'set_count': 0, 'rep_count': 0, 'volume_kg': 0.0}
+
+
+def area_totals(workout_sets):
+    grouped_sets = defaultdict(list)
+    for workout_set in workout_sets:
+        grouped_sets[workout_set.target_area or '타겟 부위 미설정'].append(workout_set)
+    return {
+        target_area: {
+            'session_count': len({item.workout_date for item in area_sets}),
+            'set_count': len(area_sets),
+            'rep_count': sum(item.reps for item in area_sets),
+            'volume_kg': round(float(sum(item.weight_kg * item.reps for item in area_sets)), 2),
+        }
+        for target_area, area_sets in grouped_sets.items()
     }
 
 
@@ -218,7 +254,7 @@ def evaluate_report(recent, journey, consistency, recovery, challenges, complete
         profile = 'progressing'
     elif has_consistency:
         profile = 'consistent'
-    elif challenges['new_exercises']:
+    elif challenges['new_areas']:
         profile = 'exploring'
     elif recent['comparable_count']:
         profile = 'maintaining'
@@ -231,8 +267,8 @@ def evaluate_report(recent, journey, consistency, recovery, challenges, complete
         (journey['improved_count'] > 0, 'long_term_improvement'),
         (has_consistency, 'consistent_weeks'),
         (is_returning, 'returned_after_miss'),
-        (bool(challenges['personal_records']), 'personal_record'),
-        (bool(challenges['new_exercises']), 'new_exercise'),
+        (bool(challenges['personal_record_areas']), 'personal_record'),
+        (bool(challenges['new_areas']), 'new_exercise'),
         (recent['uncomparable_count'] > 0, 'incomplete_comparison'),
     ):
         if condition:
@@ -250,11 +286,20 @@ def evaluate_report(recent, journey, consistency, recovery, challenges, complete
         'profile': profile,
         'evidence_codes': evidence_codes,
         'focus_code': focus_code,
-        'method_version': 'personal_report_v1',
+        'method_version': 'body_area_report_v2',
     }
 
 
-def personal_report_output(database, user_id, week_start, as_of_date, is_current_week):
+def personal_report_output(
+    database,
+    user_id,
+    period_start,
+    as_of_date,
+    is_current_period,
+    period_type='weekly',
+    previous_start=None,
+    previous_end=None,
+):
     completed_dates = database.scalars(
         select(workoutSession.workout_date)
         .where(
@@ -274,8 +319,27 @@ def personal_report_output(database, user_id, week_start, as_of_date, is_current
             workoutSet.weight_kg,
             workoutSet.reps,
             workoutSession.workout_date,
+            case(
+                (workoutSet.exercise_source == 'shared', sharedExerciseItem.target_area),
+                else_=exerciseItem.target_area,
+            ).label('target_area'),
         )
         .join(workoutSession, workoutSession.session_id == workoutSet.session_id)
+        .outerjoin(
+            exerciseItem,
+            and_(
+                exerciseItem.exercise_id == workoutSet.exercise_id,
+                exerciseItem.user_id == user_id,
+                workoutSet.exercise_source == 'custom',
+            ),
+        )
+        .outerjoin(
+            sharedExerciseItem,
+            and_(
+                sharedExerciseItem.exercise_id == workoutSet.shared_exercise_id,
+                workoutSet.exercise_source == 'shared',
+            ),
+        )
         .where(
             workoutSession.user_id == user_id,
             workoutSession.session_status == 'completed',
@@ -284,9 +348,9 @@ def personal_report_output(database, user_id, week_start, as_of_date, is_current
         .order_by(workoutSession.workout_date, workoutSet.set_id)
     ).all()
     valid_sets = [item for item in set_rows if exercise_key(item)]
-    previous_start = week_start - timedelta(days=7)
-    previous_end = as_of_date - timedelta(days=7)
-    current_sets = [item for item in valid_sets if item.workout_date >= week_start]
+    previous_start = previous_start or period_start - timedelta(days=7)
+    previous_end = previous_end or as_of_date - timedelta(days=7)
+    current_sets = [item for item in valid_sets if item.workout_date >= period_start]
     previous_sets = [
         item for item in valid_sets if previous_start <= item.workout_date <= previous_end
     ]
@@ -295,78 +359,113 @@ def personal_report_output(database, user_id, week_start, as_of_date, is_current
     sets_by_exercise = defaultdict(list)
     for item in valid_sets:
         sets_by_exercise[exercise_key(item)].append(item)
-    first_sets, latest_sets = [], []
-    new_exercises = []
-    for exercise_sets in sets_by_exercise.values():
-        first_date, latest_date = exercise_sets[0].workout_date, exercise_sets[-1].workout_date
-        if first_date >= week_start:
-            new_exercises.append(
-                {**exercise_identity(exercise_sets[-1]), 'first_date': first_date.isoformat()}
+    first_period_start = None
+    first_period_end = None
+    if valid_sets:
+        first_date = valid_sets[0].workout_date
+        first_period_start = (
+            first_date.replace(day=1)
+            if period_type == 'monthly'
+            else first_date - timedelta(days=first_date.weekday())
+        )
+        if period_type == 'monthly':
+            next_month = (first_period_start.replace(day=28) + timedelta(days=4)).replace(day=1)
+            first_period_end = (
+                min(
+                    next_month - timedelta(days=1), first_period_start + (as_of_date - period_start)
+                )
+                if is_current_period
+                else next_month - timedelta(days=1)
             )
-        if first_date < latest_date:
-            first_sets.extend(item for item in exercise_sets if item.workout_date == first_date)
-            latest_sets.extend(item for item in exercise_sets if item.workout_date == latest_date)
         else:
-            latest_sets.extend(exercise_sets)
-    journey = comparison_summary(first_sets, latest_sets)
-    historical_sets = [item for item in valid_sets if item.workout_date < week_start]
+            first_period_end = first_period_start + (as_of_date - period_start)
+    first_sets = [
+        item
+        for item in valid_sets
+        if first_period_start < period_start and item.workout_date <= first_period_end
+    ]
+    journey = (
+        comparison_summary(first_sets, current_sets)
+        if first_period_start != period_start
+        else comparison_summary([], [])
+    )
+    journey['baseline_start'] = first_period_start.isoformat() if first_period_start else None
+    journey['baseline_end'] = first_period_end.isoformat() if first_period_end else None
+    historical_sets = [item for item in valid_sets if item.workout_date < period_start]
     personal_records = [
         item
         for item in compare_conditions(historical_sets, current_sets)
         if item['direction'] == 'improved'
     ]
+    area_first_dates = {}
+    for item in valid_sets:
+        area_first_dates.setdefault(item.target_area or '타겟 부위 미설정', item.workout_date)
+    record_areas = defaultdict(set)
+    for item in personal_records:
+        identity = (item['exercise_source'], item['exercise_id'])
+        target_area = sets_by_exercise[identity][-1].target_area or '타겟 부위 미설정'
+        record_areas[target_area].add(identity)
     challenges = {
-        'new_exercises': new_exercises,
-        'personal_records': personal_records,
-        'record_exercise_count': len(
-            {(item['exercise_source'], item['exercise_id']) for item in personal_records}
-        ),
+        'new_areas': [
+            {'target_area': target_area, 'first_date': first_date.isoformat()}
+            for target_area, first_date in sorted(area_first_dates.items())
+            if first_date >= period_start
+        ],
+        'personal_record_areas': [
+            {'target_area': target_area, 'record_count': len(identities)}
+            for target_area, identities in sorted(record_areas.items())
+        ],
+        'record_area_count': len(record_areas),
     }
 
     goal_changes = database.scalars(
         select(weeklyPromise)
         .where(
             weeklyPromise.user_id == user_id,
-            weeklyPromise.effective_week <= week_start,
+            weeklyPromise.effective_week <= as_of_date,
         )
         .order_by(weeklyPromise.effective_week)
     ).all()
     # For a completed report, Sunday is closed; for this week's report it is still provisional.
-    closure_date = as_of_date if is_current_week else as_of_date + timedelta(days=1)
-    consistency = promise_history(goal_changes, completed_dates, week_start, closure_date)
+    # A month ending midweek must not close the unfinished promise week.
+    closure_date = as_of_date if is_current_period else as_of_date + timedelta(days=1)
+    last_week_start = as_of_date - timedelta(days=as_of_date.weekday())
+    consistency = promise_history(goal_changes, completed_dates, last_week_start, closure_date)
     recovery = recovery_history(consistency['weeks'], completed_dates)
 
     current_days = {item.workout_date for item in current_sets}
     previous_days = {item.workout_date for item in previous_sets}
     preferences = []
-    for identity, exercise_sets in sets_by_exercise.items():
-        current_exercise_days = {
-            item.workout_date for item in current_sets if exercise_key(item) == identity
+    for target_area in sorted(area_first_dates):
+        current_area_days = {
+            item.workout_date
+            for item in current_sets
+            if (item.target_area or '타겟 부위 미설정') == target_area
         }
-        previous_exercise_days = {
-            item.workout_date for item in previous_sets if exercise_key(item) == identity
+        previous_area_days = {
+            item.workout_date
+            for item in previous_sets
+            if (item.target_area or '타겟 부위 미설정') == target_area
         }
-        if not current_exercise_days and not previous_exercise_days:
+        if not current_area_days and not previous_area_days:
             continue
         current_percent = (
-            round(len(current_exercise_days) / len(current_days) * 100) if current_days else None
+            round(len(current_area_days) / len(current_days) * 100) if current_days else None
         )
         previous_percent = (
-            round(len(previous_exercise_days) / len(previous_days) * 100) if previous_days else None
+            round(len(previous_area_days) / len(previous_days) * 100) if previous_days else None
         )
         preferences.append(
             {
-                **exercise_identity(exercise_sets[-1]),
-                'session_count': len(current_exercise_days),
-                'previous_session_count': len(previous_exercise_days),
+                'target_area': target_area,
+                'session_count': len(current_area_days),
+                'previous_session_count': len(previous_area_days),
                 'session_percent': current_percent,
                 'previous_session_percent': previous_percent,
             }
         )
-    preferences.sort(
-        key=lambda item: (-item['session_count'], item['exercise_source'], item['exercise_id'])
-    )
-    current_dates = [day for day in completed_dates if day >= week_start]
+    preferences.sort(key=lambda item: (-item['session_count'], item['target_area']))
+    current_dates = [day for day in completed_dates if day >= period_start]
     return {
         'comparison_start': previous_start.isoformat(),
         'comparison_end': previous_end.isoformat(),
@@ -382,7 +481,7 @@ def personal_report_output(database, user_id, week_start, as_of_date, is_current
             'recorded_count': len(current_days),
             'previous_recorded_count': len(previous_days),
             'excluded_set_count': sum(
-                exercise_key(item) is None for item in set_rows if item.workout_date >= week_start
+                exercise_key(item) is None for item in set_rows if item.workout_date >= period_start
             ),
         },
         'evaluation': evaluate_report(

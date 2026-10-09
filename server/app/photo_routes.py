@@ -7,6 +7,7 @@ from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse
 from sqlalchemy import select
 
+from .challenge_service import record_activity_for_challenges
 from .database import userAccount, workoutPhoto, workoutSession
 from .photo_processing import (
     list_photo_frames,
@@ -86,8 +87,8 @@ def complete_photo(
             or (saved_session.note or '') != note.strip()
         ):
             raise HTTPException(409, '이미 처리된 요청의 내용이 다릅니다.')
-        return session_output(saved_session, local_today())
-    today = local_today()
+        return session_output(saved_session, local_today(user.timezone))
+    today = local_today(user.timezone)
     if workout_date != today:
         raise HTTPException(409, '날짜가 변경되었습니다. 오늘 화면에서 다시 촬영해 주세요.')
     session = database.scalar(
@@ -95,7 +96,16 @@ def complete_photo(
         .where(workoutSession.user_id == user.user_id, workoutSession.workout_date == today)
         .with_for_update()
     )
-    if session and session.session_status in {'completed', 'rest', 'missed'}:
+    is_photo_supplement = bool(
+        session
+        and session.session_status == 'completed'
+        and session.verification_type == 'manual'
+        and not session.photos
+    )
+    is_return_from_rest = bool(session and session.session_status == 'rest')
+    if session and session.session_status in {'completed', 'rest', 'missed'} and not (
+        is_photo_supplement or is_return_from_rest
+    ):
         raise HTTPException(409, '이미 종료된 운동입니다. 기록을 확인해 주세요.')
     duplicate = database.scalar(
         select(workoutPhoto.photo_id)
@@ -127,8 +137,7 @@ def complete_photo(
     try:
         original_photo.save(photo_directory / 'original.jpg', format='JPEG', quality=92)
         rendered_photo.save(photo_directory / 'rendered.jpg', format='JPEG', quality=92)
-        session.photos.append(
-            workoutPhoto(
+        saved_photo = workoutPhoto(
                 photo_uuid=photo_uuid,
                 submission_id=str(submission_id),
                 storage_key=rendered_key,
@@ -139,12 +148,24 @@ def complete_photo(
                 effect_version=effect_version,
                 is_reusable=settings['reuse_enabled'],
             )
-        )
+        session.photos.append(saved_photo)
         session.session_status = 'completed'
         session.verification_type = 'photo'
-        session.completed_at = utc_now()
+        accepted_at = utc_now()
+        if not is_photo_supplement:
+            session.completed_at = accepted_at
         session.reusable = settings['reuse_enabled']
-        session.note = note.strip() or None
+        if not is_photo_supplement or note.strip():
+            session.note = note.strip() or None
+        database.flush()
+        record_activity_for_challenges(
+            database,
+            user.user_id,
+            session.session_id,
+            'photo',
+            accepted_at,
+            saved_photo.photo_id,
+        )
         database.commit()
     except Exception:
         database.rollback()

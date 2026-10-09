@@ -61,7 +61,7 @@ def current_session(
     user = database.get(userAccount, stored_session.user_id)
     if not credential or not credential.is_active or user is None:
         raise authentication_error()
-    expires_in = request.app.state.settings.session_minutes * 60
+    expires_in = request.app.state.settings.session_days * 86400
     stored_session.expires_at = now + timedelta(seconds=expires_in)
     database.commit()
     set_session_cookie(response, request, raw_session_id, expires_in)
@@ -91,7 +91,7 @@ def authentication_data(user: userAccount, expires_in: int) -> dict:
 
 def create_session(request: Request, database: Session, user: userAccount) -> tuple[str, int]:
     settings = request.app.state.settings
-    expires_in = settings.session_minutes * 60
+    expires_in = settings.session_days * 86400
     now = utc_now()
     raw_session_id = token_urlsafe(32)
     database.execute(delete(authSession).where(authSession.expires_at <= now))

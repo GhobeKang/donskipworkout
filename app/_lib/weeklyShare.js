@@ -1,25 +1,23 @@
 import { Capacitor } from '@capacitor/core';
 import { Directory, Filesystem } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
-import { exercise_label, translate } from './i18n';
-import { comparison_text, personal_report_copy } from './personalReport';
+import { translate } from './i18n';
+import { comparison_text, personal_report_copy, report_status } from './personalReport';
 
 export function weekly_share_copy(report, language) {
   const t = (message, values = []) => translate(message, values, language);
   const copy = personal_report_copy(report, language);
-  const period = `${report.week_start} — ${report.week_end}`;
-  const status = t(report.is_current_week ? '진행 중인 리포트' : '완료된 주간 리포트');
-  const recent = report.insights.recent.comparisons;
-  const highlight = recent.find((item) => item.direction === 'improved')
-    || recent.find((item) => item.direction === 'declined')
-    || recent[0];
-  const highlight_title = highlight ? exercise_label(highlight, language) : t('비교 기록을 쌓는 중');
-  const highlight_detail = highlight ? comparison_text(highlight, language) : t('같은 조건의 기록이 있어야 변화를 비교할 수 있어요.');
+  const period = `${report.period_start} — ${report.period_end}`;
+  const status = t(report_status(report));
+  const recent = copy.insights.recent.comparisons;
+  const highlight = recent[0] || copy.insights.journey.comparisons[0];
+  const highlight_title = highlight ? t(highlight.target_area) : copy.metrics[0]?.label;
+  const highlight_detail = highlight ? comparison_text(highlight, language) : copy.metrics[0]?.value;
   const caption = ["DON'T SKIP", t('나의 변화 리포트'), period, status,
-    t('기준일: {0}', [report.as_of_date]), copy.title, copy.coverage, copy.commitment,
+    t('기준일: {0}', [report.as_of_date]), copy.title,
     ...copy.metrics.map((metric) => `${metric.label}: ${metric.value}`),
-    highlight_title, highlight_detail, ...copy.evidence,
-    t('직접 기록한 운동 기준 · 다른 사용자와의 순위가 아니에요.')].join('\n');
+    highlight_title, highlight_detail,
+    t('직접 기록한 운동 기준 · 다른 사용자와의 순위가 아니에요.')].filter(Boolean).join('\n');
   return { ...copy, period, status, highlight_title, highlight_detail, caption };
 }
 
@@ -28,7 +26,9 @@ export function create_weekly_share_image(report, language) {
   const copy = weekly_share_copy(report, language);
   const canvas = document.createElement('canvas');
   canvas.width = 1080;
-  canvas.height = 1350;
+  const evidence_y = 434 + Math.ceil(copy.metrics.length / 2) * 175;
+  const footer_y = evidence_y + (copy.highlight_title ? 220 : 0);
+  canvas.height = footer_y + 90;
   const context = canvas.getContext('2d');
   if (!context) return Promise.reject(new Error(t('공유 이미지를 만들지 못했습니다.')));
   const colors = { background: '#141a18', panel: '#222b26', text: '#f5f5ed', muted: '#b8c3ba', accent: '#d0ed95' };
@@ -74,13 +74,13 @@ export function create_weekly_share_image(report, language) {
     draw_text(metric.label, panel_x + 28, panel_y + 50, 29, colors.muted, 500, 396);
     draw_text(metric.value, panel_x + 28, panel_y + 105, language === 'en' ? 26 : 31, colors.text, 750, 396);
   });
-  draw_panel(76, 982, 928, 180);
-  draw_text(t('변화의 근거'), 104, 1028, 28, colors.muted);
-  draw_text(copy.highlight_title, 104, 1080, 38, colors.text, 750, 870);
-  draw_text(copy.highlight_detail, 104, 1131, 30, colors.accent, 600, 870);
-  draw_text(copy.commitment, 76, 1208, 24, colors.muted, 500);
-  draw_text(copy.coverage, 76, 1246, 24, colors.muted, 500);
-  draw_text(t('직접 기록한 운동 기준 · 다른 사용자와의 순위가 아니에요.'), 76, 1284, 24, colors.muted, 500);
+  if (copy.highlight_title) {
+    draw_panel(76, evidence_y, 928, 180);
+    draw_text(t('변화의 근거'), 104, evidence_y + 46, 28, colors.muted);
+    draw_text(copy.highlight_title, 104, evidence_y + 98, 38, colors.text, 750, 870);
+    draw_text(copy.highlight_detail, 104, evidence_y + 149, 30, colors.accent, 600, 870);
+  }
+  draw_text(t('직접 기록한 운동 기준 · 다른 사용자와의 순위가 아니에요.'), 76, footer_y + 44, 24, colors.muted, 500);
   return new Promise((resolve, reject) => {
     const timeout_id = setTimeout(() => reject(new Error(t('공유 이미지 준비 시간이 초과되었습니다.'))), 8000);
     canvas.toBlob((blob) => {

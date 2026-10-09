@@ -22,6 +22,7 @@ def exercise_progress(user: userDependency, database: databaseDependency):
     exercise_name = func.coalesce(
         sharedExerciseItem.name, exerciseItem.name, workoutSet.exercise_name
     )
+    target_area = func.coalesce(sharedExerciseItem.target_area, exerciseItem.target_area)
     archived_name = case(
         (
             workoutSet.exercise_id.is_(None) & workoutSet.shared_exercise_id.is_(None),
@@ -36,10 +37,12 @@ def exercise_progress(user: userDependency, database: databaseDependency):
             workoutSet.shared_exercise_id,
             archived_name.label('archived_name'),
             func.max(exercise_name).label('name'),
+            target_area.label('target_area'),
             workoutSession.workout_date,
             func.max(workoutSet.weight_kg).label('max_weight'),
             func.max(workoutSet.reps).label('max_reps'),
             func.sum(workoutSet.weight_kg * workoutSet.reps).label('volume'),
+            func.count(workoutSet.set_id).label('set_count'),
         )
         .join(workoutSession, workoutSession.session_id == workoutSet.session_id)
         .outerjoin(exerciseItem, exerciseItem.exercise_id == workoutSet.exercise_id)
@@ -52,6 +55,7 @@ def exercise_progress(user: userDependency, database: databaseDependency):
             workoutSet.exercise_id,
             workoutSet.shared_exercise_id,
             archived_name,
+            target_area,
             workoutSession.workout_date,
         )
         .order_by(workoutSession.workout_date)
@@ -66,6 +70,7 @@ def exercise_progress(user: userDependency, database: databaseDependency):
                 'exercise_key': exercise_key,
                 'exercise_source': row.exercise_source,
                 'name': row.name,
+                'target_area': row.target_area,
                 'archived': exercise_id is None,
                 'points': [],
             },
@@ -76,6 +81,7 @@ def exercise_progress(user: userDependency, database: databaseDependency):
                 'max_weight': float(row.max_weight),
                 'max_reps': row.max_reps,
                 'volume': float(row.volume),
+                'set_count': row.set_count,
             }
         )
     return sorted(
@@ -88,6 +94,7 @@ def exercise_output(exercise, exercise_source='custom', last_sets=None):
         'exercise_id': exercise.exercise_id,
         'exercise_source': exercise_source,
         'name': exercise.name,
+        'target_area': getattr(exercise, 'target_area', None),
         'last_sets': (exercise.last_sets if last_sets is None else last_sets) or [],
     }
 
@@ -291,7 +298,12 @@ def create_exercise(payload: exerciseInput, user: userDependency, database: data
     )
     if count >= 100:
         raise HTTPException(422, '운동 종목은 최대 100개까지 등록할 수 있습니다.')
-    exercise = exerciseItem(user_id=user.user_id, name=payload.name, last_sets=[])
+    exercise = exerciseItem(
+        user_id=user.user_id,
+        name=payload.name,
+        target_area=payload.target_area,
+        last_sets=[],
+    )
     database.add(exercise)
     try:
         database.commit()
@@ -319,6 +331,7 @@ def rename_exercise(
     ):
         raise HTTPException(409, '기본 운동 종목에 이미 등록되어 있습니다.')
     exercise.name = payload.name
+    exercise.target_area = payload.target_area
     try:
         database.commit()
     except IntegrityError:

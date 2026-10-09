@@ -36,6 +36,8 @@ class userAccount(databaseBase):
     user_uuid: Mapped[str] = mapped_column(String(36), unique=True)
     email: Mapped[str | None] = mapped_column(String(255), unique=True)
     display_name: Mapped[str | None] = mapped_column(String(100))
+    country_code: Mapped[str] = mapped_column(String(2), default='KR')
+    timezone: Mapped[str] = mapped_column(String(64), default='Asia/Seoul')
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.current_timestamp(), onupdate=func.current_timestamp()
@@ -108,6 +110,7 @@ class exerciseItem(databaseBase):
     exercise_id: Mapped[int] = mapped_column(id_type, primary_key=True, autoincrement=True)
     user_id: Mapped[int] = mapped_column(id_type, ForeignKey('users.user_id'))
     name: Mapped[str] = mapped_column(String(100))
+    target_area: Mapped[str | None] = mapped_column(String(20))
     last_sets: Mapped[list] = mapped_column(
         JSON().with_variant(JSONB(), 'postgresql'), default=list
     )
@@ -118,6 +121,7 @@ class sharedExerciseItem(databaseBase):
     __tablename__ = 'shared_exercise_items'
     exercise_id: Mapped[int] = mapped_column(id_type, primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String(100))
+    target_area: Mapped[str | None] = mapped_column(String(20))
 
 
 class userSharedExerciseProgress(databaseBase):
@@ -164,6 +168,294 @@ class workoutPhoto(databaseBase):
     effect_version: Mapped[int | None] = mapped_column(Integer)
     is_reusable: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())
+
+
+class challengeRoom(databaseBase):
+    __tablename__ = 'challenge_rooms'
+    room_id: Mapped[int] = mapped_column(id_type, primary_key=True, autoincrement=True)
+    room_uuid: Mapped[str] = mapped_column(String(36), unique=True)
+    host_user_id: Mapped[int] = mapped_column(id_type, ForeignKey('users.user_id'))
+    name: Mapped[str] = mapped_column(String(60))
+    description: Mapped[str | None] = mapped_column(String(300))
+    member_limit: Mapped[int] = mapped_column(Integer, default=10)
+    status: Mapped[str] = mapped_column(String(20), default='open')
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())
+
+
+class challengeRound(databaseBase):
+    __tablename__ = 'challenge_rounds'
+    round_id: Mapped[int] = mapped_column(id_type, primary_key=True, autoincrement=True)
+    round_uuid: Mapped[str] = mapped_column(String(36), unique=True)
+    room_id: Mapped[int] = mapped_column(id_type, ForeignKey('challenge_rooms.room_id'))
+    round_number: Mapped[int] = mapped_column(Integer, default=1)
+    previous_round_id: Mapped[int | None] = mapped_column(
+        id_type, ForeignKey('challenge_rounds.round_id')
+    )
+    status: Mapped[str] = mapped_column(String(24), default='draft')
+    start_at: Mapped[datetime | None] = mapped_column(DateTime)
+    end_at: Mapped[datetime | None] = mapped_column(DateTime)
+    settlement_end_at: Mapped[datetime | None] = mapped_column(DateTime)
+    timezone: Mapped[str] = mapped_column(String(40), default='Asia/Seoul')
+    rulebook_version: Mapped[int] = mapped_column(Integer, default=0)
+    roster_version: Mapped[int] = mapped_column(Integer, default=1)
+    draft_rulebook: Mapped[dict] = mapped_column(
+        JSON().with_variant(JSONB(), 'postgresql'), default=dict
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())
+
+
+class challengeRoundMember(databaseBase):
+    __tablename__ = 'challenge_round_members'
+    __table_args__ = (UniqueConstraint('round_id', 'user_id'),)
+    member_id: Mapped[int] = mapped_column(id_type, primary_key=True, autoincrement=True)
+    round_id: Mapped[int] = mapped_column(id_type, ForeignKey('challenge_rounds.round_id'))
+    user_id: Mapped[int] = mapped_column(id_type, ForeignKey('users.user_id'))
+    participant_status: Mapped[str] = mapped_column(String(24), default='joined_pending')
+    consented_rulebook_version: Mapped[int | None] = mapped_column(Integer)
+    consented_roster_version: Mapped[int | None] = mapped_column(Integer)
+    consented_at: Mapped[datetime | None] = mapped_column(DateTime)
+    withdrawn_at: Mapped[datetime | None] = mapped_column(DateTime)
+    joined_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())
+
+
+class coachingQuestion(databaseBase):
+    __tablename__ = 'coaching_questions'
+    __table_args__ = (UniqueConstraint('round_id', 'author_user_id', 'request_id'),)
+    question_id: Mapped[int] = mapped_column(id_type, primary_key=True, autoincrement=True)
+    question_uuid: Mapped[str] = mapped_column(String(36), unique=True)
+    round_id: Mapped[int] = mapped_column(id_type, ForeignKey('challenge_rounds.round_id'))
+    author_user_id: Mapped[int] = mapped_column(id_type, ForeignKey('users.user_id'))
+    host_user_id: Mapped[int] = mapped_column(id_type, ForeignKey('users.user_id'))
+    request_id: Mapped[str] = mapped_column(String(36))
+    category: Mapped[str] = mapped_column(String(24))
+    body: Mapped[str] = mapped_column(String(2000))
+    awaiting_host: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime)
+    updated_at: Mapped[datetime] = mapped_column(DateTime)
+
+
+class coachingReply(databaseBase):
+    __tablename__ = 'coaching_replies'
+    __table_args__ = (UniqueConstraint('question_id', 'sender_user_id', 'request_id'),)
+    reply_id: Mapped[int] = mapped_column(id_type, primary_key=True, autoincrement=True)
+    question_id: Mapped[int] = mapped_column(id_type, ForeignKey('coaching_questions.question_id'))
+    sender_user_id: Mapped[int] = mapped_column(id_type, ForeignKey('users.user_id'))
+    request_id: Mapped[str] = mapped_column(String(36))
+    body: Mapped[str] = mapped_column(String(2000))
+    created_at: Mapped[datetime] = mapped_column(DateTime)
+
+
+class challengeRulebook(databaseBase):
+    __tablename__ = 'challenge_rulebooks'
+    __table_args__ = (UniqueConstraint('round_id', 'version'),)
+    rulebook_id: Mapped[int] = mapped_column(id_type, primary_key=True, autoincrement=True)
+    round_id: Mapped[int] = mapped_column(id_type, ForeignKey('challenge_rounds.round_id'))
+    version: Mapped[int] = mapped_column(Integer)
+    target_count: Mapped[int] = mapped_column(Integer)
+    duration_days: Mapped[int] = mapped_column(Integer)
+    verification_mode: Mapped[str] = mapped_column(String(24))
+    description: Mapped[str | None] = mapped_column(String(1000))
+    rulebook_json: Mapped[dict] = mapped_column(JSON().with_variant(JSONB(), 'postgresql'))
+    published_at: Mapped[datetime] = mapped_column(DateTime)
+
+
+class challengeInvitation(databaseBase):
+    __tablename__ = 'challenge_invitations'
+    invitation_id: Mapped[int] = mapped_column(id_type, primary_key=True, autoincrement=True)
+    round_id: Mapped[int] = mapped_column(id_type, ForeignKey('challenge_rounds.round_id'))
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True)
+    code_hash: Mapped[str] = mapped_column(String(64), unique=True)
+    expires_at: Mapped[datetime] = mapped_column(DateTime)
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())
+
+
+class challengeInviteAttempt(databaseBase):
+    __tablename__ = 'challenge_invite_attempts'
+    attempt_id: Mapped[int] = mapped_column(id_type, primary_key=True, autoincrement=True)
+    user_id: Mapped[int | None] = mapped_column(id_type, ForeignKey('users.user_id'))
+    remote_address_hash: Mapped[str] = mapped_column(String(64))
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())
+
+
+class challengePeriod(databaseBase):
+    __tablename__ = 'challenge_periods'
+    __table_args__ = (UniqueConstraint('round_id', 'period_index'),)
+    period_id: Mapped[int] = mapped_column(id_type, primary_key=True, autoincrement=True)
+    round_id: Mapped[int] = mapped_column(id_type, ForeignKey('challenge_rounds.round_id'))
+    period_index: Mapped[int] = mapped_column(Integer)
+    start_at: Mapped[datetime] = mapped_column(DateTime)
+    end_at: Mapped[datetime] = mapped_column(DateTime)
+    target_count: Mapped[int] = mapped_column(Integer)
+    status: Mapped[str] = mapped_column(String(20), default='upcoming')
+
+
+class challengeVerificationEvent(databaseBase):
+    __tablename__ = 'challenge_verification_events'
+    event_id: Mapped[int] = mapped_column(id_type, primary_key=True, autoincrement=True)
+    event_uuid: Mapped[str] = mapped_column(String(36), unique=True)
+    round_id: Mapped[int] = mapped_column(id_type, ForeignKey('challenge_rounds.round_id'))
+    user_id: Mapped[int] = mapped_column(id_type, ForeignKey('users.user_id'))
+    session_id: Mapped[int] = mapped_column(id_type, ForeignKey('workout_sessions.session_id'))
+    photo_id: Mapped[int | None] = mapped_column(
+        id_type, ForeignKey('workout_session_photos.photo_id')
+    )
+    evaluation_date: Mapped[date] = mapped_column(Date)
+    verification_type: Mapped[str] = mapped_column(String(10))
+    accepted_at: Mapped[datetime] = mapped_column(DateTime)
+    status: Mapped[str] = mapped_column(String(20), default='accepted')
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())
+
+
+class challengeCheckin(databaseBase):
+    __tablename__ = 'challenge_checkins'
+    __table_args__ = (UniqueConstraint('round_id', 'user_id', 'evaluation_date'),)
+    checkin_id: Mapped[int] = mapped_column(id_type, primary_key=True, autoincrement=True)
+    round_id: Mapped[int] = mapped_column(id_type, ForeignKey('challenge_rounds.round_id'))
+    period_id: Mapped[int] = mapped_column(id_type, ForeignKey('challenge_periods.period_id'))
+    user_id: Mapped[int] = mapped_column(id_type, ForeignKey('users.user_id'))
+    evaluation_date: Mapped[date] = mapped_column(Date)
+    verification_event_id: Mapped[int] = mapped_column(
+        id_type, ForeignKey('challenge_verification_events.event_id')
+    )
+    status: Mapped[str] = mapped_column(String(20), default='accepted')
+    reason_code: Mapped[str | None] = mapped_column(String(40))
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())
+
+
+class challengeEvaluation(databaseBase):
+    __tablename__ = 'challenge_evaluations'
+    __table_args__ = (UniqueConstraint('round_id', 'evaluation_version'),)
+    evaluation_id: Mapped[int] = mapped_column(id_type, primary_key=True, autoincrement=True)
+    round_id: Mapped[int] = mapped_column(id_type, ForeignKey('challenge_rounds.round_id'))
+    evaluation_version: Mapped[int] = mapped_column(Integer)
+    method_version: Mapped[str] = mapped_column(String(20), default='v1')
+    rulebook_version: Mapped[int] = mapped_column(Integer)
+    source_watermark: Mapped[datetime] = mapped_column(DateTime)
+    finalized_at: Mapped[datetime] = mapped_column(DateTime)
+    result_json: Mapped[dict] = mapped_column(JSON().with_variant(JSONB(), 'postgresql'))
+
+
+class workoutTimer(databaseBase):
+    __tablename__ = 'workout_timers'
+    timer_id: Mapped[int] = mapped_column(id_type, primary_key=True, autoincrement=True)
+    timer_uuid: Mapped[str] = mapped_column(String(36), unique=True)
+    user_id: Mapped[int] = mapped_column(id_type, ForeignKey('users.user_id'))
+    status: Mapped[str] = mapped_column(String(20), default='running')
+    started_at: Mapped[datetime] = mapped_column(DateTime)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime)
+    measured_seconds: Mapped[int] = mapped_column(Integer, default=0)
+    record_source: Mapped[str] = mapped_column(String(20), default='timer_recorded')
+    revision: Mapped[int] = mapped_column(Integer, default=1)
+    needs_review_reason: Mapped[str | None] = mapped_column(String(120))
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())
+
+
+class workoutTimerEvent(databaseBase):
+    __tablename__ = 'workout_timer_events'
+    __table_args__ = (UniqueConstraint('timer_id', 'request_id'),)
+    event_id: Mapped[int] = mapped_column(id_type, primary_key=True, autoincrement=True)
+    timer_id: Mapped[int] = mapped_column(id_type, ForeignKey('workout_timers.timer_id'))
+    request_id: Mapped[str] = mapped_column(String(36))
+    action: Mapped[str] = mapped_column(String(20))
+    server_received_at: Mapped[datetime] = mapped_column(DateTime)
+    client_action_at: Mapped[datetime | None] = mapped_column(DateTime)
+    expected_revision: Mapped[int] = mapped_column(Integer)
+    resulting_revision: Mapped[int] = mapped_column(Integer)
+
+
+class workoutTimerSegment(databaseBase):
+    __tablename__ = 'workout_timer_segments'
+    segment_id: Mapped[int] = mapped_column(id_type, primary_key=True, autoincrement=True)
+    timer_id: Mapped[int] = mapped_column(id_type, ForeignKey('workout_timers.timer_id'))
+    segment_started_at: Mapped[datetime] = mapped_column(DateTime)
+    segment_ended_at: Mapped[datetime | None] = mapped_column(DateTime)
+    record_source: Mapped[str] = mapped_column(String(20), default='timer_recorded')
+    segment_status: Mapped[str] = mapped_column(String(20), default='accepted')
+
+
+class workoutTimerRevision(databaseBase):
+    __tablename__ = 'workout_timer_revisions'
+    revision_id: Mapped[int] = mapped_column(id_type, primary_key=True, autoincrement=True)
+    timer_id: Mapped[int] = mapped_column(id_type, ForeignKey('workout_timers.timer_id'))
+    previous_seconds: Mapped[int] = mapped_column(Integer)
+    updated_seconds: Mapped[int] = mapped_column(Integer)
+    changed_by_user_id: Mapped[int] = mapped_column(id_type, ForeignKey('users.user_id'))
+    reason: Mapped[str] = mapped_column(String(500))
+    created_at: Mapped[datetime] = mapped_column(DateTime)
+
+
+class notificationPreference(databaseBase):
+    __tablename__ = 'notification_preferences'
+    __table_args__ = (UniqueConstraint('round_id', 'user_id'),)
+    preference_id: Mapped[int] = mapped_column(id_type, primary_key=True, autoincrement=True)
+    round_id: Mapped[int] = mapped_column(id_type, ForeignKey('challenge_rounds.round_id'))
+    user_id: Mapped[int] = mapped_column(id_type, ForeignKey('users.user_id'))
+    room_news_enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    host_nudge_enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    quiet_start: Mapped[time] = mapped_column(Time, default=time(21, 0))
+    quiet_end: Mapped[time] = mapped_column(Time, default=time(9, 0))
+    timezone: Mapped[str] = mapped_column(String(64), default='Asia/Seoul')
+    updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())
+
+
+class pushDevice(databaseBase):
+    __tablename__ = 'push_devices'
+    __table_args__ = (
+        UniqueConstraint('user_id', 'installation_uuid'),
+        UniqueConstraint('provider', 'token_hash'),
+    )
+    device_id: Mapped[int] = mapped_column(id_type, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(id_type, ForeignKey('users.user_id'))
+    installation_uuid: Mapped[str] = mapped_column(String(36))
+    platform: Mapped[str] = mapped_column(String(10))
+    provider: Mapped[str] = mapped_column(String(10))
+    token: Mapped[str] = mapped_column(String(4096))
+    token_hash: Mapped[str] = mapped_column(String(64))
+    active: Mapped[bool] = mapped_column(Boolean, default=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())
+
+
+class notificationEvent(databaseBase):
+    __tablename__ = 'notification_events'
+    event_id: Mapped[int] = mapped_column(id_type, primary_key=True, autoincrement=True)
+    event_uuid: Mapped[str] = mapped_column(String(36), unique=True)
+    event_key: Mapped[str] = mapped_column(String(200), unique=True)
+    round_id: Mapped[int | None] = mapped_column(
+        id_type, ForeignKey('challenge_rounds.round_id')
+    )
+    recipient_user_id: Mapped[int] = mapped_column(id_type, ForeignKey('users.user_id'))
+    sender_user_id: Mapped[int | None] = mapped_column(id_type, ForeignKey('users.user_id'))
+    category: Mapped[str] = mapped_column(String(24))
+    title: Mapped[str] = mapped_column(String(100))
+    body: Mapped[str] = mapped_column(String(300))
+    payload: Mapped[dict] = mapped_column(JSON().with_variant(JSONB(), 'postgresql'), default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime)
+
+
+class notificationInbox(databaseBase):
+    __tablename__ = 'notification_inbox'
+    event_id: Mapped[int] = mapped_column(
+        id_type, ForeignKey('notification_events.event_id'), primary_key=True
+    )
+    user_id: Mapped[int] = mapped_column(id_type, ForeignKey('users.user_id'))
+    read_at: Mapped[datetime | None] = mapped_column(DateTime)
+
+
+class notificationOutbox(databaseBase):
+    __tablename__ = 'notification_outbox'
+    __table_args__ = (UniqueConstraint('event_id', 'device_id'),)
+    outbox_id: Mapped[int] = mapped_column(id_type, primary_key=True, autoincrement=True)
+    event_id: Mapped[int] = mapped_column(
+        id_type, ForeignKey('notification_events.event_id')
+    )
+    device_id: Mapped[int] = mapped_column(id_type, ForeignKey('push_devices.device_id'))
+    status: Mapped[str] = mapped_column(String(20), default='queued')
+    attempt_count: Mapped[int] = mapped_column(Integer, default=0)
+    next_attempt_at: Mapped[datetime] = mapped_column(DateTime)
+    provider_message_id: Mapped[str | None] = mapped_column(String(200))
+    last_error: Mapped[str | None] = mapped_column(String(200))
+    created_at: Mapped[datetime] = mapped_column(DateTime)
 
 
 def create_database(database_url: str | URL):

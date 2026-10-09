@@ -9,6 +9,9 @@ ios/App/DerivedData/
 .env
 .env.*
 !.env.example
+server/*service-account*.json
+server/*firebase-adminsdk*.json
+server/*.p8
 server/.venv/
 __pycache__/
 .pytest_cache/
@@ -22,3 +25,4 @@ media/
 legacy/
 scripts/
 supabase/
+.gradle/

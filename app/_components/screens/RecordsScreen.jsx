@@ -9,24 +9,24 @@ import WeeklyShare from '../sharing/WeeklyShare';
 
 const day_names = ['일', '월', '화', '수', '목', '금', '토'];
 
-function current_month() {
-  const parts = new Intl.DateTimeFormat('en', { timeZone: 'Asia/Seoul', year: 'numeric', month: 'numeric' }).formatToParts(new Date());
+function current_month(timezone) {
+  const parts = new Intl.DateTimeFormat('en', { timeZone: timezone, year: 'numeric', month: 'numeric' }).formatToParts(new Date());
   return { year: Number(parts.find((part) => part.type === 'year').value), month: Number(parts.find((part) => part.type === 'month').value) };
 }
 
-function month_for_date(workout_date) {
+function month_for_date(workout_date, timezone) {
   const date_parts = /^(\d{4})-(\d{2})-\d{2}$/.exec(workout_date || '');
-  if (!date_parts) return current_month();
+  if (!date_parts) return current_month(timezone);
   const year = Number(date_parts[1]);
   const month = Number(date_parts[2]);
   return year >= 2000 && year <= 2100 && month >= 1 && month <= 12
     ? { year, month }
-    : current_month();
+    : current_month(timezone);
 }
 
-export default function RecordsScreen({ revision, on_unauthorized, initial_tab, initial_workout_date, focus_record_uuid, on_open_record }) {
+export default function RecordsScreen({ revision, on_unauthorized, initial_tab, initial_workout_date, focus_record_uuid, on_open_record, timezone = 'Asia/Seoul' }) {
   const { t, language } = useLanguage();
-  const [selected_month, set_selected_month] = useState(() => month_for_date(initial_workout_date));
+  const [selected_month, set_selected_month] = useState(() => month_for_date(initial_workout_date, timezone));
   const [selected_tab, set_selected_tab] = useState(initial_tab);
   const [reload_count, set_reload_count] = useState(0);
   const { year, month } = selected_month;
@@ -60,8 +60,8 @@ export default function RecordsScreen({ revision, on_unauthorized, initial_tab, 
     <header className="pageHeader"><div><p className="eyebrow">{t('이거 봐봐, 너가 이만큼 해냈어.')}</p><h1>{t('보이는 만큼,\n성장했다는 증거.')}</h1></div></header>
     <button type="button" className="shareEntry" aria-pressed={selected_tab === 'share'} onClick={() => set_selected_tab('share')}><span><strong>{t('나의 변화 리포트')}</strong><small>{t('변화의 근거를 모아, 나만의 리포트로.')}</small></span><MaterialIcon>ios_share</MaterialIcon></button>
     <div className="tabs" aria-label={t("기록 보기")}>{[['calendar', t("캘린더")], ['list', t("운동 목록")], ['progress', t("성장 추이")], ['stats', t("통계")]].map(([tab, label]) => <button type="button" key={tab} className={selected_tab === tab ? 'isActive' : ''} aria-pressed={selected_tab === tab} onClick={() => set_selected_tab(tab)}>{label}</button>)}</div>
-    {selected_tab === 'share' && <WeeklyShare revision={revision} on_unauthorized={on_unauthorized} />}
-    {selected_tab === 'progress' && <ExerciseProgress revision={revision} on_unauthorized={on_unauthorized} />}
+    {selected_tab === 'share' && <WeeklyShare revision={revision} on_unauthorized={on_unauthorized} timezone={timezone} />}
+    {selected_tab === 'progress' && <ExerciseProgress revision={revision} on_unauthorized={on_unauthorized} timezone={timezone} />}
     {['calendar', 'list'].includes(selected_tab) && <div className="calendarHeader">
       <button className="textButton" aria-label={t("이전 달")} disabled={year === 2000 && month === 1} onClick={() => change_month(-1)}>‹</button>
       <strong>{format_workout_date(`${year}-${String(month).padStart(2, '0')}-01`, language, { year: 'numeric', month: 'long' })}</strong>

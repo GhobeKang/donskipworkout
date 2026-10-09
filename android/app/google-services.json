@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "113735670255",
+    "project_id": "donskip-f2c3c",
+    "storage_bucket": "donskip-f2c3c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:113735670255:android:0a827b5d884509dca67e1a",
+        "android_client_info": {
+          "package_name": "com.donskip.attendancecheck"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBMtxNNBOoKLNhBZrANAD6vHgffEfggPhw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -16,8 +16,18 @@ class serverSettings(BaseSettings):
     supabase_db_user: str | None = None
     supabase_db_password: SecretStr | None = None
     supabase_database_url: SecretStr | None = None
+    challenge_invite_secret: SecretStr | None = None
+    firebase_project_id: str | None = Field(default=None, min_length=1, max_length=100)
+    firebase_credentials_path: str | None = Field(
+        default=None, validation_alias='GOOGLE_APPLICATION_CREDENTIALS'
+    )
+    apns_key_id: str | None = None
+    apns_team_id: str | None = None
+    apns_auth_key_path: str | None = None
+    apns_topic: str | None = None
+    apns_environment: Literal['sandbox', 'production'] = 'production'
     supabase_db_sslmode: Literal['require', 'verify-ca', 'verify-full'] = 'require'
-    session_minutes: int = Field(default=180, ge=1, le=1440)
+    session_days: int = Field(default=400, ge=1, le=400)
     session_cookie_name: str = Field(default='attendance_session', min_length=1, max_length=64)
     session_cookie_secure: bool = False
     session_cookie_samesite: Literal['lax', 'strict', 'none'] = 'lax'
@@ -37,6 +47,9 @@ class serverSettings(BaseSettings):
 
     @model_validator(mode='after')
     def validate_database(self):
+        apns_values = [self.apns_key_id, self.apns_team_id, self.apns_auth_key_path, self.apns_topic]
+        if any(apns_values) and not all(apns_values):
+            raise ValueError('APNS_KEY_ID, APNS_TEAM_ID, APNS_AUTH_KEY_PATH, and APNS_TOPIC are required together')
         if self.session_cookie_samesite == 'none' and not self.session_cookie_secure:
             raise ValueError('SESSION_COOKIE_SECURE must be true when SameSite is none')
         database_parts = [

@@ -1,6 +1,7 @@
 import { useLanguage } from '../../_hooks/useLanguage';
 import LanguageSelector from '../settings/LanguageSelector';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import CountryTimezoneFields from '../settings/CountryTimezoneFields';
 
 export default function AuthScreen({ on_authenticate, pending, error, on_clear_error }) {
   const { t, localize_message } = useLanguage();
@@ -8,13 +9,19 @@ export default function AuthScreen({ on_authenticate, pending, error, on_clear_e
   const [email, set_email] = useState('');
   const [password, set_password] = useState('');
   const [display_name, set_display_name] = useState('');
+  const [country_code, set_country_code] = useState('');
+  const [timezone, set_timezone] = useState('Asia/Seoul');
   const is_register = auth_mode === 'register';
+
+  useEffect(() => {
+    set_timezone(Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Seoul');
+  }, []);
 
   const submit_form = (event) => {
     event.preventDefault();
     on_authenticate(auth_mode, {
       email: email.trim(), password,
-      ...(is_register ? { display_name: display_name.trim() } : {}),
+      ...(is_register ? { display_name: display_name.trim(), country_code, timezone } : {}),
     });
   };
 
@@ -24,6 +31,10 @@ export default function AuthScreen({ on_authenticate, pending, error, on_clear_e
       <h2>{is_register ? t("회원가입") : t("로그인")}</h2>
       <fieldset disabled={pending}>
         {is_register && <label>{t("이름")}<input name="display_name" autoComplete="nickname" required maxLength={100} value={display_name} onChange={(event) => set_display_name(event.target.value)} /></label>}
+        {is_register && <CountryTimezoneFields country_code={country_code} timezone={timezone} on_change={(field_name, value) => {
+          if (field_name === 'country_code') set_country_code(value);
+          else set_timezone(value);
+        }} />}
         <label>{t("이메일")}<input name="email" type="email" autoComplete="username" required maxLength={255} value={email} onChange={(event) => set_email(event.target.value)} /></label>
         <label>{t("비밀번호")}<input name="password" type="password" autoComplete={is_register ? 'new-password' : 'current-password'} required minLength={is_register ? 12 : 1} maxLength={128} value={password} onChange={(event) => set_password(event.target.value)} /></label>
         {is_register && <p className="infoText">{t("비밀번호는 12~128자로 입력해 주세요.")}</p>}

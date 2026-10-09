@@ -76,6 +76,20 @@ export function exercise_label(exercise, language = get_language()) {
   return exercise?.exercise_source === 'shared' ? translate(name, [], language) : name;
 }
 
+export function exercise_secondary_label(exercise, language = get_language()) {
+  if (exercise?.exercise_source !== 'shared') return '';
+  const alternate_language = language === 'en' ? 'ko' : 'en';
+  const alternate_name = exercise_label(exercise, alternate_language);
+  return alternate_name === exercise_label(exercise, language) ? '' : alternate_name;
+}
+
+export function exercise_matches_query(exercise, search_query) {
+  const normalized_query = search_query.trim().toLocaleLowerCase().replace(/[\s_-]+/g, '');
+  if (!normalized_query) return true;
+  return [exercise_label(exercise, 'ko'), exercise_label(exercise, 'en')]
+    .some((exercise_name) => exercise_name.toLocaleLowerCase().replace(/[\s_-]+/g, '').includes(normalized_query));
+}
+
 export function format_workout_date(workout_date, language = get_language(), options = { month: 'short', day: 'numeric' }) {
   return new Intl.DateTimeFormat(language === 'en' ? 'en-US' : 'ko-KR', { ...options, timeZone: 'UTC' })
     .format(new Date(`${workout_date}T12:00:00Z`));

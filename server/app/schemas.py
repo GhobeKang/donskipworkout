@@ -1,7 +1,19 @@
+from datetime import date, datetime
 from decimal import Decimal
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from typing import Annotated, Literal
+from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, SecretStr, StrictBool, field_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    EmailStr,
+    Field,
+    SecretStr,
+    StrictBool,
+    field_validator,
+    model_validator,
+)
 
 
 class requestModel(BaseModel):
@@ -11,6 +23,7 @@ class requestModel(BaseModel):
 class loginRequest(requestModel):
     email: EmailStr = Field(max_length=255)
     password: SecretStr = Field(min_length=1, max_length=128)
+    installation_uuid: UUID | None = None
 
     @field_validator('email')
     @classmethod
@@ -21,6 +34,8 @@ class loginRequest(requestModel):
 class registerRequest(loginRequest):
     password: SecretStr = Field(min_length=12, max_length=128)
     display_name: str = Field(min_length=1, max_length=100)
+    country_code: str = Field(default='KR', pattern=r'^[A-Z]{2}$')
+    timezone: str = Field(default='Asia/Seoul', min_length=1, max_length=64)
 
     @field_validator('display_name')
     @classmethod
@@ -30,10 +45,21 @@ class registerRequest(loginRequest):
             raise ValueError('A nonempty display name without control characters is required')
         return value
 
+    @field_validator('timezone')
+    @classmethod
+    def validate_timezone(cls, value: str) -> str:
+        try:
+            ZoneInfo(value)
+        except (ValueError, ZoneInfoNotFoundError):
+            raise ValueError('A valid IANA timezone is required') from None
+        return value
+
 
 class settingsData(requestModel):
     schedule_days: list[Annotated[int, Field(strict=True, ge=0, le=6)]] = Field(max_length=7)
     workout_time: str = Field(pattern=r'^(?:[01]\d|2[0-3]):[0-5]\d$')
+    country_code: str | None = Field(default=None, pattern=r'^[A-Z]{2}$')
+    timezone: str | None = Field(default=None, min_length=1, max_length=64)
     roast_level: Literal['off', 'spicy', 'hot']
     reuse_enabled: StrictBool
     notification_workout_enabled: StrictBool = True
@@ -48,9 +74,17 @@ class settingsData(requestModel):
             raise ValueError('Duplicate schedule days are not allowed')
         return sorted(value)
 
+    @field_validator('timezone')
+    @classmethod
+    def validate_timezone(cls, value: str | None) -> str | None:
+        return registerRequest.validate_timezone(value) if value is not None else None
+
 
 class exerciseInput(requestModel):
     name: str = Field(min_length=1, max_length=100)
+    target_area: Literal[
+        '가슴', '등', '어깨', '이두', '삼두', '복근', '엉덩이', '허벅지', '종아리', '전신'
+    ]
 
     @field_validator('name')
     @classmethod
@@ -103,6 +137,7 @@ class exerciseData(BaseModel):
     exercise_source: Literal['shared', 'custom']
     exercise_id: int
     name: str
+    target_area: str | None
     last_sets: list[workoutSetData]
 
 
@@ -213,14 +248,30 @@ class reportComparisonData(reportExerciseData):
     current_date: str
 
 
+class reportAreaTotals(BaseModel):
+    session_count: int
+    set_count: int
+    rep_count: int
+    volume_kg: float
+
+
+class reportAreaComparison(BaseModel):
+    target_area: str
+    previous: reportAreaTotals
+    current: reportAreaTotals
+    direction: Literal['improved', 'maintained', 'declined', 'uncomparable']
+
+
 class reportComparisonSummary(BaseModel):
-    exercise_count: int
+    area_count: int
     comparable_count: int
     uncomparable_count: int
     improved_count: int
     maintained_count: int
     declined_count: int
-    comparisons: list[reportComparisonData]
+    comparisons: list[reportAreaComparison]
+    baseline_start: str | None = None
+    baseline_end: str | None = None
 
 
 class reportWeekData(BaseModel):
@@ -253,17 +304,24 @@ class reportRecoveryData(BaseModel):
     events: list[reportRecoveryEvent]
 
 
-class reportNewExerciseData(reportExerciseData):
+class reportNewAreaData(BaseModel):
+    target_area: str
     first_date: str
 
 
+class reportAreaRecordData(BaseModel):
+    target_area: str
+    record_count: int
+
+
 class reportChallengeData(BaseModel):
-    new_exercises: list[reportNewExerciseData]
-    personal_records: list[reportComparisonData]
-    record_exercise_count: int
+    new_areas: list[reportNewAreaData]
+    personal_record_areas: list[reportAreaRecordData]
+    record_area_count: int
 
 
-class reportPreferenceData(reportExerciseData):
+class reportPreferenceData(BaseModel):
+    target_area: str
     session_count: int
     previous_session_count: int
     session_percent: int | None
@@ -324,6 +382,98 @@ class weeklyShareData(BaseModel):
     extra_count: int | None
     growth: shareGrowthData
     insights: personalReportData
+
+
+class periodReportData(weeklyShareData):
+    period_type: Literal['weekly', 'monthly']
+    period_start: str
+    period_end: str
+    is_current_period: bool
+
+
+class challengeRoomCreate(requestModel):
+    name: str = Field(min_length=2, max_length=30)
+    description: str | None = Field(default=None, max_length=300)
+    member_limit: int = Field(default=10, strict=True, ge=2, le=10)
+
+    @field_validator('name')
+    @classmethod
+    def normalize_name(cls, value: str) -> str:
+        value = ' '.join(value.split())
+        if not value or any(ord(character) < 32 for character in value):
+            raise ValueError('Room name must be nonempty without control characters')
+        return value
+
+
+class challengeRulebookUpdate(requestModel):
+    expected_version: int = Field(strict=True, ge=0)
+    target_count: int = Field(default=3, strict=True, ge=1, le=7)
+    duration_days: Literal[7, 14, 28] = 7
+    verification_mode: Literal['photo_required', 'photo_or_manual'] = 'photo_required'
+    start_date: date | None = None
+    description: str | None = Field(default=None, max_length=1000)
+
+
+class challengeInviteJoin(requestModel):
+    code: str | None = Field(
+        default=None, min_length=8, max_length=9,
+        pattern=r'^[A-HJ-NP-Z2-9]{4}-?[A-HJ-NP-Z2-9]{4}$',
+    )
+    token: str | None = Field(default=None, min_length=32, max_length=128)
+
+    @model_validator(mode='after')
+    def require_one_invite_credential(self):
+        if (self.code is None) == (self.token is None):
+            raise ValueError('Provide exactly one invitation code or token')
+        return self
+
+
+class workoutTimerStart(requestModel):
+    request_id: UUID
+
+
+class workoutTimerAction(requestModel):
+    action: Literal['pause', 'resume', 'finish', 'discard']
+    request_id: UUID
+    expected_revision: int = Field(strict=True, ge=0)
+
+
+class workoutTimerReconcile(requestModel):
+    action: Literal['pause', 'finish']
+    request_id: UUID
+    expected_revision: int = Field(strict=True, ge=0)
+    client_action_at: datetime
+
+
+class workoutTimerCorrection(requestModel):
+    measured_seconds: int = Field(strict=True, ge=0, le=86400)
+    reason: str = Field(min_length=1, max_length=500)
+
+    @field_validator('reason')
+    @classmethod
+    def normalize_reason(cls, value: str) -> str:
+        reason = ' '.join(value.split())
+        if not reason or any(ord(character) < 32 for character in reason):
+            raise ValueError('A reason without control characters is required')
+        return reason
+
+
+class notificationPreferenceUpdate(requestModel):
+    room_news_enabled: StrictBool
+    host_nudge_enabled: StrictBool
+    quiet_start: str = Field(pattern=r'^(?:[01]\d|2[0-3]):[0-5]\d$')
+    quiet_end: str = Field(pattern=r'^(?:[01]\d|2[0-3]):[0-5]\d$')
+
+
+class pushDeviceRegistration(requestModel):
+    installation_uuid: UUID
+    platform: Literal['android', 'ios']
+    token: str = Field(min_length=20, max_length=4096)
+
+
+class challengeNudgeRequest(requestModel):
+    request_id: UUID
+    member_uuids: list[UUID] = Field(default_factory=list, max_length=10)
 
 
 class settingsOptions(BaseModel):

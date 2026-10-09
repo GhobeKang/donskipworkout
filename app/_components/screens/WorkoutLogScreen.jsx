@@ -10,9 +10,9 @@ import WorkoutFloatingActions from '../workout/WorkoutFloatingActions';
 import MaterialIcon from '../ui/MaterialIcon';
 import RequestState from '../ui/RequestState';
 
-function seoul_date() {
+function current_workout_date(timezone) {
   const date_parts = new Intl.DateTimeFormat('en', {
-    timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit',
+    timeZone: timezone, year: 'numeric', month: '2-digit', day: '2-digit',
   }).formatToParts(new Date());
   const date_values = Object.fromEntries(date_parts.map(({ type, value }) => [type, value]));
   return `${date_values.year}-${date_values.month}-${date_values.day}`;
@@ -20,6 +20,10 @@ function seoul_date() {
 
 function storage_key_for(user_uuid, workout_date) {
   return `workout_set_draft:${user_uuid}:${workout_date}`;
+}
+
+function exercise_key_for(group) {
+  return group ? `${group.exercise_source}:${group.exercise_id}` : '';
 }
 
 function normalize_groups(exercise_groups) {
@@ -72,11 +76,13 @@ function read_saved_draft(storage_key) {
   }
 }
 
-export default function WorkoutLogScreen({ user_uuid, initial_workout_date, is_active, catalog_revision, on_unauthorized, on_open_library, on_open_checkin, on_saved }) {
+export default function WorkoutLogScreen({ user_uuid, initial_workout_date, is_active, catalog_revision, on_unauthorized, on_open_library, on_open_checkin, on_saved, timezone = 'Asia/Seoul' }) {
   const { t, localize_message } = useLanguage();
-  const [selected_date, set_selected_date] = useState(initial_workout_date || seoul_date());
+  const [selected_date, set_selected_date] = useState(initial_workout_date || current_workout_date(timezone));
+  const initial_date_applied_ref = useRef(Boolean(initial_workout_date));
   const [resource_revision, set_resource_revision] = useState(0);
   const [exercise_groups, set_exercise_groups] = useState([]);
+  const [expanded_exercise_key, set_expanded_exercise_key] = useState('');
   const [archived_groups, set_archived_groups] = useState([]);
   const [hydrated_date, set_hydrated_date] = useState('');
   const [save_status, set_save_status] = useState('');
@@ -94,6 +100,12 @@ export default function WorkoutLogScreen({ user_uuid, initial_workout_date, is_a
   const draft_revision_ref = useRef(0);
   const refreshed_today_dates_ref = useRef(new Set());
   const retry_counts_by_date_ref = useRef(new Map());
+
+  useEffect(() => {
+    if (initial_date_applied_ref.current || !initial_workout_date) return;
+    initial_date_applied_ref.current = true;
+    set_selected_date(initial_workout_date);
+  }, [initial_workout_date]);
 
   const flush_save = async () => {
     if (save_active_ref.current || !pending_save_ref.current) return;
@@ -129,7 +141,7 @@ export default function WorkoutLogScreen({ user_uuid, initial_workout_date, is_a
           window.localStorage.removeItem(save_snapshot.storage_key);
         }
       } catch {}
-      if (save_snapshot.workout_date === seoul_date()
+      if (save_snapshot.workout_date === current_workout_date(timezone)
         && !refreshed_today_dates_ref.current.has(save_snapshot.workout_date)) {
         refreshed_today_dates_ref.current.add(save_snapshot.workout_date);
         on_saved();
@@ -226,7 +238,9 @@ export default function WorkoutLogScreen({ user_uuid, initial_workout_date, is_a
         exercise_name: group.exercise_name,
         sets: group.sets,
       }));
-    set_exercise_groups(saved_draft?.groups || editable_server_groups);
+    const hydrated_groups = saved_draft?.groups || editable_server_groups;
+    set_exercise_groups(hydrated_groups);
+    set_expanded_exercise_key(exercise_key_for(hydrated_groups.at(-1)));
     set_save_error('');
     if (saved_draft) {
       const normalized_groups = normalize_groups(saved_draft.groups);
@@ -260,8 +274,14 @@ export default function WorkoutLogScreen({ user_uuid, initial_workout_date, is_a
     }
   }, [log_resource.data, log_resource.loading, exercises.loading, selected_date, user_uuid, catalog_revision]);
 
-  const change_groups = (next_groups) => {
+  const change_groups = (next_groups, preferred_exercise_key = null) => {
     set_exercise_groups(next_groups);
+    set_expanded_exercise_key((current_exercise_key) => {
+      if (preferred_exercise_key !== null) return preferred_exercise_key;
+      return next_groups.some((group) => exercise_key_for(group) === current_exercise_key)
+        ? current_exercise_key
+        : exercise_key_for(next_groups.at(-1));
+    });
     queue_save(selected_date, next_groups);
   };
   const add_exercise = (exercise) => {
@@ -269,14 +289,15 @@ export default function WorkoutLogScreen({ user_uuid, initial_workout_date, is_a
     if (exercise_groups.length >= 30 || exercise_groups.some(
       (group) => `${group.exercise_source}:${group.exercise_id}` === exercise_key,
     )) return;
-    change_groups([...exercise_groups, {
+    const next_groups = [...exercise_groups, {
       exercise_source: exercise.exercise_source,
       exercise_id: exercise.exercise_id,
       exercise_name: exercise.name,
       sets: exercise.last_sets.length
         ? exercise.last_sets.map((workout_set) => ({ ...workout_set }))
         : [{ weight_kg: 0, reps: 8 }],
-    }]);
+    }];
+    change_groups(next_groups, exercise_key);
     window.requestAnimationFrame(() => {
       document.getElementById(`workout-group-${exercise.exercise_source}-${exercise.exercise_id}`)
         ?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'center' });
@@ -294,7 +315,7 @@ export default function WorkoutLogScreen({ user_uuid, initial_workout_date, is_a
     <header className="pageHeader"><div><p className="eyebrow">{t('성장 욕심이 있다면 일단 남겨봐.')}</p><h1>{t('들었으면,\n기록으로 남겨봐.')}</h1></div></header>
     <div className="workoutDatePicker">
       <label className="fieldLabel" htmlFor="workout-record-date">{t("기록 날짜")}</label>
-      <input id="workout-record-date" className="timeInput" type="date" value={selected_date} max={seoul_date()} onChange={(event) => {
+      <input id="workout-record-date" className="timeInput" type="date" value={selected_date} max={current_workout_date(timezone)} onChange={(event) => {
         if (!event.target.value) return;
         set_selected_date(event.target.value);
         set_save_status('');
@@ -307,7 +328,16 @@ export default function WorkoutLogScreen({ user_uuid, initial_workout_date, is_a
     </div>
     <RequestState loading={log_resource.loading || exercises.loading} error={log_resource.error || exercises.error} on_retry={() => set_resource_revision((value) => value + 1)} />
     {log_resource.data && exercises.data && hydrated_date === selected_date && <>
-      <WorkoutSetBuilder exercises={exercises.data} exercise_groups={exercise_groups} on_change={change_groups} disabled={false} />
+      <WorkoutSetBuilder
+        exercises={exercises.data}
+        exercise_groups={exercise_groups}
+        expanded_exercise_key={expanded_exercise_key}
+        on_change={change_groups}
+        on_toggle_exercise={(exercise_key) => set_expanded_exercise_key(
+          (current_exercise_key) => current_exercise_key === exercise_key ? '' : exercise_key,
+        )}
+        disabled={false}
+      />
       <WorkoutFloatingActions exercises={exercises.data} exercise_groups={exercise_groups} on_add_exercise={add_exercise} on_open_library={on_open_library} />
     </>}
     {archived_groups.length > 0 && <section className="workoutBuilder" aria-labelledby="archived-workout-heading">

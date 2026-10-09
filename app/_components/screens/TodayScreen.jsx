@@ -4,6 +4,7 @@ import { useLanguage } from '../../_hooks/useLanguage';
 import { useEffect, useState } from 'react';
 import MaterialIcon from '../ui/MaterialIcon';
 import ActionModal from '../ui/ActionModal';
+import WorkoutTimer from '../workout/WorkoutTimer';
 
 function get_workout_clock(timezone, current_time) {
   const clock_parts = new Intl.DateTimeFormat('en-CA', {
@@ -34,7 +35,7 @@ function is_workout_time_late(workout_date, workout_time, timezone, current_time
     && scheduled_hour * 3600 + scheduled_minute * 60 < current_clock.seconds;
 }
 
-export default function TodayScreen({ data, pending, revision, on_unauthorized, on_action, on_checkin, on_open_memory, on_open_records, on_open_workout, on_open_settings, on_refresh }) {
+export default function TodayScreen({ user_uuid, data, pending, revision, on_unauthorized, on_action, on_checkin, on_open_memory, on_open_records, on_open_workout, on_open_settings, on_open_challenges, on_refresh }) {
   const { t, language } = useLanguage();
   const [selected_action, set_selected_action] = useState(null);
   const [current_time, set_current_time] = useState(() => new Date());
@@ -75,7 +76,9 @@ export default function TodayScreen({ data, pending, revision, on_unauthorized, 
       <button className="wideButton primary" type="button" disabled={pending} onClick={primary_action}><MaterialIcon>{is_completed ? 'check_circle' : is_finished ? 'event' : session_status === 'started' ? 'photo_camera' : 'north_east'}</MaterialIcon>{pending ? t('기록 중…') : action_label}</button>
       {!is_finished && <div className="secondaryActions">{can_start && <button className="quietButton" type="button" disabled={pending || !can_snooze} onClick={() => open_action_modal('snooze')}>{is_scheduled_late ? t('미루기 불가') : session?.snooze_count ? t('미루기 사용함') : t('30분 뒤에')}</button>}<button className="quietButton" type="button" disabled={pending} onClick={() => open_action_modal('rest')}>{t('오늘은 휴식')}</button></div>}
     </article>
+    <WorkoutTimer user_uuid={user_uuid} is_active on_unauthorized={on_unauthorized} />
     {!is_finished && <button className="quietButton directCheckin" type="button" disabled={pending} onClick={on_checkin}><MaterialIcon>photo_camera</MaterialIcon>{t('이미 운동했다면, 바로 인증')}</button>}
+    <button className="challengeEntry" type="button" disabled={pending} onClick={on_open_challenges}><span className="memoryIcon"><MaterialIcon>groups</MaterialIcon></span><span><strong>{t('내 챌린지')}</strong><small>{t('친구와 운동 약속을 만들고 진행 상황을 확인합니다.')}</small></span><MaterialIcon>chevron_right</MaterialIcon></button>
     <section className="memorySection"><div className="sectionHeading"><h2>{t('지난번의 나')}</h2><button className="quietButton" type="button" disabled={pending} onClick={on_open_workout}>{t('세트 기록')}<MaterialIcon>arrow_forward</MaterialIcon></button></div>{memory ? <button type="button" className="memoryRow" disabled={pending} onClick={() => on_open_memory(memory)}><span className="memoryIcon"><MaterialIcon>fitness_center</MaterialIcon></span><span className="memorySummary"><strong>{memory.note || memory.title}</strong><time dateTime={memory.workout_date}>{format_workout_date(memory.workout_date, language)}</time></span><MaterialIcon>chevron_right</MaterialIcon></button> : <p className="emptyState">{t('보여줄 과거는 아직 없다. 오늘부터 남기자.')}</p>}</section>
     <button className="quietButton refreshButton" type="button" disabled={pending} onClick={on_refresh}><MaterialIcon>refresh</MaterialIcon>{t('최신 기록 불러오기')}</button>
     <ActionModal action={selected_action} pending={pending} on_confirm={confirm_action} on_close={() => set_selected_action(null)} />
