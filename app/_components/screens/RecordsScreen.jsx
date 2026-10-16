@@ -1,3 +1,4 @@
+import InfoTooltip from '../ui/InfoTooltip';
 import { useLanguage } from '../../_hooks/useLanguage';
 import { useEffect, useState } from 'react';
 import useApiResource from '../../_hooks/useApiResource';
@@ -5,7 +6,10 @@ import RequestState from '../ui/RequestState';
 import MaterialIcon from '../ui/MaterialIcon';
 import { format_workout_date } from '../../_lib/i18n';
 import ExerciseProgress from '../records/ExerciseProgress';
+import WeeklyMuscleActivity from '../records/WeeklyMuscleActivity';
 import WeeklyShare from '../sharing/WeeklyShare';
+import { format_workout_duration } from '../../_lib/workoutTime';
+import records_styles from '../reports/MuscleActivityReport.module.css';
 
 const day_names = ['일', '월', '화', '수', '목', '금', '토'];
 
@@ -58,20 +62,20 @@ export default function RecordsScreen({ revision, on_unauthorized, initial_tab, 
 
   return <section className="viewPanel isVisible">
     <header className="pageHeader"><div><p className="eyebrow">{t('이거 봐봐, 너가 이만큼 해냈어.')}</p><h1>{t('보이는 만큼,\n성장했다는 증거.')}</h1></div></header>
-    <button type="button" className="shareEntry" aria-pressed={selected_tab === 'share'} onClick={() => set_selected_tab('share')}><span><strong>{t('나의 변화 리포트')}</strong><small>{t('변화의 근거를 모아, 나만의 리포트로.')}</small></span><MaterialIcon>ios_share</MaterialIcon></button>
-    <div className="tabs" aria-label={t("기록 보기")}>{[['calendar', t("캘린더")], ['list', t("운동 목록")], ['progress', t("성장 추이")], ['stats', t("통계")]].map(([tab, label]) => <button type="button" key={tab} className={selected_tab === tab ? 'isActive' : ''} aria-pressed={selected_tab === tab} onClick={() => set_selected_tab(tab)}>{label}</button>)}</div>
+    <div className="infoEntry"><button type="button" className="shareEntry" aria-pressed={selected_tab === 'share'} onClick={() => set_selected_tab('share')}><span><strong>{t('나의 변화 리포트')}</strong><small>{t('변화의 근거를 모아, 나만의 리포트로.')}</small></span><MaterialIcon>ios_share</MaterialIcon></button></div>
+    <div className={`tabs ${records_styles.recordsTabs}`} aria-label={t("기록 보기")}>{[['calendar', t("캘린더")], ['list', t("운동 목록")], ['muscles', t("근육 활동")], ['progress', t("성장 추이")], ['stats', t("통계")]].map(([tab, label]) => <button type="button" key={tab} className={selected_tab === tab ? 'isActive' : ''} aria-pressed={selected_tab === tab} onClick={() => set_selected_tab(tab)}>{label}</button>)}</div>
     {selected_tab === 'share' && <WeeklyShare revision={revision} on_unauthorized={on_unauthorized} timezone={timezone} />}
     {selected_tab === 'progress' && <ExerciseProgress revision={revision} on_unauthorized={on_unauthorized} timezone={timezone} />}
+    {selected_tab === 'muscles' && <WeeklyMuscleActivity revision={revision} on_unauthorized={on_unauthorized} timezone={timezone} initial_workout_date={initial_workout_date} />}
     {['calendar', 'list'].includes(selected_tab) && <div className="calendarHeader">
       <button className="textButton" aria-label={t("이전 달")} disabled={year === 2000 && month === 1} onClick={() => change_month(-1)}>‹</button>
       <strong>{format_workout_date(`${year}-${String(month).padStart(2, '0')}-01`, language, { year: 'numeric', month: 'long' })}</strong>
       <button className="textButton" aria-label={t("다음 달")} disabled={year === 2100 && month === 12} onClick={() => change_month(1)}>›</button>
     </div>}
-    {!['progress', 'share'].includes(selected_tab) && <RequestState loading={active_resource.loading} error={active_resource.error} on_retry={() => set_reload_count((value) => value + 1)} />}
+    {!['progress', 'share', 'muscles'].includes(selected_tab) && <RequestState loading={active_resource.loading} error={active_resource.error} on_retry={() => set_reload_count((value) => value + 1)} />}
     {selected_tab === 'stats' && stats.data && <>
-      <p className="infoText">{t("전체 기간 · 실제 저장된 기록 기준")}</p>
       <section className="statsChartCard" aria-labelledby="stats-chart-title">
-        <div className="statsChartHeading"><div><p className="cardKicker">{t("한눈에 보기")}</p><h2 id="stats-chart-title">{t("운동 기록 분포")}</h2></div><span>{stats.data.total_count}{t("회")}</span></div>
+        <div className="statsChartHeading"><div><p className="cardKicker">{t("한눈에 보기")}</p><h2 id="stats-chart-title">{t("운동 기록 분포")}<InfoTooltip label={t('운동 기록 분포')}><span className="infoTooltipParagraph">{t("전체 기간 · 실제 저장된 기록 기준")}</span><span className="infoTooltipParagraph">{t("상태별 기록 횟수 비교")}</span></InfoTooltip></h2></div><span>{stats.data.total_count}{t("회")}</span></div>
         <div className="statsChart" role="img" aria-label={stat_chart_fields.map(({ field_name, label }) => t("{0} {1}회", [label, stats.data[field_name]])).join(', ')}>
           {stat_chart_fields.map(({ field_name, label, color }) => {
             const bar_height = stats.data[field_name] ? Math.max(8, Math.round((stats.data[field_name] / stat_chart_max) * 100)) : 0;
@@ -81,7 +85,6 @@ export default function RecordsScreen({ revision, on_unauthorized, initial_tab, 
             </div>;
           })}
         </div>
-        <p className="statsChartCaption">{t("상태별 기록 횟수 비교")}</p>
       </section>
       <dl className="statsGrid">{Object.entries(stat_labels).map(([field_name, label]) => <div className="settingsCard" key={field_name}><dt>{label}</dt><dd>{stats.data[field_name]}{t("회")}</dd></div>)}</dl>
     </>}
@@ -113,7 +116,7 @@ export default function RecordsScreen({ revision, on_unauthorized, initial_tab, 
       <div className="recentHeading"><h2>{selected_tab === 'list' ? t("운동 목록") : t("이번 달 기록")}</h2><span>{records.data.pagination.total}{t("건")}</span></div>
       <div className="recordList">{records.data.records.length ? records.data.records.map((record) => {
         const is_focused_record = record.session_uuid === focus_record_uuid;
-        return <article className={'recordEntry' + (is_focused_record ? ' isFocused' : '')} id={`record-${record.session_uuid}`} tabIndex={is_focused_record ? -1 : undefined} aria-label={is_focused_record ? t("{0} {1} 기록", [record.date, record.title]) : undefined} key={record.session_uuid}><button className="recordItem recordItemButton" type="button" aria-label={t("{0} {1}, 해당 기록으로 이동", [record.date, record.title])} onClick={() => on_open_record(record)}><time className="recordDate" dateTime={record.workout_date}>{record.date}</time><span className="recordTitle">{record.title}</span><span className="recordMeta">{record.verification_type === 'photo' ? t("사진 인증") : record.status}</span><span className="recordOpenLabel">{t("해당 기록으로 이동")}<MaterialIcon>arrow_forward</MaterialIcon></span></button></article>;
+        return <article className={'recordEntry' + (is_focused_record ? ' isFocused' : '')} id={`record-${record.session_uuid}`} tabIndex={is_focused_record ? -1 : undefined} aria-label={is_focused_record ? t("{0} {1} 기록", [record.date, record.title]) : undefined} key={record.session_uuid}><button className="recordItem recordItemButton" type="button" aria-label={t("{0} {1}, 해당 기록으로 이동", [record.date, record.title]) + (record.workout_time ? ` · ${t('운동 시간')} ${format_workout_duration(record.workout_time.measured_seconds, language)}` : '')} onClick={() => on_open_record(record)}><time className="recordDate" dateTime={record.workout_date}>{record.date}</time><span className="recordTitle">{record.title}</span><span className="recordMeta">{record.verification_type === 'photo' ? t("사진 인증") : record.status}</span><span className="recordOpenLabel">{t("해당 기록으로 이동")}<MaterialIcon>arrow_forward</MaterialIcon></span>{record.workout_time && <span className="recordDuration">{t('운동 시간')} · {format_workout_duration(record.workout_time.measured_seconds, language)}</span>}</button></article>;
       }) : <p className="emptyState">{t("이 달에 저장된 운동 기록이 없습니다.")}</p>}</div>
     </>}
   </section>;

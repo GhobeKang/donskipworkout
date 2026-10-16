@@ -1,0 +1,63 @@
+.panel { min-width: 0; border: 1px solid var(--line); border-radius: var(--card-radius); background: var(--card); }
+.panel > summary { display: list-item; min-height: 76px; padding: 16px; cursor: pointer; }
+.panel > summary::marker { color: var(--accent-text); }
+.panel > summary > span { display: inline-grid; width: calc(100% - 20px); vertical-align: middle; }
+.panel > summary strong { font-size: 16px; }
+.panel > summary small { margin-top: 4px; color: var(--muted); font-size: 12px; }
+.panel > summary:focus-visible, .mapViewport:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 3px; border-radius: 12px; }
+.explorer { display: grid; gap: 16px; padding: 0 14px 16px; }
+.explorer p, .explorer h3 { margin: 0; }
+.description, .note, .inspectedMuscle, .emptySelection { font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
+.toolbar, .selectionHeading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+.viewSwitch, .zoomControls { display: flex; align-items: center; gap: 4px; }
+.explorer button { min-height: 44px; min-width: 44px; padding: 8px; color: var(--white); background: var(--card); border: 1px solid var(--line); border-radius: 10px; }
+.viewSwitch button { min-width: 58px; font-size: 13px; }
+.viewSwitch button[aria-pressed="true"] { color: var(--on-orange); background: var(--orange); border-color: var(--orange); font-weight: 700; }
+.zoomControls button { display: grid; place-items: center; padding: 0; }
+.zoomControls output { min-width: 40px; text-align: center; font-size: 11px; font-variant-numeric: tabular-nums; }
+.colorPicker legend { margin-bottom: 8px; font-size: 12px; font-weight: 600; }
+.colorOptions { display: flex; flex-wrap: wrap; gap: 4px; }
+.colorOption > span { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--swatch-color); color: #fff; font-weight: 800; text-shadow: 0 1px 2px #000; }
+.colorOption[aria-pressed="true"] { border: 2px solid var(--white); padding: 7px; }
+.explorer .applyColor { font-size: 11px; }
+.mapViewport { height: 440px; min-width: 0; overflow: auto; border: 1px solid var(--line); border-radius: 16px; background: var(--bg); overscroll-behavior: contain; scrollbar-gutter: stable; }
+.diagram { --muscle-neutral: #a9b1b4; --body-neutral: #e1e5e6; display: block; min-width: 100%; height: auto; }
+.bodyBase { pointer-events: none; }
+.bodyBase path:not([fill="none"]) { fill: var(--body-neutral); }
+.muscleRegion { cursor: pointer; outline: none; }
+.muscleRegion path { fill: var(--region-color, var(--muscle-neutral)); transition: fill 160ms, stroke 160ms; }
+.muscleRegion:hover path, .muscleRegion:focus-visible path { stroke: var(--white); stroke-width: 2px; }
+.isSelected path { stroke: var(--white); stroke-width: 0.75px; }
+.inspectedMuscle { display: grid; align-content: start; gap: 2px; min-height: 40px; }
+.inspectedMuscle strong { color: var(--white); font-size: 13px; }
+.inspectedMuscle > span { font-size: 11px; }
+.selection { padding-top: 12px; border-top: 1px solid var(--line); }
+.selectionHeading h3 { font-size: 13px; }
+.selectionHeading button { font-size: 11px; }
+.selection .emptySelection { margin-top: 8px; }
+.selectedList, .results { margin: 10px 0 0; padding: 0; list-style: none; max-height: 240px; overflow-y: auto; overscroll-behavior: contain; }
+.selectedList li { display: flex; align-items: center; gap: 4px; padding: 4px 0; }
+.selectedColor { display: grid; place-items: center; flex-shrink: 0; width: 44px; height: 44px; }
+.selectedColor input { width: 40px; height: 40px; padding: 3px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); cursor: pointer; }
+.explorer .selectedName { min-width: 0; flex: 1; border-color: transparent; background: var(--bg); text-align: left; overflow-wrap: anywhere; font-size: 12px; }
+.selectedList li > button:last-child { display: grid; place-items: center; padding: 0; }
+.muscleList { padding-top: 12px; border-top: 1px solid var(--line); }
+.muscleList summary { min-height: 44px; padding: 10px 0; cursor: pointer; font-size: 13px; font-weight: 600; }
+.muscleList summary:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 2px; }
+.listFilters { display: grid; gap: 6px; }
+.listFilters label { font-size: 12px; color: var(--muted); }
+.listFilters input, .listFilters select { min-width: 0; width: 100%; min-height: 44px; padding: 10px; border: 1px solid var(--line); border-radius: 10px; color: var(--white); background: var(--bg); font-size: 13px; }
+.listFilters label:not(:first-child) { margin-top: 4px; }
+.explorer .resultCount { margin-top: 12px; font-size: 11px; color: var(--muted); }
+.results button { display: flex; align-items: center; justify-content: space-between; width: 100%; margin-bottom: 5px; gap: 8px; text-align: left; }
+.results button > span:first-child { min-width: 0; display: grid; }
+.results button strong { font-size: 12px; overflow-wrap: anywhere; }
+.results button small { color: var(--muted); font-size: 10px; }
+.results button[aria-pressed="true"] { border-color: var(--accent-text); }
+.results button > span:last-child { color: var(--accent-text); font-weight: 700; }
+.credits { color: var(--muted); font-size: 10px; overflow-wrap: anywhere; }
+.credits a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+.loading { padding: 0 16px 16px; color: var(--muted); font-size: 12px; }
+@media (max-width: 360px) { .explorer { padding-left: 10px; padding-right: 10px; } .mapViewport { height: 400px; } .toolbar { gap: 6px; } .viewSwitch button { min-width: 48px; } }
+@media (prefers-color-scheme: dark) { .diagram { --muscle-neutral: #89959b; --body-neutral: #424c52; } }
+@media (prefers-reduced-motion: reduce) { .muscleRegion path { transition: none; } }

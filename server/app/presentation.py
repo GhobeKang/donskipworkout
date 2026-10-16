@@ -110,7 +110,7 @@ def progress_message_for(roast_level, current_session, is_scheduled_day):
     return level_messages.get(progress_status, hero_quotes.get(roast_level, hero_quotes['off']))
 
 
-def session_output(session, today):
+def session_output(session, today, workout_time=None):
     status = effective_status(session, today)
     return {
         'session_uuid': session.session_uuid,
@@ -142,6 +142,7 @@ def session_output(session, today):
         if session.completed_at
         else None,
         'exercise_groups': workout_groups_output(session.workout_sets),
+        'workout_time': workout_time,
     }
 
 

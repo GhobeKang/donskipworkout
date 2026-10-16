@@ -20,7 +20,11 @@ export default function CheckinScreen({ session, workout_date, pending, on_back,
     if (pending || is_finished || !photo_selection || !catalog.data) return;
     const upload_body = new FormData();
     upload_body.append('photo', photo_selection.photo_blob, 'workout.jpg');
-    upload_body.append('frame_id', photo_selection.frame_id);
+    upload_body.append('captured_at', photo_selection.captured_at);
+    upload_body.append('capture_timezone', photo_selection.capture_timezone);
+    upload_body.append('workout_summary_hash', photo_selection.workout_summary_hash);
+    upload_body.append('branding_language', photo_selection.branding_language);
+    upload_body.append('character_id', photo_selection.character_id);
     upload_body.append('filter_id', catalog.data.filter.filter_id);
     upload_body.append('effect_version', String(catalog.data.effect_version));
     upload_body.append('workout_date', workout_date);
@@ -34,7 +38,7 @@ export default function CheckinScreen({ session, workout_date, pending, on_back,
     {session?.photo_path && <SavedPhoto photo_path={session.photo_path} />}
     {!is_finished && <>
       <RequestState loading={catalog.loading} error={catalog.error} on_retry={() => set_catalog_revision((value) => value + 1)} />
-      {catalog.data && !catalog.error && <PhotoComposer key={`${workout_date}:${catalog_revision}`} catalog={catalog.data} disabled={pending} on_change={set_photo_selection} />}
+      {catalog.data && !catalog.error && <PhotoComposer key={`${workout_date}:${catalog_revision}`} catalog={catalog.data} workout_date={workout_date} disabled={pending} on_change={set_photo_selection} />}
     </>}
     <button className="textButton" type="button" onClick={on_open_workout} disabled={pending}>{t("운동 세트 기록 열기")}</button>
     {!is_finished && <form onSubmit={submit_photo}>

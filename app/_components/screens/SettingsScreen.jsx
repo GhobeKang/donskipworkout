@@ -1,11 +1,6 @@
 import { useLanguage } from '../../_hooks/useLanguage';
-import { useEffect, useState } from 'react';
-import { Capacitor } from '@capacitor/core';
-import {
-  inspect_workout_notifications,
-  open_exact_alarm_settings,
-  schedule_notification_debug_test,
-} from '../../_lib/notifications';
+import { useState } from 'react';
+import ServerNotificationSettings from '../settings/ServerNotificationSettings';
 import MaterialIcon from '../ui/MaterialIcon';
 import ToggleButton from '../ui/ToggleButton';
 import LanguageSelector from '../settings/LanguageSelector';
@@ -14,7 +9,11 @@ import WorkoutLocationSettings from '../settings/WorkoutLocationSettings';
 
 const notification_fields = [
   { field_name: 'notification_workout_enabled', label: '운동 30분 전 알림' },
-  { field_name: 'notification_missed_enabled', label: '운동 시간 30분 후부터 재촉 알림 3회' },
+  {
+    field_name: 'notification_missed_enabled',
+    label: '미인증 재촉 알림',
+    description: '출발 전에는 예정 시각 30·60·90분 뒤, 출발 후에는 3시간 뒤 미인증일 때 한 번만 보내요.',
+  },
   { field_name: 'notification_snooze_enabled', label: '미루기 30분 뒤 알림' },
   {
     field_name: 'notification_free_workout_enabled',
@@ -23,15 +22,9 @@ const notification_fields = [
   },
 ];
 
-export default function SettingsScreen({ user_uuid, data, options, pending, on_save, on_notify }) {
+export default function SettingsScreen({ user_uuid, data, options, pending, on_save, on_notify, on_unauthorized }) {
   const { t, language } = useLanguage();
   const [draft, set_draft] = useState(data);
-  const [notification_debug_enabled, set_notification_debug_enabled] = useState(false);
-  const [notification_debug_result, set_notification_debug_result] = useState(null);
-  const [notification_debug_busy, set_notification_debug_busy] = useState(false);
-  useEffect(() => {
-    set_notification_debug_enabled(Capacitor.isNativePlatform());
-  }, []);
   const change_field = (field_name, value) => set_draft((current) => ({ ...current, [field_name]: value }));
   const toggle_day = (day_index) => set_draft((current) => ({
     ...current, schedule_days: current.schedule_days.includes(day_index)
@@ -39,30 +32,6 @@ export default function SettingsScreen({ user_uuid, data, options, pending, on_s
       : [...current.schedule_days, day_index].sort(),
   }));
   const is_dirty = JSON.stringify(draft) !== JSON.stringify(data);
-  const inspect_notifications = async (schedule_test) => {
-    set_notification_debug_busy(true);
-    try {
-      const result = schedule_test
-        ? await schedule_notification_debug_test(draft.timezone)
-        : await inspect_workout_notifications(draft.timezone);
-      set_notification_debug_result(result);
-    } catch (error) {
-      set_notification_debug_result({ error: error.message || '알림 진단에 실패했습니다.' });
-    } finally {
-      set_notification_debug_busy(false);
-    }
-  };
-  const open_notification_permission_settings = async () => {
-    set_notification_debug_busy(true);
-    try {
-      const result = await open_exact_alarm_settings();
-      set_notification_debug_result({ exact_alarm_settings: result });
-    } catch (error) {
-      set_notification_debug_result({ error: error.message || '정확한 알람 설정을 열지 못했습니다.' });
-    } finally {
-      set_notification_debug_busy(false);
-    }
-  };
   return <section className="viewPanel isVisible">
     <header className="pageHeader"><div><p className="eyebrow">{t('의지 말고, 장치를 만들어.')}</p><h1>{t('내 운동의 룰.')}</h1></div></header>
     <article className="settingsCard"><LanguageSelector /></article>
@@ -89,19 +58,10 @@ export default function SettingsScreen({ user_uuid, data, options, pending, on_s
         <article className="settingsCard">
           <h2><MaterialIcon>notifications</MaterialIcon>{t(" 알림 설정")}</h2>
           <p className="infoText">{t("정기 운동 알림과 자유운동 날 권유 알림을 각각 설정할 수 있습니다. 앱 알림 권한이 필요합니다.")}</p>
+          <p className="infoText">{t('지금 출발을 누르면 당일 일반 운동 알림은 중단됩니다. 3시간 안에 인증하면 재촉 알림도 보내지 않습니다.')}</p>
           {notification_fields.map(({ field_name, label, description }) => <div className="toggleRow" key={field_name}><span>{t(label)}{description && <small>{t(description)}</small>}</span><ToggleButton active={draft[field_name]} label={t(label)} onClick={() => change_field(field_name, !draft[field_name])} /></div>)}
         </article>
-        {notification_debug_enabled && <article className="settingsCard">
-          <h2><MaterialIcon>bug_report</MaterialIcon>알림 디버그</h2>
-          <p className="infoText">15초 뒤 테스트 알림을 예약하고 권한 및 대기 중인 운동 알림을 확인합니다.</p>
-          <p className="infoText">{t('scheduled_at은 UTC, scheduled_local은 선택한 시간대의 시각입니다.')}</p>
-          <div className="secondaryActions">
-            <button className="quietButton" type="button" disabled={notification_debug_busy} onClick={() => inspect_notifications(false)}>예약 상태 확인</button>
-            <button className="quietButton" type="button" disabled={notification_debug_busy} onClick={() => inspect_notifications(true)}>15초 테스트 알림</button>
-            <button className="quietButton" type="button" disabled={notification_debug_busy} onClick={open_notification_permission_settings}>정확한 알람 설정</button>
-          </div>
-          {notification_debug_result && <pre className="infoText" aria-live="polite">{JSON.stringify(notification_debug_result, null, 2)}</pre>}
-        </article>}
+        <ServerNotificationSettings user_uuid={user_uuid} on_notify={on_notify} on_unauthorized={on_unauthorized} />
         <article className="settingsCard"><h2>{t("기록 재사용")}</h2><div className="toggleRow"><span>{t("과거 기록 다시 보기")}<small>{t("동의한 과거 기록을 오늘 화면에서 보여줘요.")}</small></span><ToggleButton active={draft.reuse_enabled} label={t("과거 기록 다시 보기")} onClick={() => change_field('reuse_enabled', !draft.reuse_enabled)} /></div></article>
         <article className="settingsCard roastCard">
           <h2><MaterialIcon>local_fire_department</MaterialIcon>{t(" 자극 강도 설정")}</h2>

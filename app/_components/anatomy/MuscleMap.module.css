@@ -1,0 +1,9 @@
+.diagram { --muscle-neutral: #b7bec1; --body-neutral: #e1e5e6; display: block; min-width: 100%; height: auto; }
+.bodyBase { pointer-events: none; }
+.bodyBase path:not([fill="none"]) { fill: var(--body-neutral); }
+.muscleRegion { cursor: pointer; outline: none; }
+.muscleRegion path { fill: var(--region-color, var(--muscle-neutral)); transition: fill 160ms, stroke 160ms; }
+.muscleRegion:hover path, .muscleRegion:focus-visible path, .isInspected path { stroke: var(--white); stroke-width: 2px; }
+.isCoarse path { stroke: var(--white); stroke-width: 2px; stroke-dasharray: 3 3; }
+@media (prefers-color-scheme: dark) { .diagram { --muscle-neutral: #89959b; --body-neutral: #424c52; } }
+@media (prefers-reduced-motion: reduce) { .muscleRegion path { transition: none; } }

@@ -82,12 +82,14 @@ export default function WorkoutLocationSettings({ user_uuid, on_notify }) {
     };
     await WorkoutLocation.savePlace(saved_place);
     set_status((current) => ({ ...current, name: saved_place.name, latitude: saved_place.latitude, longitude: saved_place.longitude }));
+    window.dispatchEvent(new Event('workout-place-changed'));
     set_position(null);
     on_notify(t('헬스장 위치를 저장했습니다.'));
   });
 
   const clear_place = () => run_action(async () => {
     await WorkoutLocation.clearPlace();
+    window.dispatchEvent(new Event('workout-place-changed'));
     set_status((current) => ({ ...current, name: '', latitude: null, longitude: null, registered: false }));
     set_place_name('');
     set_position(null);
@@ -97,6 +99,7 @@ export default function WorkoutLocationSettings({ user_uuid, on_notify }) {
   return <article className="settingsCard">
     <h2><MaterialIcon>location_on</MaterialIcon>{t(' 운동 장소 알림')}</h2>
     <p className="infoText">{t('장소에 도착해 잠시 머무르면 운동 시작 알림을 보냅니다. 알림을 눌러야 타이머가 시작됩니다.')}</p>
+    <p className="infoText">{t('등록 위치 반경 150m를 벗어나면 운동을 자동으로 종료하고 그때까지의 운동 시간을 저장합니다.')}</p>
     {!is_native ? <p className="infoText">{t('위치 알림은 Android·iOS 앱에서 사용할 수 있습니다.')}</p> : <>
       {status?.name && <section className="savedWorkoutLocation" aria-label={t('저장된 헬스장')}>
         <p>{t('저장된 헬스장')}</p>

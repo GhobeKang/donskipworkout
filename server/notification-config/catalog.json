@@ -15,7 +15,19 @@
     "missed": {
       "title": "아직 운동 인증이 없어요",
       "body": "오늘 운동을 마쳤다면 사진이나 수동 출석으로 기록해 주세요."
+    },
+    "departure_unverified": {
+      "title": "출발 후 3시간, 인증을 확인해 주세요",
+      "body": "출발한 지 3시간이 지났어요. 운동을 마쳤다면 사진이나 수동 출석으로 인증해 주세요."
     }
+  },
+  "departure_messages_by_roast_level": {
+    "spicy": [
+      "출발한 지 3시간이야. 운동했으면 인증까지 끝내. 기록이 아직 없어."
+    ],
+    "hot": [
+      "출발했다고 끝난 게 아니야. 3시간이 지났는데 인증은 아직 없어. 운동했으면 인증으로 마무리해."
+    ]
   },
   "messages_by_roast_level": {
     "spicy": [
@@ -52,5 +64,75 @@
       "완벽하게 할 날 기다리다가 대충이라도 할 날을 또 버리네. 오늘은 대충이라도 하러 가.",
       "달라지고 싶다는 말은 충분히 들었어. 오늘도 똑같이 미룰 건지, 이번엔 나갈 건지 행동으로 보여 줘."
     ]
+  },
+  "localized": {
+    "en": {
+      "defaults": {
+        "workout": {
+          "title": "Time to get ready",
+          "body": "Your workout is at {workout_time}. It starts in 30 minutes."
+        },
+        "free_workout": {
+          "title": "How about some light movement?",
+          "body": "Today is a free-workout day. How about some light movement at {workout_time}?"
+        },
+        "snooze": {
+          "title": "Snooze time is over",
+          "body": "Your 30-minute snooze is over. Time to check in."
+        },
+        "missed": {
+          "title": "No workout check-in yet",
+          "body": "Finished your workout? Check in with a photo or manually."
+        },
+        "departure_unverified": {
+          "title": "Three hours since departure: check in",
+          "body": "It's been three hours since you left. If you've finished your workout, save a photo or manual check-in."
+        }
+      },
+      "departure_messages_by_roast_level": {
+        "spicy": [
+          "You left three hours ago. If you worked out, finish the check-in. Your record is still missing."
+        ],
+        "hot": [
+          "Saying you left isn't the finish line. Three hours have passed and there's still no check-in. If you worked out, record it."
+        ]
+      },
+      "messages_by_roast_level": {
+        "spicy": [
+          "You said you were going. How long are you just going to talk about it? Get up.",
+          "Just go. You'll do something once you get there. Thinking about it won't build muscle.",
+          "Still deciding? Think on the way. Put your shoes on first.",
+          "You said later a while ago. Later is now. Let's go.",
+          "You don't feel like going. Go anyway. If you still hate it, do one exercise and head home.",
+          "If you're going, go now. How long is this workout trailer going to last?",
+          "Stop looking for motivation on the couch. It's probably at the gym. Go find it.",
+          "Leaving it to tomorrow's you again? They won't feel like going either. You go.",
+          "You can lie down after your workout. Get the order right.",
+          "Waiting until you're ready? Shoes on. You're ready. Let's go.",
+          "It's always a hassle before you go. We covered that yesterday. Let's move.",
+          "Just show up first. You haven't even arrived yet. Why worry already?",
+          "Enough workout videos. Only the people in them are exercising. Your turn.",
+          "Go do just one exercise. Nobody said more. But go do that one.",
+          "Okay, it's a hassle. You can go while feeling that way."
+        ],
+        "hot": [
+          "You said you'd work out. Why am I taking your words more seriously than you are?",
+          "You want change and comfort at the same time. That's why you're stuck. Go today.",
+          "Stop pretending to decide. You're looking for reasons to skip. Put your shoes on.",
+          "You planned to go every day. Now even once is a negotiation. Keep today's promise.",
+          "Even you don't believe 'starting tomorrow' anymore. Go today and change that.",
+          "Waiting for motivation? Why make a schedule if you cancel whenever you don't feel like it? Go.",
+          "No time to work out, but plenty of time to debate it? Bring those doubts along and go.",
+          "What's one delay? The problem is you use that same excuse every time. Go this time.",
+          "You put so much effort into choosing workout clothes. Put some into wearing them outside.",
+          "Worried you won't do well? Not going means doing nothing. Go and do one thing.",
+          "Who said your future self will be more disciplined? It's still you. Stop postponing today.",
+          "Is a promise to yourself that easy to cancel? Keep your word today.",
+          "You haven't started, but your excuse is already ready. Put that preparation into your workout.",
+          "Waiting for the perfect day costs you another day of doing something. Go do what you can.",
+          "Enough talk about wanting change. Show whether you'll postpone again or walk out the door."
+        ]
+      }
+    }
   }
 }

@@ -6,6 +6,10 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends fonts-noto-cjk \
+    && rm -rf /var/lib/apt/lists/*
+
 RUN addgroup --system --gid 10001 attendance \
     && adduser --system --uid 10001 --ingroup attendance attendance
 
@@ -15,7 +19,7 @@ RUN python -m pip install --no-cache-dir -r requirements.txt
 COPY --chown=attendance:attendance app ./app
 COPY --chown=attendance:attendance notification-config ./notification-config
 
-RUN mkdir -p /app/logs /app/media/photos /app/media/frames \
+RUN mkdir -p /app/logs /app/media/photos \
     && chown -R attendance:attendance /app/logs /app/media
 
 USER attendance

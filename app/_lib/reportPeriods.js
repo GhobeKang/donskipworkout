@@ -6,6 +6,12 @@ export function report_today(timezone = 'Asia/Seoul') {
   return `${date_part('year')}-${date_part('month')}-${date_part('day')}`;
 }
 
+export function report_week_start(workout_date) {
+  const date = new Date(`${workout_date}T00:00:00Z`);
+  date.setUTCDate(date.getUTCDate() - (date.getUTCDay() + 6) % 7);
+  return date.toISOString().slice(0, 10);
+}
+
 function date_string(date) {
   return date.toISOString().slice(0, 10);
 }

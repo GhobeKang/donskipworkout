@@ -85,6 +85,7 @@ def authentication_data(user: userAccount, expires_in: int) -> dict:
             'user_uuid': user.user_uuid,
             'email': user.email,
             'display_name': user.display_name,
+            'community_policy_version': user.community_policy_version,
         },
     }
 

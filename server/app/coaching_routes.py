@@ -6,9 +6,11 @@ from pydantic import Field, field_validator
 from sqlalchemy import select
 
 from .challenge_routes import get_round_for_user, lock_round
+from .community_policy import communityUserDependency
+from .community_safety import blocked_user_ids, require_interaction_allowed
 from .database import coachingQuestion, coachingReply, userAccount
 from .schemas import requestModel
-from .security import databaseDependency, userDependency, utc_now
+from .security import databaseDependency, utc_now
 
 router = APIRouter(prefix='/api/v1/challenge-rounds')
 
@@ -30,7 +32,7 @@ class coachingQuestionInput(coachingMessageInput):
     category: Literal['technique', 'muscle', 'coaching', 'request']
 
 
-def question_scope(current_round, room, user_id):
+def question_scope(database, current_round, room, user_id):
     # Recipient is fixed at creation; a future host must not inherit private history.
     owner_filter = (
         coachingQuestion.host_user_id == user_id
@@ -39,6 +41,7 @@ def question_scope(current_round, room, user_id):
     )
     return select(coachingQuestion).where(
         coachingQuestion.round_id == current_round.round_id, owner_filter,
+        coachingQuestion.author_user_id.not_in(blocked_user_ids(database, user_id)),
     )
 
 
@@ -51,9 +54,13 @@ def require_writable(member, current_round):
 
 def question_output(database, question, *, include_body=False):
     author = database.get(userAccount, question.author_user_id)
+    host = database.get(userAccount, question.host_user_id)
     result = {
         'question_uuid': question.question_uuid,
         'author_name': author.display_name or '참가자',
+        'author_uuid': author.user_uuid,
+        'host_uuid': host.user_uuid,
+        'is_removed': question.is_removed,
         'category': question.category,
         'preview': question.body[:100],
         'awaiting_host': question.awaiting_host,
@@ -67,11 +74,11 @@ def question_output(database, question, *, include_body=False):
 
 @router.get('/{round_uuid}/questions')
 def list_questions(
-    round_uuid: str, user: userDependency, database: databaseDependency,
+    round_uuid: str, user: communityUserDependency, database: databaseDependency,
     before_id: int | None = Query(default=None, gt=0),
 ):
     current_round, room, _ = get_round_for_user(database, round_uuid, user.user_id)
-    query = question_scope(current_round, room, user.user_id)
+    query = question_scope(database, current_round, room, user.user_id)
     if before_id is not None:
         query = query.where(coachingQuestion.question_id < before_id)
     questions = database.scalars(query.order_by(coachingQuestion.question_id.desc()).limit(21)).all()
@@ -85,10 +92,14 @@ def list_questions(
 @router.post('/{round_uuid}/questions', status_code=201)
 def create_question(
     round_uuid: str, payload: coachingQuestionInput,
-    user: userDependency, database: databaseDependency,
+    user: communityUserDependency, database: databaseDependency,
 ):
     current_round, room, member = get_round_for_user(database, round_uuid, user.user_id)
     require_writable(member, current_round)
+    database.scalars(select(userAccount).where(userAccount.user_id.in_(
+        [user.user_id, room.host_user_id],
+    )).order_by(userAccount.user_id).with_for_update()).all()
+    require_interaction_allowed(database, user.user_id, room.host_user_id)
     if room.host_user_id == user.user_id:
         raise HTTPException(403, '참가자만 방장에게 질문을 남길 수 있습니다.')
     lock_round(database, current_round)
@@ -113,11 +124,11 @@ def create_question(
 
 @router.get('/{round_uuid}/questions/{question_uuid}')
 def read_question(
-    round_uuid: str, question_uuid: str, user: userDependency, database: databaseDependency,
+    round_uuid: str, question_uuid: str, user: communityUserDependency, database: databaseDependency,
     before_id: int | None = Query(default=None, gt=0),
 ):
     current_round, room, member = get_round_for_user(database, round_uuid, user.user_id)
-    question = database.scalar(question_scope(current_round, room, user.user_id).where(
+    question = database.scalar(question_scope(database, current_round, room, user.user_id).where(
         coachingQuestion.question_uuid == question_uuid,
     ))
     if question is None:
@@ -130,10 +141,13 @@ def read_question(
     return {
         **question_output(database, question, include_body=True),
         'can_reply': member.participant_status not in {'invited', 'removed', 'withdrawn'}
-        and current_round.status != 'cancelled' and room.host_user_id == question.host_user_id,
+        and current_round.status != 'cancelled' and room.host_user_id == question.host_user_id
+        and not question.is_removed,
         'replies': [{
             'reply_id': reply.reply_id, 'body': reply.body,
             'is_host': reply.sender_user_id == question.host_user_id,
+            'sender_uuid': database.get(userAccount, reply.sender_user_id).user_uuid,
+            'is_removed': reply.is_removed,
             'created_at': reply.created_at.isoformat() + 'Z',
         } for reply in reversed(page)],
         'next_cursor': page[-1].reply_id if len(replies) > 50 else None,
@@ -143,15 +157,23 @@ def read_question(
 @router.post('/{round_uuid}/questions/{question_uuid}/replies', status_code=201)
 def reply_to_question(
     round_uuid: str, question_uuid: str, payload: coachingMessageInput,
-    user: userDependency, database: databaseDependency,
+    user: communityUserDependency, database: databaseDependency,
 ):
     current_round, room, member = get_round_for_user(database, round_uuid, user.user_id)
-    question = database.scalar(question_scope(current_round, room, user.user_id).where(
+    question = database.scalar(question_scope(database, current_round, room, user.user_id).where(
         coachingQuestion.question_uuid == question_uuid,
     ).with_for_update())
     if question is None:
         raise HTTPException(404, '질문을 찾을 수 없습니다.')
     require_writable(member, current_round)
+    other_user_id = (question.author_user_id if user.user_id == question.host_user_id
+                     else question.host_user_id)
+    database.scalars(select(userAccount).where(userAccount.user_id.in_(
+        [user.user_id, other_user_id],
+    )).order_by(userAccount.user_id).with_for_update()).all()
+    require_interaction_allowed(database, user.user_id, other_user_id)
+    if question.is_removed:
+        raise HTTPException(403, '운영 정책에 따라 삭제된 대화에는 답변할 수 없습니다.')
     if room.host_user_id != question.host_user_id:
         raise HTTPException(409, '방장이 변경된 이전 질문은 조회만 가능합니다.')
     existing = database.scalar(select(coachingReply).where(

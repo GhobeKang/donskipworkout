@@ -8,6 +8,7 @@ export default function WorkoutSetBuilder({
   expanded_exercise_key,
   on_change,
   on_toggle_exercise,
+  on_open_area_import,
   disabled,
 }) {
   const { t, language } = useLanguage();
@@ -18,7 +19,10 @@ export default function WorkoutSetBuilder({
   };
 
   return <section className="workoutBuilder" aria-labelledby="workout-builder-heading">
-    <div className="workoutBuilderHeading"><div><h2 id="workout-builder-heading">{t("운동 세트")}</h2><p className="infoText">{t('지난 기록을 불러오고, 오늘의 숫자를 남겨.')}</p></div></div>
+    <div className="workoutBuilderHeading">
+      <div><h2 id="workout-builder-heading">{t("운동 세트")}</h2><p className="infoText">{t('지난 기록을 불러오고, 오늘의 숫자를 남겨.')}</p></div>
+      <button className="textButton workoutAreaImportButton" type="button" disabled={disabled} onClick={on_open_area_import}><MaterialIcon>history</MaterialIcon>{t('부위별 불러오기')}</button>
+    </div>
     {!exercises.length && <div className="emptyState">{t("등록한 운동 종목이 없습니다.")}</div>}
     {exercise_groups.map((group, group_index) => {
       const exercise = exercises.find((item) => item.exercise_source === group.exercise_source && item.exercise_id === group.exercise_id);
@@ -26,6 +30,7 @@ export default function WorkoutSetBuilder({
       const exercise_key = `${group.exercise_source}:${group.exercise_id}`;
       const group_content_id = `workout-group-content-${group.exercise_source}-${group.exercise_id}`;
       const is_expanded = expanded_exercise_key === exercise_key;
+      const previous_sets = group.import_record?.sets || exercise?.last_sets;
       return <article className="workoutGroup" id={`workout-group-${group.exercise_source}-${group.exercise_id}`} key={`${group.exercise_source}:${group.exercise_id}`}>
         <div className="workoutGroupHeading">
           <h3>
@@ -37,8 +42,9 @@ export default function WorkoutSetBuilder({
           </h3>
           <button className="workoutGroupRemove" type="button" aria-label={t("{0} 제거", [exercise_name])} disabled={disabled} onClick={() => on_change(exercise_groups.filter((_, index) => index !== group_index))}><MaterialIcon>close</MaterialIcon></button>
         </div>
+        {group.import_record && <p className="workoutImportSource">{t('{0} 기록 · 최근 같은 부위 운동에서 {1}회 기록', [group.import_record.workout_date, group.import_record.session_count])}</p>}
         <div id={group_content_id} hidden={!is_expanded}>
-          <p className="previousSets">{exercise?.last_sets?.length ? t('지난 기록 · {0}', [exercise.last_sets.map((workout_set) => t('{0}kg × {1}회', [workout_set.weight_kg, workout_set.reps])).join(' / ')]) : t('첫 세트가 기준이 된다.')}</p>
+          <p className="previousSets">{previous_sets?.length ? t('지난 기록 · {0}', [previous_sets.map((workout_set) => t('{0}kg × {1}회', [workout_set.weight_kg, workout_set.reps])).join(' / ')]) : t('첫 세트가 기준이 된다.')}</p>
           <div className="workoutSetLabels"><span>{t("세트")}</span><span>{t("중량 kg")}</span><span>{t("반복 횟수")}</span><span /></div>
           {group.sets.map((workout_set, set_index) => <div className="workoutSetRow" key={set_index}>
             <span>{set_index + 1}</span>

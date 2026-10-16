@@ -27,15 +27,23 @@ class notificationDefaults(BaseModel):
     free_workout: notificationText
     snooze: notificationText
     missed: notificationText
+    departure_unverified: notificationText | None = None
 
 
-class notificationCatalog(BaseModel):
+class notificationCatalogLocale(BaseModel):
     model_config = ConfigDict(extra='forbid')
 
     defaults: notificationDefaults
     messages_by_roast_level: dict[
         Literal['off', 'spicy', 'hot'], Annotated[list[notification_message], Field(max_length=100)]
     ] = Field(default_factory=dict)
+    departure_messages_by_roast_level: dict[
+        Literal['off', 'spicy', 'hot'], Annotated[list[notification_message], Field(max_length=100)]
+    ] = Field(default_factory=dict)
+
+
+class notificationCatalog(notificationCatalogLocale):
+    localized: dict[Literal['en'], notificationCatalogLocale] = Field(default_factory=dict)
 
 
 def read_notification_catalog(catalog_path):

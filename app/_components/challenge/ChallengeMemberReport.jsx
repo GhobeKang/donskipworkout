@@ -2,10 +2,14 @@
 
 import { useLanguage } from '../../_hooks/useLanguage';
 import { member_report_changes, measured_change } from '../../_lib/reportVisibility';
+import { evidence_copy, performance_value } from '../../_lib/reportEvidence';
+import PerformanceEvidence from '../reports/PerformanceEvidence';
+import TeamGrowthGuide from '../reports/TeamGrowthGuide';
 import MaterialIcon from '../ui/MaterialIcon';
+import WorkoutTimeEvidence from '../reports/WorkoutTimeEvidence';
 
 const metric_labels = {
-  attendance: '개인 출석 목표 달성', volume: '총중량의 성장',
+  attendance: '개인 출석 목표 달성', volume: '총중량 변화',
   punctuality: '인증 시간 준수', extra: '추가 운동의 변화',
 };
 const metric_explanations = {
@@ -22,12 +26,16 @@ const exercise_field_labels = {
 export default function ChallengeMemberReport({ report, heading_ref, on_back }) {
   const { language, t } = useLanguage();
   const changes = member_report_changes(report);
+  const evidence = report.growth_evidence || {};
+  const copy = evidence_copy(evidence, language, report.attendance.current_dates.length);
   const number_formatter = new Intl.NumberFormat(language === 'en' ? 'en-US' : 'ko-KR', { maximumFractionDigits: 2 });
   const number = (value) => number_formatter.format(value);
   const change = (value, unit = '') => value > 0 ? t('{0}{1} 증가', [number(value), unit])
-    : t('{0}{1} 감소', [number(Math.abs(value)), unit]);
+    : value < 0 ? t('{0}{1} 감소', [number(Math.abs(value)), unit]) : t('유지');
   const metric_values = (metric) => {
     if (metric.key === 'volume') return t('총중량 {0} → {1}kg', [number(metric.previous), number(metric.current)]);
+    if (metric.previous === null && metric.key === 'attendance') return t('개인 목표 달성 {0}%', [number(metric.current)]);
+    if (metric.previous === null && metric.key === 'punctuality') return t('시간 내 인증 {0}%', [number(metric.current)]);
     if (metric.key === 'attendance') return t('목표 달성 {0}% → {1}%', [number(metric.previous), number(metric.current)]);
     if (metric.key === 'punctuality') return t('시간 내 인증 {0}% → {1}%', [number(metric.previous), number(metric.current)]);
     return t('추가 운동 {0}일 → {1}일', [number(metric.previous), number(metric.current)]);
@@ -41,6 +49,22 @@ export default function ChallengeMemberReport({ report, heading_ref, on_back }) 
     return previous && (measured_change(previous.completed_count, period.completed_count)
       || measured_change(previous.credited_count, period.credited_count));
   });
+  const report_exercises = report.exercises.filter((exercise) => exercise.current_logs.length || exercise.previous_logs.length);
+  const goal_status_labels = { kept: '목표 달성', missed: '목표 미달', rest: '휴식', unknown: '평가 자료 부족', in_progress: '진행 중' };
+  const saved_goal_periods = [...(report.attendance.previous_periods || []), ...report.attendance.periods];
+  const goal_weeks = saved_goal_periods.length > 0 ? saved_goal_periods.map((period) => ({
+    week_start: period.start_date, completed_count: period.completed_count, target_count: period.target_count,
+    status: !Number.isFinite(period.target_count) ? 'unknown' : period.target_count === 0 ? 'rest'
+      : period.completed_count >= period.target_count ? 'kept' : 'missed',
+  })) : evidence.consistency?.weeks || [];
+  const training_rows = [
+    { key: 'attendance', label: '인증 출석', previous: report.attendance.previous_dates.length, current: report.attendance.current_dates.length, unit: '일', comparable: report.attendance.previous_dates.length > 0 },
+    ...['workout_days', 'set_count', 'rep_count', 'volume_kg'].map((field) => ({
+      key: field, label: exercise_field_labels[field], previous: report.previous_totals[field], current: report.current_totals[field],
+      unit: { workout_days: '일', set_count: '세트', rep_count: '회', volume_kg: 'kg' }[field],
+      comparable: report.previous_totals.workout_days > 0 && report.current_totals.workout_days > 0,
+    })),
+  ];
 
   return <section className="challengeMemberReport" aria-labelledby="challenge-member-report-heading">
     <header className="challengeReportDetailHeader">
@@ -48,20 +72,50 @@ export default function ChallengeMemberReport({ report, heading_ref, on_back }) 
       <h3 id="challenge-member-report-heading" tabIndex={-1} ref={heading_ref}>{report.display_name}</h3>
       {participant_label && <span className="challengeReportBadge">{participant_label}</span>}
     </header>
-    {changes.has_changes && Number.isFinite(report.total_score) && <div className="challengeGrowthHero">
-      <span>{t('성장·수행 종합 점수')}</span>
-      <strong>{number(report.total_score)}<small> / 100</small></strong>
-      <p>{t('종합 점수는 전체 평가 항목으로 계산하며, 상세에는 확인된 변화만 표시합니다.')}</p>
-    </div>}
+    <div className="challengeGrowthHero">
+      <span>{t('수행·유지·복귀의 근거')}</span>
+      <h4>{copy.title}</h4>
+      {copy.highlights.length > 0 && <ul className="reportEvidence">{copy.highlights.map((highlight) => <li key={highlight}>{highlight}</li>)}</ul>}
+      <p>{t('총중량·세트·운동일의 증감은 훈련량 참고 지표입니다. 총중량 감소만으로 수행 저하를 판단하지 않습니다.')}</p>
+      {copy.focus && <p>{copy.focus}</p>}
+    </div>
     <div className="challengeReportPeriods">
       <div><span>{t('이전 기간')}</span><strong>{report.previous_period.start_date} — {report.previous_period.end_date}</strong></div>
       <div><span>{t('챌린지 기간')}</span><strong>{report.current_period.start_date} — {report.current_period.end_date}</strong></div>
     </div>
-    {!changes.has_changes && <p className="emptyState">{t('표시할 수 있는 변화가 없습니다.')}</p>}
-    {changes.totals.length > 0 && <div className="challengeReportTotals" aria-label={t('수행 요약')}>
-      {changes.totals.map((total) => <div key={total.key}><span>{t(total.label)}</span><strong>{number(total.previous)} → {number(total.current)}<small> {t(total.unit)}</small></strong></div>)}
-    </div>}
-    {changes.metrics.length > 0 && <><h4>{t('점수의 근거')}</h4>
+    <TeamGrowthGuide evidence={evidence} />
+    {evidence.workout_time && <details className="reportSection" open>
+      <summary><span>{t('운동 시간의 변화')}</span><small>{t('측정 근거 보기')}</small></summary>
+      <div className="reportSectionBody"><WorkoutTimeEvidence summary={evidence.workout_time} show_days /></div>
+    </details>}
+    {evidence.performance && <details className="reportSection" open>
+      <summary><span>{t('동일 조건의 수행 변화')}</span><strong>{performance_value(evidence.performance, language)}</strong><small>{t('측정 근거 보기')}</small></summary>
+      <div className="reportSectionBody"><PerformanceEvidence performance={evidence.performance} /></div>
+    </details>}
+    {evidence.consistency && <details className="reportSection" open>
+      <summary><span>{t('지켜온 운동 목표')}</span><strong>{evidence.consistency.period_evaluated_weeks > 0 ? t('완료된 목표 {0}/{1}주 달성', [evidence.consistency.period_kept_weeks, evidence.consistency.period_evaluated_weeks]) : t('개인 목표 평가 자료 부족')}</strong><small>{t('측정 근거 보기')}</small></summary>
+      <div className="reportSectionBody">
+        <p className="infoText">{t('연속 달성은 이전·현재 비교 기간 안에서만 계산합니다. 각 주는 회차 시작일부터 7일 구간입니다.')}</p>
+        <table className="reportDataTable isGoals"><caption className="srOnly">{t('주차별 목표와 실제 운동')}</caption><thead><tr><th scope="col">{t('주 시작')}</th><th scope="col">{t('실제')}</th><th scope="col">{t('목표')}</th><th scope="col">{t('결과')}</th></tr></thead><tbody>{goal_weeks.map((week) => <tr key={week.week_start}>
+          <th scope="row">{week.week_start}<small>{t(week.week_start < report.current_period.start_date ? '이전 기간' : '챌린지 기간')}</small></th><td>{t('운동 {0}회', [week.completed_count])}</td><td>{Number.isFinite(week.target_count) ? t('운동 {0}회', [week.target_count]) : '—'}</td><td>{t(goal_status_labels[week.status] || '평가 자료 부족')}</td>
+        </tr>)}</tbody></table>
+        {evidence.consistency.period_evaluated_weeks === 0 && <p className="infoText">{t('저장된 개인 목표가 없어 목표 유지와 복귀를 평가할 수 없어요.')}</p>}
+      </div>
+    </details>}
+    {(evidence.recovery?.events.length > 0 || evidence.recovery?.opportunity_count > 0) && <details className="reportSection" open>
+      <summary><span>{t('다시 돌아오는 힘')}</span><strong>{t('복귀 달성 {0}/{1}번', [evidence.recovery.recovered_count, evidence.recovery.opportunity_count])}</strong><small>{t('측정 근거 보기')}</small></summary>
+      <ul className="reportComparisons reportSectionBody">{evidence.recovery.events.map((event) => <li key={event.return_week}><strong>{event.missed_week} → {event.return_week}</strong><p>{t(event.status === 'recovered' ? '복귀 달성' : event.status === 'pending' ? '운동 재개 · 목표 달성 확인 중' : event.first_return_date ? '운동 재개 · 목표 미달' : '복귀 기록 없음')}</p>{event.first_return_date && <small>{t('첫 복귀일: {0}', [event.first_return_date])}</small>}</li>)}</ul>
+      {evidence.recovery.events.length === 0 && <p className="infoText reportSectionBody">{t('완료된 복귀 기회 {0}번 · 목표 달성 복귀 기록 없음', [evidence.recovery.opportunity_count])}</p>}
+    </details>}
+    <section className="teamTrainingTable" aria-label={t('훈련량 참고 수치')}>
+      <h4>{t('훈련량 참고 수치')}</h4>
+      <table className="reportDataTable"><thead><tr><th scope="col">{t('항목')}</th><th scope="col">{t('이전')}</th><th scope="col">{t('이번')}</th><th scope="col">{t('증감')}</th></tr></thead><tbody>{training_rows.map((row) => <tr key={row.key}>
+        <th scope="row">{t(row.label)}</th><td>{number(row.previous)}<small>{t(row.unit)}</small></td><td>{number(row.current)}<small>{t(row.unit)}</small></td><td>{row.comparable ? change(row.current - row.previous, t(row.unit)) : t('비교 자료 부족')}</td>
+      </tr>)}</tbody></table>
+      <p className="infoText">{t('운동일은 세트 기록이 있는 날입니다. 훈련량 증감은 수행 판정과 별도로 봅니다.')}</p>
+    </section>
+    {changes.metrics.length > 0 && <details className="challengeGrowthMethod"><summary>{t('기존 활동 점수와 배점 근거 (참고)')}{Number.isFinite(report.total_score) && ` · ${number(report.total_score)}/100`}</summary>
+      <p>{t('기존 활동 점수는 출석·총중량·인증 시간·추가 운동 배점입니다. 수행 향상·유지·복귀의 판정에는 사용하지 않습니다.')}</p>
       <div className="challengeGrowthMetrics">{changes.metrics.map((metric) => <details className="challengeGrowthMetric" key={metric.key}>
         <summary><span><strong>{t(metric_labels[metric.key])}</strong><small>{metric_values(metric)}</small></span><span className="challengeGrowthMetricScore">{t('{0}/{1}점', [number(metric.points), metric.max_points])}<MaterialIcon>expand_more</MaterialIcon></span></summary>
         <div className="challengeGrowthEvidence">
@@ -91,16 +145,16 @@ export default function ChallengeMemberReport({ report, heading_ref, on_back }) 
           </>}
         </div>
       </details>)}</div>
-    </>}
-    {changes.exercises.length > 0 && <>
-      <div className="sectionHeading"><h4>{t('종목별 수행과 변화')}</h4><span>{t('{0}개 종목', [changes.exercises.length])}</span></div>
-      <div className="challengeExerciseReports">{changes.exercises.map((exercise) => <details className="challengeExerciseReport" key={JSON.stringify([exercise.exercise_source, exercise.exercise_id, exercise.exercise_name])}>
-        <summary><span><strong>{exercise.exercise_name}</strong>{exercise.changed_fields.includes('volume_kg') && <small>{t('총중량 {0}', [change(exercise.current.volume_kg - exercise.previous.volume_kg, 'kg')])}</small>}</span><MaterialIcon>expand_more</MaterialIcon></summary>
+    </details>}
+    {report_exercises.length > 0 && <>
+      <div className="sectionHeading"><h4>{t('종목별 수행과 변화')}</h4><span>{t('{0}개 종목', [report_exercises.length])}</span></div>
+      <div className="challengeExerciseReports">{report_exercises.map((exercise) => <details className="challengeExerciseReport" key={JSON.stringify([exercise.exercise_source, exercise.exercise_id, exercise.exercise_name])}>
+        <summary><span><strong>{exercise.exercise_name}</strong><small>{t('기록 {0} → {1}일 · 비교 조건 {2}개', [exercise.previous.workout_days, exercise.current.workout_days, exercise.conditions.length])}</small></span><MaterialIcon>expand_more</MaterialIcon></summary>
         <div className="challengeExerciseEvidence">
-          {exercise.changed_fields.length > 0 && <dl className="challengeExerciseComparison">{exercise.changed_fields.map((field) => <div key={field}>
-            <dt>{t(exercise_field_labels[field])}</dt><dd>{number(exercise.previous[field])} → {number(exercise.current[field])}{['best_weight_kg', 'volume_kg'].includes(field) ? ' kg' : ''}</dd>
-          </div>)}</dl>}
-          {exercise.conditions.length > 0 && <><p className="sm-text">{t('점수는 전체 종목의 총중량 변화로 계산합니다. 동일 조건 중량·반복 비교는 참고 상세입니다.')}</p><ul className="challengeConditionList">{exercise.conditions.map((condition) => <li key={JSON.stringify([condition.dimension, condition.condition_value])}>
+          <dl className="challengeExerciseComparison">{Object.keys(exercise_field_labels).map((field) => <div key={field}>
+            <dt>{t(exercise_field_labels[field])}</dt><dd>{exercise.previous.workout_days > 0 ? number(exercise.previous[field]) : t('기록 없음')} → {exercise.current.workout_days > 0 ? number(exercise.current[field]) : t('기록 없음')}{['best_weight_kg', 'volume_kg'].includes(field) ? ' kg' : ''}</dd>
+          </div>)}</dl>
+          {exercise.conditions.length > 0 && <><p className="sm-text">{t('수행 해석은 동일 조건의 중량·반복 기록을 사용합니다. 총중량 변화는 별도로 표시합니다.')}</p><ul className="challengeConditionList">{exercise.conditions.map((condition) => <li key={JSON.stringify([condition.dimension, condition.condition_value])}>
             <strong>{condition.dimension === 'weight_kg' ? t('동일 {0}회 반복', [number(condition.condition_value)]) : t('동일 {0}kg 중량', [number(condition.condition_value)])}</strong>
             <span>{number(condition.previous_value)} → {number(condition.current_value)} {condition.dimension === 'weight_kg' ? 'kg' : t('회')}</span>
             <small>{change(condition.current_value - condition.previous_value, condition.dimension === 'weight_kg' ? 'kg' : t('회'))} · {condition.previous_date} → {condition.current_date}</small>

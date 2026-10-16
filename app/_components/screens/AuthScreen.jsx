@@ -2,6 +2,7 @@ import { useLanguage } from '../../_hooks/useLanguage';
 import LanguageSelector from '../settings/LanguageSelector';
 import { useEffect, useState } from 'react';
 import CountryTimezoneFields from '../settings/CountryTimezoneFields';
+import CommunityPolicy, { LegalDocuments } from '../legal/CommunityPolicy';
 
 export default function AuthScreen({ on_authenticate, pending, error, on_clear_error }) {
   const { t, localize_message } = useLanguage();
@@ -11,6 +12,7 @@ export default function AuthScreen({ on_authenticate, pending, error, on_clear_e
   const [display_name, set_display_name] = useState('');
   const [country_code, set_country_code] = useState('');
   const [timezone, set_timezone] = useState('Asia/Seoul');
+  const [accepted_policy_version, set_accepted_policy_version] = useState('');
   const is_register = auth_mode === 'register';
 
   useEffect(() => {
@@ -21,7 +23,7 @@ export default function AuthScreen({ on_authenticate, pending, error, on_clear_e
     event.preventDefault();
     on_authenticate(auth_mode, {
       email: email.trim(), password,
-      ...(is_register ? { display_name: display_name.trim(), country_code, timezone } : {}),
+      ...(is_register ? { display_name: display_name.trim(), country_code, timezone, accepted_policy_version } : {}),
     });
   };
 
@@ -38,8 +40,9 @@ export default function AuthScreen({ on_authenticate, pending, error, on_clear_e
         <label>{t("이메일")}<input name="email" type="email" autoComplete="username" required maxLength={255} value={email} onChange={(event) => set_email(event.target.value)} /></label>
         <label>{t("비밀번호")}<input name="password" type="password" autoComplete={is_register ? 'new-password' : 'current-password'} required minLength={is_register ? 12 : 1} maxLength={128} value={password} onChange={(event) => set_password(event.target.value)} /></label>
         {is_register && <p className="infoText">{t("비밀번호는 12~128자로 입력해 주세요.")}</p>}
+        {is_register && <CommunityPolicy show_agreement accepted_version={accepted_policy_version} on_change={set_accepted_policy_version} disabled={pending} />}
         {error && <p className="errorText" role="alert">{localize_message(error)}</p>}
-        <button className="wideButton primary" type="submit">{pending ? t("확인 중…") : is_register ? t("계정 만들기") : t("로그인")}</button>
+        <button className="wideButton primary" type="submit" disabled={is_register && !accepted_policy_version}>{pending ? t("확인 중…") : is_register ? t("계정 만들기") : t("로그인")}</button>
         <button className="textButton" type="button" onClick={() => {
           set_auth_mode(is_register ? 'login' : 'register');
           set_password('');
@@ -48,5 +51,6 @@ export default function AuthScreen({ on_authenticate, pending, error, on_clear_e
       </fieldset>
     </form>
     <LanguageSelector />
+    <LegalDocuments />
   </section>;
 }

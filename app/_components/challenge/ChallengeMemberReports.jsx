@@ -18,6 +18,7 @@ export default function ChallengeMemberReports({ round_uuid, round_status, is_ac
   const [refresh_version, set_refresh_version] = useState(0);
   const heading_ref = useRef(null);
   const member_buttons = useRef(new Map());
+  const team_summary = summary_data?.team_summary;
 
   useEffect(() => {
     if (!is_active) return;
@@ -77,10 +78,28 @@ export default function ChallengeMemberReports({ round_uuid, round_status, is_ac
     {summary_data && <span className="challengeReportBadge">{t(summary_data.report_state === 'finalized' ? '결과 확정' : '결과 확인 중 · 잠정 리포트')}</span>}
     {summary_error && <div className="requestState" role="alert"><p>{summary_error}</p></div>}
     {summary_loading && !summary_data && <p role="status">{t('리포트 불러오는 중…')}</p>}
+    {team_summary && !selected_member_uuid && <div className="teamGrowthSummary">
+      <h3>{t('팀의 수행·유지·복귀')}</h3>
+      <p>{t('전체 {0}명 · 수행 비교 가능 {1}명 · 비교 자료 부족 {2}명', [team_summary.member_count, team_summary.comparable_member_count, team_summary.insufficient_member_count])}</p>
+      <dl>
+        <div><dt>{t('동일 조건 수행 향상')}</dt><dd>{t('{0}/{1}명', [team_summary.improved_member_count, team_summary.comparable_member_count])}</dd></div>
+        <div><dt>{t('반복 확인된 수행 유지')}</dt><dd>{t('{0}/{1}명', [team_summary.repeated_maintained_member_count, team_summary.comparable_member_count])}</dd></div>
+        <div><dt>{t('기간 내 개인 목표 달성')}</dt><dd>{team_summary.goal_evaluable_member_count > 0 ? t('{0}/{1}명', [team_summary.goal_kept_member_count, team_summary.goal_evaluable_member_count]) : t('평가 자료 부족')}</dd></div>
+        <div><dt>{t('목표 미달 후 복귀 달성')}</dt><dd>{t('{0}명', [team_summary.recovered_member_count])}</dd></div>
+        <div><dt>{t('기록 확인이 필요한 멤버')}</dt><dd>{t('{0}/{1}명', [team_summary.review_member_count, team_summary.comparable_member_count])}</dd></div>
+      </dl>
+      <p>{t('각 항목은 중복 집계될 수 있습니다. 비교 자료 부족은 성장 0점이 아니에요.')}</p>
+    </div>}
     {!selected_member_uuid ? <ul className="challengeGrowthMemberList">{summary_data?.members.map((member) => <li key={member.user_uuid}>
       <button type="button" onClick={() => set_selected_member_uuid(member.user_uuid)} ref={(element) => { if (element) member_buttons.current.set(member.user_uuid, element); else member_buttons.current.delete(member.user_uuid); }}>
-        <span><strong>{member.display_name}</strong>{member.improved_exercise_count > 0 && <small>{t('총중량 증가 {0}종목', [member.improved_exercise_count])}</small>}</span>
-        <span className="challengeGrowthMemberScore">{Number.isFinite(member.total_score) && <strong>{member.total_score}<small>/100</small></strong>}<MaterialIcon>chevron_right</MaterialIcon></span>
+        <span><strong>{member.display_name}</strong>{member.growth_summary && <>
+          <small>{member.growth_summary.comparable_count > 0 ? t('향상 {0} · 유지 {1} · 확인 필요 {2}종목', [member.growth_summary.improved_count + member.growth_summary.mixed_count, member.growth_summary.maintained_count, member.growth_summary.review_count + member.growth_summary.mixed_count]) : t('동일 조건 수행 비교 자료 부족')}</small>
+          <small>{t('수행 비교 {0}/{1}종목 · 반복 향상 {2} · 반복 유지 {3}', [member.growth_summary.comparable_count, member.growth_summary.exercise_count, member.growth_summary.repeated_improved_count, member.growth_summary.repeated_maintained_count])}</small>
+          <small>{member.growth_summary.evaluated_periods > 0 ? t('기간 내 목표 {0}/{1}주 달성', [member.growth_summary.kept_periods, member.growth_summary.evaluated_periods]) : t('개인 목표 평가 자료 부족')}</small>
+          {member.growth_summary.current_streak >= 2 && <small>{t('비교 기간에서 목표 {0}주 연속 달성', [member.growth_summary.current_streak])}</small>}
+          {member.growth_summary.recovered_count > 0 && <small>{t('복귀 달성 {0}번', [member.growth_summary.recovered_count])}</small>}
+        </>}</span>
+        <span className="challengeGrowthMemberScore"><MaterialIcon>chevron_right</MaterialIcon></span>
       </button>
     </li>)}</ul> : <>
       {detail_loading && <p role="status">{t('팀원 리포트 불러오는 중…')}</p>}

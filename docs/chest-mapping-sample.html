@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>가슴 파츠 분리·매핑 샘플</title>
+  <style>
+    :root{color-scheme:light;--page_background:#f5f5f2;--page_surface:#fff;--page_text:#1b1e20;--page_muted:#555e63;--page_line:#d7dad7;--page_accent:#823805}
+    *{box-sizing:border-box}body{margin:0;background:var(--page_background);color:var(--page_text);font:15px/1.7 system-ui,'Malgun Gothic',sans-serif}.samplePage{max-width:1040px;margin:auto;padding:30px 24px 48px}.sampleKicker{font-size:12px;color:var(--page_accent)}h1{font-size:28px;margin:6px 0 12px;line-height:1.35}h2{font-size:18px;margin:0 0 12px}p{margin:10px 0}.sampleIntro,.sampleNote{color:var(--page_muted)}.sampleNote{font-size:13px}.sampleViews{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-top:24px}.sampleView{background:var(--page_surface);border:1px solid var(--page_line);border-radius:14px;padding:16px;min-width:0}.svgCanvas{background:#fff}.svgCanvas svg{display:block;width:100%;height:auto}.svgCanvas [data-shape-key]{cursor:pointer;transition:fill .15s ease}.sampleControls{margin-top:20px;background:var(--page_surface);border:1px solid var(--page_line);border-radius:14px;padding:20px}.controlGrid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:20px}label{display:block}select{display:block;width:100%;min-height:44px;margin-top:6px;padding:8px;border:1px solid var(--page_line);border-radius:8px;background:#fff;color:var(--page_text);font:inherit}input[type=range]{display:block;width:100%;margin:18px 0;accent-color:#CF5604}.rangeLabel{display:flex;justify-content:space-between;gap:12px}.pairOption{display:flex;align-items:center;gap:8px;min-height:44px;margin-top:8px}.pairOption input{width:18px;height:18px;accent-color:#CF5604}.sampleStatus{margin-top:12px;color:var(--page_accent)}code{font:12px/1.7 ui-monospace,Consolas,monospace;overflow-wrap:anywhere}.partDetails{margin-top:8px;overflow-wrap:anywhere}.paletteLegend{display:flex;flex-wrap:wrap;gap:10px 16px;margin-top:16px;font-size:13px}.paletteItem{display:flex;align-items:center;gap:6px}.paletteSwatch{width:18px;height:18px;border:1px solid #555e63;border-radius:4px}.sampleFacts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-top:20px}.sampleFact{padding:16px 0;border-top:1px solid var(--page_line);min-width:0}.sampleFact h2{margin:0 0 8px}.sampleLinks{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:12px}a{color:var(--page_accent);text-underline-offset:3px}.partTable{width:100%;border-collapse:collapse;font-size:13px;margin-top:12px}.partTable td,.partTable th{text-align:left;padding:10px 6px;border-bottom:1px solid var(--page_line);overflow-wrap:anywhere;vertical-align:top}.partTable th:last-child,.partTable td:last-child{text-align:right;white-space:nowrap}summary{cursor:pointer;min-height:44px;padding:10px 0}a:focus-visible,select:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid #823805;outline-offset:3px}@media(max-width:700px){.samplePage{padding:24px 14px 40px}.sampleViews,.controlGrid,.sampleFacts{grid-template-columns:1fr}h1{font-size:24px}.sampleViews{gap:12px}.sampleView{padding:12px}}@media(prefers-reduced-motion:reduce){.svgCanvas [data-shape-key]{transition:none}}
+  </style>
+  <script src="assets/chest-mapping-sample/chest_parts.js" defer></script>
+</head>
+<body>
+<main class="samplePage" id="chest-sample-page">
+  <span class="sampleKicker">고정 SVG 파츠 · 가상 빈도 · 2026-10-14</span>
+  <h1>가슴 원본 2파츠 → 세부 6파츠</h1>
+  <p class="sampleIntro">원본 외곽을 유지하면서 좌우 각각 윗·가운데·아랫가슴을 닫힌 곡선 경로로 나눴습니다. 파츠를 선택해 빈도를 바꾸면 색상만 변경됩니다.</p>
+  <div class="sampleViews">
+    <section class="sampleView"><h2>원본 · 좌우 2파츠</h2><div class="svgCanvas" id="original-chest-view"></div></section>
+    <section class="sampleView"><h2>수정 · 좌우 × 3구역</h2><div class="svgCanvas" id="split-chest-view"></div></section>
+  </div>
+  <section class="sampleControls" aria-label="가슴 파츠 채색 조절">
+    <div class="controlGrid">
+      <label for="chest-part-selector">선택할 파츠<select id="chest-part-selector"></select></label>
+      <div><label class="rangeLabel" for="chest-frequency-input"><span>운동한 날</span><output id="chest-frequency-value">1일</output></label><input id="chest-frequency-input" type="range" min="0" max="7" step="1" value="1"><label class="pairOption"><input id="chest-pair-input" type="checkbox" checked><span>같은 구역의 좌우를 함께 변경</span></label></div>
+    </div>
+    <div class="sampleStatus" role="status" aria-live="polite" id="chest-sample-status"></div>
+    <div class="partDetails"><code id="chest-part-identity"></code></div>
+    <div class="paletteLegend" aria-label="주간 빈도 색상 범례">
+      <span class="paletteItem"><span class="paletteSwatch" style="background:#E7E8E5" aria-hidden="true"></span>0일</span>
+      <span class="paletteItem"><span class="paletteSwatch" style="background:#F3D7CB" aria-hidden="true"></span>1일</span>
+      <span class="paletteItem"><span class="paletteSwatch" style="background:#EEB59C" aria-hidden="true"></span>2일</span>
+      <span class="paletteItem"><span class="paletteSwatch" style="background:#E49069" aria-hidden="true"></span>3일</span>
+      <span class="paletteItem"><span class="paletteSwatch" style="background:#D86D38" aria-hidden="true"></span>4일</span>
+      <span class="paletteItem"><span class="paletteSwatch" style="background:#CF5604" aria-hidden="true"></span>5〜7일</span>
+    </div>
+  </section>
+  <div class="sampleFacts">
+    <section class="sampleFact"><h2>분리 방식</h2><p>외곽 Bézier 곡선을 분할하고 안쪽에 공통 곡선 경계를 연결했습니다. 직사각형 마스크로 사진을 가린 방식이 아니라, 여섯 개의 독립된 닫힌 path입니다.</p><p class="sampleNote">원본 좌표를 유지했습니다. 이 화면의 왼쪽 가슴은 사람의 오른쪽이며, 파츠 ID는 해부학적 좌우 기준입니다.</p></section>
+    <section class="sampleFact"><h2>표현 범위</h2><p>윗·가운데·아랫가슴은 대흉근의 기록용 타겟 구역입니다. 분할선은 시안이며 독립된 세 근육의 경계가 아닙니다. 소흉근은 별도 심부 원본이 필요합니다.</p><p class="sampleNote">AI 이미지를 생성하거나 분할하지 않았습니다. 앱 리포트·DB 연결은 이 샘플에 포함하지 않았습니다.</p></section>
+  </div>
+  <details><summary>파츠 ID와 현재 값</summary><table class="partTable"><thead><tr><th>파츠</th><th>ID</th><th>빈도</th></tr></thead><tbody id="chest-part-table"></tbody></table></details>
+  <div class="sampleLinks"><a href="assets/chest-mapping-sample/chest_parts.svg">분리 SVG · 초기 색상</a><a href="assets/chest-mapping-sample/chest_parts.js">파츠 데이터·매핑 코드</a><a href="https://github.com/HichamELBSI/react-native-body-highlighter/blob/8ed39ac2ae9cb46fb79d77eedec7e5b029a75174/assets/bodyFront.ts" target="_blank" rel="noopener noreferrer">가져온 공개 코드</a><a href="assets/chest-mapping-sample/LICENSE.txt">MIT 라이선스</a></div>
+  <p class="sampleNote">ELABBASSI Hicham의 react-native-body-highlighter 경로를 수정했습니다. 원본 커밋: <code>8ed39ac2ae9cb46fb79d77eedec7e5b029a75174</code></p>
+</main>
+<script>
+  window.addEventListener('DOMContentLoaded', () => {
+    const sample_root = document.getElementById('chest-sample-page');
+    const sample_api = window.chest_mapping_sample;
+    if (!sample_api) {
+      sample_root.querySelector('#chest-sample-status').textContent = '파츠 데이터 로딩 실패';
+      return;
+    }
+    const assets = sample_api.assets;
+    const original_svg = sample_api.create_chest_svg('original', 'source');
+    const split_svg = sample_api.create_chest_svg('split', 'split');
+    sample_root.querySelector('#original-chest-view').appendChild(original_svg);
+    sample_root.querySelector('#split-chest-view').appendChild(split_svg);
+    const part_selector = sample_root.querySelector('#chest-part-selector');
+    const frequency_input = sample_root.querySelector('#chest-frequency-input');
+    const frequency_value = sample_root.querySelector('#chest-frequency-value');
+    const pair_input = sample_root.querySelector('#chest-pair-input');
+    const status_text = sample_root.querySelector('#chest-sample-status');
+    const identity_text = sample_root.querySelector('#chest-part-identity');
+    const table_body = sample_root.querySelector('#chest-part-table');
+    const original_geometry = new Map(assets.parts.map(part => [part.shape_key, part.path_d]));
+    const frequency_by_part = Object.fromEntries(assets.parts.map(part => [part.shape_key, assets.default_frequencies[part.region_key]]));
+    const table_values = new Map();
+    for (const part of assets.parts) {
+      const part_label = (part.side === 'left' ? '왼쪽' : '오른쪽') + ' ' + part.target_subarea;
+      const option_element = document.createElement('option');
+      option_element.value = part.shape_key;
+      option_element.textContent = part_label;
+      part_selector.appendChild(option_element);
+      const row_element = document.createElement('tr');
+      const label_cell = document.createElement('td');
+      label_cell.textContent = part_label;
+      const id_cell = document.createElement('td');
+      const id_code = document.createElement('code');
+      id_code.textContent = part.shape_key;
+      id_cell.appendChild(id_code);
+      const value_cell = document.createElement('td');
+      row_element.append(label_cell, id_cell, value_cell);
+      table_body.appendChild(row_element);
+      table_values.set(part.shape_key, value_cell);
+    }
+    part_selector.value = assets.parts[0].shape_key;
+    function sync_selected_part() {
+      const selected_part = assets.parts.find(part => part.shape_key === part_selector.value);
+      frequency_input.value = String(frequency_by_part[selected_part.shape_key]);
+      frequency_value.textContent = frequency_input.value + '일';
+      let geometry_is_fixed = true;
+      for (const path_element of split_svg.querySelectorAll('[data-shape-key]')) {
+        const shape_key = path_element.dataset.shapeKey;
+        const active_part = assets.parts.find(part => part.shape_key === shape_key);
+        const is_selected = pair_input.checked ? active_part.region_key === selected_part.region_key : shape_key === selected_part.shape_key;
+        path_element.setAttribute('stroke-width', is_selected ? '1.4' : '0.6');
+        if (path_element.getAttribute('d') !== original_geometry.get(shape_key)) geometry_is_fixed = false;
+        table_values.get(shape_key).textContent = frequency_by_part[shape_key] + '일';
+      }
+      status_text.textContent = '닫힌 경로 6개 · ' + (geometry_is_fixed ? '모든 윤곽 고정' : '윤곽 변경 감지') + ' · ' + (pair_input.checked ? '좌우 통합' : '파츠별 제어');
+      identity_text.textContent = selected_part.region_key + ' → ' + selected_part.shape_key;
+    }
+    frequency_input.addEventListener('input', () => {
+      const selected_part = assets.parts.find(part => part.shape_key === part_selector.value);
+      const day_count = Number(frequency_input.value);
+      const affected_parts = pair_input.checked ? assets.parts.filter(part => part.region_key === selected_part.region_key) : [selected_part];
+      if (pair_input.checked) sample_api.apply_region_frequency(split_svg, selected_part.region_key, day_count);
+      else sample_api.set_part_frequency(split_svg, selected_part.shape_key, day_count);
+      affected_parts.forEach(part => { frequency_by_part[part.shape_key] = day_count; });
+      sync_selected_part();
+    });
+    part_selector.addEventListener('change', sync_selected_part);
+    pair_input.addEventListener('change', sync_selected_part);
+    split_svg.addEventListener('click', event => {
+      const shape_key = event.target.dataset && event.target.dataset.shapeKey;
+      if (shape_key && original_geometry.has(shape_key)) {
+        part_selector.value = shape_key;
+        sync_selected_part();
+      }
+    });
+    sync_selected_part();
+  });
+</script>
+</body>
+</html>

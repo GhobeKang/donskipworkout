@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { exercise_label, exercise_matches_query, exercise_secondary_label } from '../../_lib/i18n';
+import { exercise_area_label } from '../../_lib/exerciseClassification';
 import { useLanguage } from '../../_hooks/useLanguage';
 import MaterialIcon from '../ui/MaterialIcon';
 
@@ -92,6 +93,7 @@ export default function ExercisePickerModal({ is_open, exercises, on_select, on_
               <span className="exercisePickerOptionText">
                 <span><strong>{exercise_name}</strong><span className="exerciseSourceBadge">{exercise.exercise_source === 'shared' ? t("기본") : t("내 종목")}</span></span>
                 {secondary_name && <small className="exerciseAlternateName">{secondary_name}</small>}
+                <small>{exercise_area_label(exercise, language)}</small>
                 <small>{last_sets}</small>
               </span>
               <MaterialIcon>add_circle</MaterialIcon>

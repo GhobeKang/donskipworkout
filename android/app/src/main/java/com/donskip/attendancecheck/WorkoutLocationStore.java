@@ -10,6 +10,8 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.util.Log;
+import com.getcapacitor.JSObject;
+import org.json.JSONException;
 
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
@@ -128,9 +130,39 @@ final class WorkoutLocationStore {
     }
 
     static void leave(Context context) {
+        recordExit(context);
         preferences(context).edit().putBoolean("inside", false)
             .remove("notification_request_id").remove("pending_start_request_id").apply();
         ((NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE)).cancel(NOTIFICATION_ID);
     }
+
+    static synchronized JSObject recordExit(Context context) {
+        SharedPreferences settings = preferences(context);
+        String pending_exit = settings.getString("pending_exit", "");
+        if (!pending_exit.isEmpty()) return readExit(context);
+        String active_timer = settings.getString("active_timer", "");
+        if (active_timer.isEmpty() || !settings.contains("latitude")) return new JSObject();
+        try {
+            JSObject exit = new JSObject(active_timer);
+            exit.put("request_id", UUID.randomUUID().toString());
+            exit.put("exited_at", System.currentTimeMillis());
+            // Persist before the background receiver returns, retaining the first exit.
+            settings.edit().putString("pending_exit", exit.toString()).remove("active_timer").commit();
+            return exit;
+        } catch (JSONException error) {
+            Log.e("WorkoutLocation", "Cannot read active workout timer", error);
+            return new JSObject();
+        }
+    }
+
+    static JSObject readExit(Context context) {
+        try {
+            return new JSObject(preferences(context).getString("pending_exit", "{}"));
+        } catch (JSONException error) {
+            Log.e("WorkoutLocation", "Cannot read pending location exit", error);
+            return new JSObject();
+        }
+    }
+
 }
 

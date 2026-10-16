@@ -10,6 +10,7 @@ import ChallengeInbox from './ChallengeInbox';
 import ChallengeQuestions from './ChallengeQuestions';
 import ChallengeMemberReports from './ChallengeMemberReports';
 import ChallengeProgressMember, { get_progress_status_label } from './ChallengeProgressMember';
+import SafetyActions from '../safety/SafetyActions';
 
 function get_default_start_date() {
   const seoul_now = new Date(Date.now() + 9 * 60 * 60 * 1000);
@@ -296,6 +297,10 @@ export default function ChallengeScreen({ user_uuid, is_active, on_unauthorized,
     [selected_room, user_uuid],
   );
   const is_host = selected_room?.host_user_uuid === user_uuid;
+  const handle_user_blocked = () => {
+    set_selected_room(null); set_progress_data(null); set_issued_invite(null);
+    set_error_message(''); set_active_tab('rooms'); load_rooms();
+  };
   const notification_round_uuid = rooms.some((room) => room.round_uuid === notification_settings_round_uuid)
     ? notification_settings_round_uuid
     : rooms[0]?.round_uuid;
@@ -397,6 +402,8 @@ export default function ChallengeScreen({ user_uuid, is_active, on_unauthorized,
         <RoomDeleteButton room={selected_room} user_is_host={is_host} pending={pending} on_delete={request_room_delete} />
       </div>}
       {error_message && <div className="requestState" role="alert"><p>{error_message}</p></div>}
+      {selected_room.host_vacant && <p className="infoText">{t('방장이 탈퇴했습니다. 기존 기록은 유지되며 새 초대·대화·다음 회차는 진행할 수 없습니다.')}</p>}
+      {!is_host && <SafetyActions content_type="room" content_id={selected_room.room_uuid} target_user_uuid={selected_room.host_user_uuid} on_unauthorized={on_unauthorized} on_blocked={handle_user_blocked} />}
       {success_message && <div className="challengeSuccess" role="status">{success_message}</div>}
       <article className="challengeCard challengeRulebookCard">
         <header className="challengeRulebookHeader">
@@ -437,13 +444,14 @@ export default function ChallengeScreen({ user_uuid, is_active, on_unauthorized,
               {selected_room.members.map((member) => <li key={member.user_uuid}>
                 <span><strong>{member.display_name}{member.user_uuid === selected_room.host_user_uuid ? ` · ${t('방장')}` : ''}</strong><small>{member.user_uuid === user_uuid ? t('나') : t(member.participant_status === 'consented' ? '참가 동의 완료' : '룰북 확인 대기')}</small></span>
                 <span className={member.consented ? 'challengeConsent isDone' : 'challengeConsent'}>{member.consented ? t('동의 완료') : t('미동의')}</span>
+                {member.user_uuid !== user_uuid && <SafetyActions content_type="user" content_id={member.user_uuid} target_user_uuid={member.user_uuid} on_unauthorized={on_unauthorized} on_blocked={handle_user_blocked} />}
               </li>)}
             </ul>
           </details>
         </section>
         {published_version > 0 && published_matches_draft && !user_membership?.consented && ['draft', 'awaiting_consent'].includes(selected_room.status) && <button className="wideButton primary challengeRulebookConsent" type="button" disabled={pending} onClick={() => mutate(`/challenge-rounds/${selected_room.round_uuid}/consents`, 'POST', {}, null, { select_result: true })}>{t('룰북과 참가자 명단에 동의')}</button>}
       </article>
-      <ChallengeQuestions key={`${selected_room.round_uuid}:${user_uuid}`} round_uuid={selected_room.round_uuid} is_host={is_host} is_active={is_active} can_write={Boolean(user_membership) && !['invited', 'removed', 'withdrawn'].includes(user_membership.participant_status) && selected_room.status !== 'cancelled'} on_unauthorized={on_unauthorized} />
+      <ChallengeQuestions key={`${selected_room.round_uuid}:${user_uuid}`} round_uuid={selected_room.round_uuid} user_uuid={user_uuid} is_host={is_host} is_active={is_active && !selected_room.host_vacant} can_write={Boolean(user_membership) && !['invited', 'removed', 'withdrawn'].includes(user_membership.participant_status) && selected_room.status !== 'cancelled' && !selected_room.host_vacant} on_unauthorized={on_unauthorized} on_blocked={handle_user_blocked} />
       {progress_data && <article className="challengeCard">
         <div className="sectionHeading challengeProgressHeading"><div><p className="eyebrow">{t('챌린지 리포트')}</p><h2>{t(progress_data.status === 'completed' ? '회차 결과' : '운동 진행 현황')}</h2></div><span className="challengeLiveStatus"><span className={'challengeLiveDot' + (progress_loading ? ' isRefreshing' : '')} />{progress_loading ? t('갱신 중…') : t('서버 집계')}</span></div>
         <div className="challengeProgressOverview">

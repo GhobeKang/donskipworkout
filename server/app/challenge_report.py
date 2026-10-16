@@ -1,7 +1,8 @@
 """Host-only growth evidence, compared with the immediately preceding equal-length window."""
 
 from collections import defaultdict
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
+from decimal import Decimal
 from types import SimpleNamespace
 from zoneinfo import ZoneInfo
 
@@ -18,10 +19,123 @@ from .database import (
     workoutSession,
     workoutSet,
 )
-from .personal_report import compare_conditions, exercise_key
+from .personal_report import compare_conditions, exercise_key, performance_summary, period_behavior
+from .workout_times import compare_workout_times, workout_time_days
 
 growth_method_version = 'growth_v2'
 growth_weights = {'attendance': 20, 'volume': 50, 'punctuality': 20, 'extra': 10}
+growth_evidence_version = 'performance_evidence_v1'
+
+
+def enrich_growth_report(report):
+    """Derive interpretation only from saved evidence; never revise finalized scores."""
+    period_sets = {'previous': [], 'current': []}
+    for exercise in report.get('exercises', []):
+        if exercise['exercise_source'] == 'deleted' or exercise['exercise_id'] is None:
+            continue
+        for period in period_sets:
+            for log in exercise.get(f'{period}_logs', []):
+                for workout_set in log['sets']:
+                    period_sets[period].append(SimpleNamespace(
+                        exercise_source=exercise['exercise_source'],
+                        exercise_id=exercise['exercise_id'],
+                        shared_exercise_id=exercise['exercise_id'],
+                        exercise_name=exercise['exercise_name'],
+                        workout_date=date.fromisoformat(log['date']),
+                        weight_kg=Decimal(str(workout_set['weight_kg'])), reps=workout_set['reps'],
+                    ))
+    performance = performance_summary(period_sets['previous'], period_sets['current'])
+    attendance = report['attendance']
+    weeks = []
+    for periods in (attendance.get('previous_periods', []), attendance.get('periods', [])):
+        for period in periods:
+            target_count = period['target_count']
+            weeks.append({
+                'week_start': period['start_date'], 'target_count': target_count,
+                'completed_count': period['completed_count'],
+                'status': 'unknown' if target_count is None else 'rest' if target_count == 0
+                else 'kept' if period['completed_count'] >= target_count else 'missed',
+            })
+    current_streak = longest_streak = 0
+    for week in weeks:
+        if week['status'] == 'kept':
+            current_streak += 1
+            longest_streak = max(longest_streak, current_streak)
+        elif week['status'] in {'missed', 'unknown'}:
+            current_streak = 0
+    consistency = {
+        'weeks': weeks, 'current_streak': current_streak, 'longest_streak': longest_streak,
+        'evaluated_weeks': sum(week['status'] in {'kept', 'missed'} for week in weeks),
+        'kept_weeks': sum(week['status'] == 'kept' for week in weeks),
+    }
+    events = []
+    previous_week = None
+    completed_dates = sorted(set(attendance['previous_dates'] + attendance['current_dates']))
+    for week in weeks:
+        if week['status'] == 'rest':
+            continue
+        if week['status'] == 'unknown':
+            previous_week = None
+            continue
+        if previous_week and previous_week['status'] == 'missed':
+            return_end = (date.fromisoformat(week['week_start']) + timedelta(days=7)).isoformat()
+            return_dates = [day for day in completed_dates if week['week_start'] <= day < return_end]
+            events.append({
+                'missed_week': previous_week['week_start'], 'return_week': week['week_start'],
+                'first_return_date': return_dates[0] if return_dates else None,
+                'status': 'recovered' if week['status'] == 'kept' else 'not_recovered',
+            })
+        previous_week = week
+    recovery = {
+        'events': events, 'opportunity_count': len(events),
+        'recovered_count': sum(event['status'] == 'recovered' for event in events),
+        'recovery_percent': None, 'pending_count': 0,
+    }
+    behavior = period_behavior(
+        consistency, recovery, date.fromisoformat(report['current_period']['start_date']),
+        date.fromisoformat(report['current_period']['end_date']),
+    )
+    growth_summary = {
+        key: value for key, value in performance.items() if key != 'comparisons'
+    }
+    growth_summary.update({
+        'kept_periods': behavior['consistency']['period_kept_weeks'],
+        'evaluated_periods': behavior['consistency']['period_evaluated_weeks'],
+        'current_streak': behavior['consistency']['current_streak'],
+        'recovered_count': behavior['recovery']['recovered_count'],
+    })
+    return {
+        **report, 'evidence_method_version': growth_evidence_version,
+        'growth_evidence': {
+            'performance': performance, **behavior, 'workout_time': report.get('workout_time'),
+        },
+        'growth_summary': growth_summary,
+    }
+
+
+def team_growth_summary(reports):
+    summaries = [report['growth_summary'] for report in reports.values()]
+    return {
+        'member_count': len(summaries),
+        'comparable_member_count': sum(item['comparable_count'] > 0 for item in summaries),
+        'improved_member_count': sum(
+            item['improved_count'] > 0 or item['mixed_count'] > 0 for item in summaries
+        ),
+        'maintained_member_count': sum(item['maintained_count'] > 0 for item in summaries),
+        'repeated_maintained_member_count': sum(
+            item['repeated_maintained_count'] > 0 for item in summaries
+        ),
+        'review_member_count': sum(
+            item['review_count'] > 0 or item['mixed_count'] > 0 for item in summaries
+        ),
+        'insufficient_member_count': sum(item['comparable_count'] == 0 for item in summaries),
+        'goal_evaluable_member_count': sum(item['evaluated_periods'] > 0 for item in summaries),
+        'goal_kept_member_count': sum(
+            item['evaluated_periods'] > 0 and item['kept_periods'] == item['evaluated_periods']
+            for item in summaries
+        ),
+        'recovered_member_count': sum(item['recovered_count'] > 0 for item in summaries),
+    }
 
 
 def capture_growth_plans(database, current_round, member_ids, now):
@@ -421,7 +535,13 @@ def build_round_growth_reports(database, current_round, now):
     ).order_by(weeklyPromise.effective_week)):
         goals_by_member[goal.user_id].append(goal)
     plans = (current_round.draft_rulebook or {}).get('_growth_plans', {})
-    return {
+    time_dates = [item.workout_date for item in sessions]
+    time_days_by_member = workout_time_days(
+        database, {user_id: account.timezone for user_id, _, account in members},
+        min(time_dates) if time_dates else previous_start,
+        max(time_dates) if time_dates else current_start,
+    )
+    reports = {
         str(user_id): member_growth_report(
             account, participant_status,
             [item for item in sessions_by_member[user_id] if item.session_id not in accepted_sessions],
@@ -436,3 +556,20 @@ def build_round_growth_reports(database, current_round, now):
         )
         for user_id, participant_status, account in members
     }
+    for user_id, _, _ in members:
+        member_days = time_days_by_member[user_id]
+        previous_dates = {
+            item.workout_date.isoformat() for item in sessions_by_member[user_id]
+            if item.session_id not in accepted_sessions
+        }
+        current_dates = {
+            item.workout_date.isoformat() for item in sessions_by_member[user_id]
+            if item.session_id in accepted_sessions
+        }
+        reports[str(user_id)]['workout_time'] = compare_workout_times(
+            {day: values for day, values in member_days.items() if day in previous_dates},
+            {day: values for day, values in member_days.items() if day in current_dates},
+            [item for item in sets_by_member[user_id] if item.session_id not in accepted_sessions],
+            [item for item in sets_by_member[user_id] if item.session_id in accepted_sessions],
+        )
+    return reports

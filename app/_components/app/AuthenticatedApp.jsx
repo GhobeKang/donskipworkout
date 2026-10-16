@@ -4,11 +4,10 @@ import { Capacitor } from '@capacitor/core';
 import { PushNotifications } from '@capacitor/push-notifications';
 import useApiResource from '../../_hooks/useApiResource';
 import { api_request } from '../../_lib/api';
-import { open_exact_alarm_settings, sync_workout_notifications } from '../../_lib/notifications';
-import { refresh_push_registration } from '../../_lib/pushNotifications';
+import { enable_push_notifications, refresh_push_registration } from '../../_lib/pushNotifications';
 import { WorkoutLocation } from '../../_lib/workoutLocation';
 import useWorkoutArrival from '../../_hooks/useWorkoutArrival';
-import bundled_notification_catalog from '../../../server/notification-config/catalog.json';
+import useWorkoutDeparture from '../../_hooks/useWorkoutDeparture';
 import BottomNavigation from '../layout/BottomNavigation';
 import StatusBar from '../layout/StatusBar';
 import CheckinScreen from '../screens/CheckinScreen';
@@ -22,8 +21,11 @@ import ChallengeScreen from '../challenge/ChallengeScreen';
 import RequestState from '../ui/RequestState';
 import Toast from '../ui/Toast';
 import LanguageSelector from '../settings/LanguageSelector';
+import AccountDeletionForm from '../account/AccountDeletionForm';
+import SafetySettings from '../safety/SafetySettings';
+import { CommunityGate, LegalDocuments } from '../legal/CommunityPolicy';
 
-export default function AuthenticatedApp({ user, on_unauthorized, on_logout }) {
+export default function AuthenticatedApp({ user, on_unauthorized, on_logout, on_account_deleted }) {
   const { t, language, localize_message } = useLanguage();
   const [current_view, set_current_view] = useState('today');
   const [record_navigation, set_record_navigation] = useState(null);
@@ -31,19 +33,14 @@ export default function AuthenticatedApp({ user, on_unauthorized, on_logout }) {
   const [revision, set_revision] = useState(0);
   const [today_revision, set_today_revision] = useState(0);
   const [exercise_catalog_revision, set_exercise_catalog_revision] = useState(0);
+  const last_saved_timer_revision = useRef('');
   const [pending, set_pending] = useState(false);
   const [toast_message, set_toast_message] = useState('');
   const [mutation_error, set_mutation_error] = useState('');
-  const [exact_alarm_status, set_exact_alarm_status] = useState(null);
-  const [exact_alarm_settings_pending, set_exact_alarm_settings_pending] = useState(false);
   const mutation_controller = useRef(null);
-  const notification_sync_id = useRef(0);
-  const notification_sync_queue = useRef(Promise.resolve());
-  const last_notification_permission = useRef(null);
   const today = useApiResource('/today', `${revision}:${today_revision}`, on_unauthorized);
   const settings = useApiResource('/settings', revision, on_unauthorized);
   const options = useApiResource('/settings/options', revision, on_unauthorized);
-  const notification_catalog = useApiResource('/notifications/catalog', revision, on_unauthorized);
   const refresh_data = () => set_revision((value) => value + 1);
   const refresh_today = () => set_today_revision((value) => value + 1);
   const refresh_exercise_catalog = () => set_exercise_catalog_revision((value) => value + 1);
@@ -55,22 +52,53 @@ export default function AuthenticatedApp({ user, on_unauthorized, on_logout }) {
   }, [t]);
   const handle_arrival_error = useCallback((message) => set_toast_message(message), []);
   useWorkoutArrival(user.user_uuid, on_unauthorized, handle_arrival_started, handle_arrival_error);
+  useWorkoutDeparture(user.user_uuid, on_unauthorized, handle_arrival_error);
+  useEffect(() => {
+    const refresh_saved_time = ({ detail }) => {
+      if (detail?.status !== 'finished' || detail.location_finish_pending) return;
+      const saved_timer_revision = `${detail.timer_uuid}:${detail.revision}`;
+      if (last_saved_timer_revision.current === saved_timer_revision) return;
+      last_saved_timer_revision.current = saved_timer_revision;
+      set_revision((value) => value + 1);
+    };
+    window.addEventListener('workout-timer-updated', refresh_saved_time);
+    window.addEventListener('workout-timer-synced', refresh_saved_time);
+    return () => {
+      window.removeEventListener('workout-timer-updated', refresh_saved_time);
+      window.removeEventListener('workout-timer-synced', refresh_saved_time);
+    };
+  }, []);
   useEffect(() => {
     const search_params = new URLSearchParams(window.location.search);
     if (search_params.has('invite') || search_params.has('room')) set_current_view('challenge');
   }, []);
   useEffect(() => {
-    refresh_push_registration().catch((error) => {
-      console.error('[PUSH_REGISTRATION_ERROR]', error.message || 'unknown');
+    let disposed = false;
+    enable_push_notifications({user_uuid: user.user_uuid, language}).then((result) => {
+      if (!disposed && result.reason === 'denied') set_toast_message(t('푸시 알림을 받으려면 알림 권한이 필요합니다.'));
+    }).catch((error) => {
+      if (disposed) return;
+      if (error.status === 401) on_unauthorized();
+      else set_toast_message(localize_message(error.message || '푸시 기기 등록에 실패했습니다.'));
     });
-  }, [user.user_uuid]);
+    return () => { disposed = true; };
+  }, [user.user_uuid, language, t, localize_message, on_unauthorized]);
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return undefined;
     let listener;
     let disposed = false;
     PushNotifications.addListener('pushNotificationActionPerformed', ({ notification }) => {
       const room_uuid = notification.data?.room_uuid;
-      if (!room_uuid) return;
+      if (!room_uuid) {
+        if (notification.data?.category === 'workout_reminder') {
+          const next_url = new URL(window.location.href);
+          next_url.searchParams.delete('room');
+          window.history.replaceState({}, '', next_url);
+          set_current_view('today');
+          set_revision((value) => value + 1);
+        }
+        return;
+      }
       const next_url = new URL(window.location.href);
       next_url.searchParams.set('room', room_uuid);
       window.history.replaceState({}, '', next_url);
@@ -90,7 +118,7 @@ export default function AuthenticatedApp({ user, on_unauthorized, on_logout }) {
     const refresh_on_resume = () => {
       if (document.visibilityState !== 'visible') return;
       set_revision((value) => value + 1);
-      refresh_push_registration().catch((error) => {
+      refresh_push_registration({user_uuid: user.user_uuid, language}).catch((error) => {
         console.error('[PUSH_REGISTRATION_ERROR]', error.message || 'unknown');
       });
     };
@@ -100,54 +128,7 @@ export default function AuthenticatedApp({ user, on_unauthorized, on_logout }) {
       document.removeEventListener('visibilitychange', refresh_on_resume);
       window.removeEventListener('online', refresh_on_resume);
     };
-  }, []);
-  useEffect(() => {
-    if (!settings.data || !today.data) return undefined;
-    let cancelled = false;
-    const current_sync_id = ++notification_sync_id.current;
-    const sync_promise = notification_sync_queue.current
-      .catch(() => {})
-      .then(() => {
-        if (cancelled) return { skipped: true };
-        return sync_workout_notifications({
-          user_uuid: user.user_uuid,
-          settings: settings.data,
-          today_data: today.data,
-          notification_catalog: notification_catalog.data || bundled_notification_catalog,
-          notification_catalog_source: notification_catalog.data ? 'remote' : 'bundled',
-        });
-      });
-    notification_sync_queue.current = sync_promise;
-    sync_promise
-      .then((result) => {
-        if (cancelled || current_sync_id !== notification_sync_id.current) return;
-        set_exact_alarm_status(result.exact_alarm || null);
-        if (result.permission === 'granted' && last_notification_permission.current !== 'granted') {
-          refresh_push_registration().catch((error) => {
-            console.error('[PUSH_REGISTRATION_ERROR]', error.message || 'unknown');
-          });
-        }
-        if (result.permission) last_notification_permission.current = result.permission;
-        if (result.permission === 'denied') {
-          set_toast_message(t("알림 권한이 꺼져 있어 기기 알림을 예약하지 못했습니다."));
-        }
-      })
-      .catch((error) => {
-        if (!cancelled && current_sync_id === notification_sync_id.current) set_toast_message(error.message || t("기기 알림을 예약하지 못했습니다."));
-      });
-    return () => { cancelled = true; };
-  }, [settings.data, today.data, notification_catalog.data, language, user.user_uuid]);
-  const open_exact_alarm_permission = async () => {
-    set_exact_alarm_settings_pending(true);
-    try {
-      await open_exact_alarm_settings();
-      refresh_data();
-    } catch (error) {
-      set_toast_message(error.message || t('정확한 알람 설정을 열지 못했습니다.'));
-    } finally {
-      set_exact_alarm_settings_pending(false);
-    }
-  };
+  }, [user.user_uuid, language]);
   useEffect(() => {
     if (!toast_message) return undefined;
     const toast_timer = setTimeout(() => set_toast_message(''), 4500);
@@ -220,10 +201,6 @@ export default function AuthenticatedApp({ user, on_unauthorized, on_logout }) {
   return <div className="phoneShell">
     <StatusBar on_open_settings={() => navigate_to('settings')} settings_active={current_view === 'settings'} disabled={pending} />
     <main className="appContent" aria-busy={pending}>
-      {exact_alarm_status === 'denied' && <div className="requestState" role="status">
-        <p>{t('정확한 알람 권한이 꺼져 있어 앱을 닫으면 운동 알림이 늦게 도착할 수 있습니다. 기기 설정에서 정확한 알람을 허용해 주세요.')}</p>
-        <button className="textButton" type="button" disabled={exact_alarm_settings_pending} onClick={open_exact_alarm_permission}>{t('정확한 알람 허용하기')}</button>
-      </div>}
       {mutation_error && <div className="requestState" role="alert"><p>{localize_message(mutation_error)}</p><button className="textButton" onClick={() => set_mutation_error('')}>{t("닫기")}</button></div>}
       {(current_view === 'today' || current_view === 'checkin') && <>
         <RequestState loading={today.loading} error={today.error} on_retry={refresh_data} />
@@ -232,15 +209,18 @@ export default function AuthenticatedApp({ user, on_unauthorized, on_logout }) {
           : <CheckinScreen session={today.data.session} workout_date={today.data.workout_date} pending={today_pending} on_back={() => navigate_to('today')} on_open_workout={() => navigate_to('workout')} on_complete={(note) => act_today('manual', note)} on_unauthorized={on_unauthorized} on_photo_complete={(body) => mutate('/sessions/today/photo', 'POST', body, t("사진 인증을 저장했습니다."))} />)}
       </>}
       {current_view === 'record' && <RecordsScreen revision={revision} on_unauthorized={on_unauthorized} initial_tab={record_navigation ? 'list' : 'calendar'} initial_workout_date={record_navigation?.workout_date} focus_record_uuid={record_navigation?.session_uuid} on_open_record={open_workout_record} timezone={settings.data?.timezone || today.data?.timezone} />}
-      {current_view === 'record-detail' && selected_workout_record && <WorkoutRecordScreen record={selected_workout_record} on_back={() => set_current_view('record')} />}
+      {current_view === 'record-detail' && selected_workout_record && <WorkoutRecordScreen record={selected_workout_record} revision={revision} on_unauthorized={on_unauthorized} on_back={() => set_current_view('record')} />}
       <WorkoutLogScreen user_uuid={user.user_uuid} initial_workout_date={today.data?.workout_date} is_active={current_view === 'workout'} catalog_revision={exercise_catalog_revision} on_unauthorized={on_unauthorized} on_open_library={() => navigate_to('workout-library')} on_open_checkin={() => navigate_to('checkin')} on_saved={refresh_today} timezone={settings.data?.timezone || today.data?.timezone} />
       {current_view === 'workout-library' && <WorkoutScreen on_unauthorized={on_unauthorized} on_back={() => navigate_to('workout')} on_catalog_change={refresh_exercise_catalog} />}
-      {current_view === 'challenge' && <ChallengeScreen user_uuid={user.user_uuid} is_active={current_view === 'challenge'} on_unauthorized={on_unauthorized} on_back={() => navigate_to('today')} />}
+      {current_view === 'challenge' && <CommunityGate on_unauthorized={on_unauthorized}><ChallengeScreen user_uuid={user.user_uuid} is_active={current_view === 'challenge'} on_unauthorized={on_unauthorized} on_back={() => navigate_to('today')} /></CommunityGate>}
       {current_view === 'settings' && <>
         <div className="accountBar"><span>{user.display_name || t("운동 사용자")}{t("님")}</span><button className="quietButton" type="button" disabled={pending} onClick={logout}>{t("전체 기기 로그아웃")}</button></div>
         {(!settings.data || !options.data) && <article className="settingsCard"><LanguageSelector /></article>}
         <RequestState loading={settings.loading || options.loading} error={settings.error || options.error} on_retry={refresh_data} />
-        {settings.data && options.data && <SettingsScreen user_uuid={user.user_uuid} data={settings.data} options={options.data} pending={pending || settings.loading || options.loading} on_save={(body) => mutate('/settings', 'PUT', body, t("설정을 저장했습니다."))} on_notify={set_toast_message} />}
+        {settings.data && options.data && <SettingsScreen user_uuid={user.user_uuid} data={settings.data} options={options.data} pending={pending || settings.loading || options.loading} on_save={(body) => mutate('/settings', 'PUT', body, t("설정을 저장했습니다."))} on_notify={set_toast_message} on_unauthorized={on_unauthorized} />}
+        <SafetySettings on_unauthorized={on_unauthorized} />
+        <LegalDocuments />
+        <AccountDeletionForm user_uuid={user.user_uuid} on_deleted={on_account_deleted} />
       </>}
     </main>
     <BottomNavigation current_view={current_view === 'record-detail' ? 'record' : current_view} on_navigate={navigate_to} disabled={pending} />

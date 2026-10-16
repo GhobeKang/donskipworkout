@@ -7,6 +7,7 @@ import android.os.Build;
 import android.os.UserManager;
 import android.util.Log;
 
+// Cancel pre-migration alarms on upgrade/boot; never replenish local alarms.
 public class WorkoutReminderReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -14,15 +15,7 @@ public class WorkoutReminderReceiver extends BroadcastReceiver {
             UserManager user_manager = context.getSystemService(UserManager.class);
             if (user_manager == null || !user_manager.isUserUnlocked()) return;
         }
-        PendingResult pending_result = goAsync();
-        new Thread(() -> {
-            try {
-                WorkoutReminderScheduler.restore(context, intent);
-            } catch (Exception error) {
-                Log.e("WorkoutReminder", "Native reminder renewal failed", error);
-            } finally {
-                pending_result.finish();
-            }
-        }, "workout-reminder-renewal").start();
+        try { WorkoutReminderScheduler.clear(context); }
+        catch (Exception error) { Log.e("WorkoutReminder", "Legacy alarm cleanup failed", error); }
     }
 }

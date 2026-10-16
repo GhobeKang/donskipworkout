@@ -15,7 +15,10 @@ from sqlalchemy.exc import IntegrityError
 from .challenge_report import (
     build_round_growth_reports,
     capture_growth_plans,
+    enrich_growth_report,
+    growth_evidence_version,
     growth_method_version,
+    team_growth_summary,
 )
 from .challenge_service import (
     accepted_checkins_for_round,
@@ -23,6 +26,12 @@ from .challenge_service import (
     create_round_periods,
     finalize_round_if_due,
     round_progress,
+)
+from .community_policy import communityUserDependency
+from .community_safety import (
+    blocked_user_ids,
+    filter_blocked_members,
+    require_room_visible,
 )
 from .database import (
     challengeEvaluation,
@@ -40,7 +49,7 @@ from .database import (
 )
 from .notification_service import create_room_news_events
 from .schemas import challengeInviteJoin, challengeRoomCreate, challengeRulebookUpdate
-from .security import databaseDependency, userDependency, utc_now
+from .security import databaseDependency, utc_now
 
 router = APIRouter(prefix='/api/v1')
 seoul_timezone = ZoneInfo('Asia/Seoul')
@@ -83,6 +92,7 @@ def get_round_for_user(database, round_uuid: str, user_id: int):
     ).first()
     if result is None:
         raise HTTPException(404, '방을 찾을 수 없습니다.')
+    require_room_visible(database, user_id, result[1])
     return result
 
 
@@ -133,7 +143,8 @@ def room_can_be_deleted(rounds, now: datetime) -> bool:
     )
 
 
-def round_output(database, room: challengeRoom, current_round: challengeRound):
+def round_output(database, room: challengeRoom, current_round: challengeRound, viewer_user_id):
+    require_room_visible(database, viewer_user_id, room)
     members = database.execute(
         select(challengeRoundMember, userAccount)
         .join(userAccount, userAccount.user_id == challengeRoundMember.user_id)
@@ -144,13 +155,15 @@ def round_output(database, room: challengeRoom, current_round: challengeRound):
     room_rounds = database.scalars(
         select(challengeRound).where(challengeRound.room_id == room.room_id)
     ).all()
-    return {
+    host = database.get(userAccount, room.host_user_id) if room.host_user_id is not None else None
+    return filter_blocked_members(database, viewer_user_id, {
         'room_uuid': room.room_uuid,
         'round_uuid': current_round.round_uuid,
         'room_name': room.name,
         'description': room.description,
         'member_limit': room.member_limit,
-        'host_user_uuid': database.get(userAccount, room.host_user_id).user_uuid,
+        'host_user_uuid': host.user_uuid if host else None,
+        'host_vacant': host is None,
         'round_number': current_round.round_number,
         'status': current_round.status,
         'can_delete': room.status == 'open' and room_can_be_deleted(room_rounds, utc_now()),
@@ -165,11 +178,12 @@ def round_output(database, room: challengeRoom, current_round: challengeRound):
             **{key: value for key, value in rulebook.rulebook_json.items() if not key.startswith('_')},
         } if rulebook else {key: value for key, value in current_round.draft_rulebook.items() if not key.startswith('_')},
         'draft_rulebook': {key: value for key, value in current_round.draft_rulebook.items() if not key.startswith('_')},
-    }
+    })
 
 
 @router.get('/challenge-rooms')
-def list_challenge_rooms(user: userDependency, database: databaseDependency):
+def list_challenge_rooms(user: communityUserDependency, database: databaseDependency):
+    blocked_ids = blocked_user_ids(database, user.user_id)
     rows = database.execute(
         select(challengeRound, challengeRoom)
         .join(challengeRoom, challengeRoom.room_id == challengeRound.room_id)
@@ -210,7 +224,7 @@ def list_challenge_rooms(user: userDependency, database: databaseDependency):
                 and room.status == 'open'
                 and room_can_be_deleted(room_rounds_by_id[room.room_id], now),
             }
-            for current_round, room in rows
+            for current_round, room in rows if room.host_user_id not in blocked_ids
         ]
     }
 
@@ -218,7 +232,7 @@ def list_challenge_rooms(user: userDependency, database: databaseDependency):
 @router.post('/challenge-rooms', status_code=201)
 def create_challenge_room(
     payload: challengeRoomCreate,
-    user: userDependency,
+    user: communityUserDependency,
     database: databaseDependency,
 ):
     room = challengeRoom(
@@ -260,11 +274,11 @@ def create_challenge_room(
     except IntegrityError:
         database.rollback()
         raise HTTPException(409, '방을 만들 수 없습니다. 다시 시도해 주세요.') from None
-    return round_output(database, room, current_round)
+    return round_output(database, room, current_round, user.user_id)
 
 
 @router.get('/challenge-rooms/{room_uuid}')
-def read_challenge_room(room_uuid: str, user: userDependency, database: databaseDependency):
+def read_challenge_room(room_uuid: str, user: communityUserDependency, database: databaseDependency):
     row = database.execute(
         select(challengeRound, challengeRoom)
         .join(challengeRoom, challengeRoom.room_id == challengeRound.room_id)
@@ -280,11 +294,11 @@ def read_challenge_room(room_uuid: str, user: userDependency, database: database
     if row is None:
         raise HTTPException(404, '방을 찾을 수 없습니다.')
     current_round, room = row
-    return round_output(database, room, current_round)
+    return round_output(database, room, current_round, user.user_id)
 
 
 @router.delete('/challenge-rooms/{room_uuid}', status_code=204)
-def delete_challenge_room(room_uuid: str, user: userDependency, database: databaseDependency):
+def delete_challenge_room(room_uuid: str, user: communityUserDependency, database: databaseDependency):
     room = database.scalar(
         select(challengeRoom).where(challengeRoom.room_uuid == room_uuid).with_for_update()
     )
@@ -349,7 +363,7 @@ def delete_challenge_room(room_uuid: str, user: userDependency, database: databa
 def create_challenge_invite(
     round_uuid: str,
     request: Request,
-    user: userDependency,
+    user: communityUserDependency,
     database: databaseDependency,
 ):
     current_round, room, _ = get_round_for_user(database, round_uuid, user.user_id)
@@ -421,7 +435,7 @@ def create_challenge_invite(
 def join_challenge_by_invite(
     payload: challengeInviteJoin,
     request: Request,
-    user: userDependency,
+    user: communityUserDependency,
     database: databaseDependency,
 ):
     now = utc_now()
@@ -482,6 +496,9 @@ def join_challenge_by_invite(
     if invitation is None or room.status == 'cancelled':
         database.commit()
         raise HTTPException(404, '사용할 수 없는 초대 코드입니다.')
+    require_room_visible(database, user.user_id, room)
+    if room.host_user_id is None:
+        raise HTTPException(409, '방장이 없는 챌린지에는 참여할 수 없습니다.')
     if current_round.status not in {'draft', 'awaiting_consent'}:
         database.commit()
         raise HTTPException(409, '이미 모집이 끝난 방입니다.')
@@ -524,14 +541,14 @@ def join_challenge_by_invite(
     except IntegrityError:
         database.rollback()
         raise HTTPException(409, '이미 이 초대에 참여했거나 방 정원이 가득 찼습니다.') from None
-    return round_output(database, room, current_round)
+    return round_output(database, room, current_round, user.user_id)
 
 
 @router.put('/challenge-rounds/{round_uuid}/rulebook')
 def update_challenge_rulebook(
     round_uuid: str,
     payload: challengeRulebookUpdate,
-    user: userDependency,
+    user: communityUserDependency,
     database: databaseDependency,
 ):
     current_round, room, _ = get_round_for_user(database, round_uuid, user.user_id)
@@ -553,13 +570,13 @@ def update_challenge_rulebook(
             member.consented_roster_version = None
             member.consented_at = None
     database.commit()
-    return round_output(database, room, current_round)
+    return round_output(database, room, current_round, user.user_id)
 
 
 @router.post('/challenge-rounds/{round_uuid}/publish')
 def publish_challenge_rulebook(
     round_uuid: str,
-    user: userDependency,
+    user: communityUserDependency,
     database: databaseDependency,
 ):
     current_round, room, _ = get_round_for_user(database, round_uuid, user.user_id)
@@ -606,7 +623,7 @@ def publish_challenge_rulebook(
         database, current_round, room, user.user_id, version, now
     )
     database.commit()
-    response = round_output(database, room, current_round)
+    response = round_output(database, room, current_round, user.user_id)
     response['notification_delivery'] = notification_delivery
     return response
 
@@ -614,7 +631,7 @@ def publish_challenge_rulebook(
 @router.post('/challenge-rounds/{round_uuid}/consents')
 def consent_to_challenge(
     round_uuid: str,
-    user: userDependency,
+    user: communityUserDependency,
     database: databaseDependency,
 ):
     current_round, room, member = get_round_for_user(database, round_uuid, user.user_id)
@@ -626,7 +643,7 @@ def consent_to_challenge(
         ).with_for_update()
     )
     if member.consented_rulebook_version == current_round.rulebook_version and member.consented_roster_version == current_round.roster_version:
-        return round_output(database, room, current_round)
+        return round_output(database, room, current_round, user.user_id)
     latest = latest_rulebook(database, current_round.round_id)
     if latest is None or current_round.status not in {'awaiting_consent', 'draft'}:
         raise HTTPException(409, '동의할 수 있는 게시된 룰북이 없습니다.')
@@ -638,13 +655,13 @@ def consent_to_challenge(
     member.consented_at = now
     member.participant_status = 'consented'
     database.commit()
-    return round_output(database, room, current_round)
+    return round_output(database, room, current_round, user.user_id)
 
 
 @router.post('/challenge-rounds/{round_uuid}/start')
 def schedule_challenge_start(
     round_uuid: str,
-    user: userDependency,
+    user: communityUserDependency,
     database: databaseDependency,
 ):
     current_round, room, _ = get_round_for_user(database, round_uuid, user.user_id)
@@ -714,11 +731,11 @@ def schedule_challenge_start(
         delete(challengeInvitation).where(challengeInvitation.round_id == current_round.round_id)
     )
     database.commit()
-    return round_output(database, room, current_round)
+    return round_output(database, room, current_round, user.user_id)
 
 
 @router.delete('/challenge-rounds/{round_uuid}/consents/me', status_code=204)
-def withdraw_challenge_consent(round_uuid: str, user: userDependency, database: databaseDependency):
+def withdraw_challenge_consent(round_uuid: str, user: communityUserDependency, database: databaseDependency):
     current_round, _, member = get_round_for_user(database, round_uuid, user.user_id)
     lock_round(database, current_round)
     member = database.scalar(
@@ -764,7 +781,7 @@ def public_periods(database, periods):
     return result
 
 
-def public_evaluation(database, evaluation: dict):
+def public_evaluation(database, evaluation: dict, viewer_user_id):
     result = deepcopy(evaluation)
     result.pop('growth_reports', None)
     result.pop('growth_report_history', None)
@@ -789,18 +806,18 @@ def public_evaluation(database, evaluation: dict):
         account = database.get(userAccount, member_result.pop('user_id'))
         member_result['user_uuid'] = account.user_uuid if account else None
         member_result['display_name'] = account.display_name if account else '참가자'
-    return result
+    return filter_blocked_members(database, viewer_user_id, result)
 
 
 @router.get('/challenge-rounds/{round_uuid}/progress')
-def read_challenge_progress(round_uuid: str, user: userDependency, database: databaseDependency):
+def read_challenge_progress(round_uuid: str, user: communityUserDependency, database: databaseDependency):
     current_round, _, _ = get_round_for_user(database, round_uuid, user.user_id)
     now = utc_now()
     advance_round_status(database, current_round, now)
     snapshot = finalize_round_if_due(database, current_round, now)
     if snapshot is not None:
         database.commit()
-        return public_evaluation(database, snapshot)
+        return public_evaluation(database, snapshot, user.user_id)
     periods = round_progress(database, current_round, now)
     target_total = sum(period['target_count'] * len(period['members']) for period in periods)
     credited_total = sum(
@@ -809,7 +826,7 @@ def read_challenge_progress(round_uuid: str, user: userDependency, database: dat
         for member_result in period['members']
     )
     database.commit()
-    periods = public_periods(database, periods)
+    periods = filter_blocked_members(database, user.user_id, public_periods(database, periods))
     return {
         'round_uuid': current_round.round_uuid,
         'status': current_round.status,
@@ -825,14 +842,14 @@ def read_challenge_progress(round_uuid: str, user: userDependency, database: dat
 
 
 @router.get('/challenge-rounds/{round_uuid}/results')
-def read_challenge_results(round_uuid: str, user: userDependency, database: databaseDependency):
+def read_challenge_results(round_uuid: str, user: communityUserDependency, database: databaseDependency):
     current_round, _, _ = get_round_for_user(database, round_uuid, user.user_id)
     now = utc_now()
     advance_round_status(database, current_round, now)
     snapshot = finalize_round_if_due(database, current_round, now)
     if snapshot is not None:
         database.commit()
-        return public_evaluation(database, snapshot)
+        return public_evaluation(database, snapshot, user.user_id)
 
 
 
@@ -876,10 +893,33 @@ def host_growth_reports(database, current_round, room, user_id, now):
         snapshot_origin = snapshot.get('growth_snapshot_origin', 'settlement')
     else:
         reports = build_round_growth_reports(database, current_round, now)
+    if any('workout_time' not in report for report in reports.values()):
+        time_reports = build_round_growth_reports(database, current_round, now)
+        # Backfill timer evidence without changing previously finalized scores.
+        reports = {
+            member_id: {**report, 'workout_time': time_reports.get(member_id, {}).get('workout_time')}
+            for member_id, report in reports.items()
+        }
+        if snapshot is not None:
+            evaluation = database.scalar(select(challengeEvaluation).where(
+                challengeEvaluation.round_id == current_round.round_id,
+            ).order_by(challengeEvaluation.evaluation_version.desc()).limit(1).with_for_update())
+            if evaluation is not None:
+                evaluation.result_json = {**snapshot, 'growth_reports': reports}
+    hidden_member_ids = {str(member_id) for member_id in blocked_user_ids(database, user_id)}
+    current_names = {str(account_id): display_name for account_id, display_name in database.execute(
+        select(userAccount.user_id, userAccount.display_name).where(
+            userAccount.user_id.in_([int(member_id) for member_id in reports if member_id.isdecimal()]),
+        )
+    )}
+    reports = {member_id: {**enrich_growth_report(report),
+                          'display_name': current_names.get(member_id) or '참가자'}
+               for member_id, report in reports.items() if member_id not in hidden_member_ids}
     return reports, {
         'round_uuid': current_round.round_uuid,
         'report_state': report_state,
         'method_version': growth_method_version,
+        'evidence_method_version': growth_evidence_version,
         'snapshot_origin': snapshot_origin,
         'finalized_at': snapshot.get('finalized_at') if snapshot else None,
     }
@@ -887,17 +927,18 @@ def host_growth_reports(database, current_round, room, user_id, now):
 
 @router.get('/challenge-rounds/{round_uuid}/member-reports')
 def read_challenge_member_reports(
-    round_uuid: str, response: Response, user: userDependency, database: databaseDependency,
+    round_uuid: str, response: Response, user: communityUserDependency, database: databaseDependency,
 ):
     current_round, room, _ = get_round_for_user(database, round_uuid, user.user_id)
     reports, metadata = host_growth_reports(database, current_round, room, user.user_id, utc_now())
     summary_fields = (
         'user_uuid', 'display_name', 'participant_status', 'total_score', 'available_points',
         'earned_points', 'score_status', 'improved_exercise_count', 'computed_at',
+        'growth_summary',
     )
     response.headers['Cache-Control'] = 'private, no-store'
     database.commit()
-    return {**metadata, 'members': [
+    return {**metadata, 'team_summary': team_growth_summary(reports), 'members': [
         {field: report[field] for field in summary_fields} for report in reports.values()
     ]}
 
@@ -905,7 +946,7 @@ def read_challenge_member_reports(
 @router.get('/challenge-rounds/{round_uuid}/member-reports/{member_uuid}')
 def read_challenge_member_report(
     round_uuid: str, member_uuid: str, response: Response,
-    user: userDependency, database: databaseDependency,
+    user: communityUserDependency, database: databaseDependency,
 ):
     current_round, room, _ = get_round_for_user(database, round_uuid, user.user_id)
     reports, metadata = host_growth_reports(database, current_round, room, user.user_id, utc_now())
@@ -920,7 +961,7 @@ def read_challenge_member_report(
 @router.post('/challenge-rounds/{round_uuid}/continuations', status_code=201)
 def propose_challenge_continuation(
     round_uuid: str,
-    user: userDependency,
+    user: communityUserDependency,
     database: databaseDependency,
 ):
     previous_round, room, _ = get_round_for_user(database, round_uuid, user.user_id)
@@ -934,7 +975,7 @@ def propose_challenge_continuation(
         )
     )
     if next_round is not None:
-        return round_output(database, room, next_round)
+        return round_output(database, room, next_round, user.user_id)
     previous_rulebook = latest_rulebook(database, previous_round.round_id)
     if previous_rulebook is None:
         raise HTTPException(409, '복사할 룰북이 없습니다.')
@@ -988,5 +1029,5 @@ def propose_challenge_continuation(
         if existing_round is None:
             raise HTTPException(409, '다음 회차를 만들지 못했습니다. 최신 방 상태를 확인해 주세요.') from None
         room = database.get(challengeRoom, existing_round.room_id)
-        return round_output(database, room, existing_round)
-    return round_output(database, room, next_round)
+        return round_output(database, room, existing_round, user.user_id)
+    return round_output(database, room, next_round, user.user_id)

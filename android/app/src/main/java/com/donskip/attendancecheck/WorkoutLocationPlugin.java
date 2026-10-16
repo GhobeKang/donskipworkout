@@ -4,6 +4,7 @@ import android.Manifest;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
+import android.os.SystemClock;
 import android.provider.Settings;
 
 
@@ -92,7 +93,8 @@ public class WorkoutLocationPlugin extends Plugin {
         LocationServices.getFusedLocationProviderClient(getContext())
             .getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, cancellation.getToken())
             .addOnSuccessListener(location -> {
-                if (location == null || !location.hasAccuracy() || location.getAccuracy() > 150f) {
+                if (location == null || !location.hasAccuracy() || location.getAccuracy() > 150f
+                    || SystemClock.elapsedRealtimeNanos() - location.getElapsedRealtimeNanos() > 30_000_000_000L) {
                     call.reject("현재 위치를 정확히 확인하지 못했습니다. 잠시 후 다시 시도해 주세요.");
                     return;
                 }
@@ -129,6 +131,7 @@ public class WorkoutLocationPlugin extends Plugin {
                 .putLong("latitude", Double.doubleToRawLongBits(latitude))
                 .putLong("longitude", Double.doubleToRawLongBits(longitude))
                 .putBoolean("inside", false)
+                .remove("active_timer").remove("pending_exit")
                 .apply();
             WorkoutLocationStore.register(getContext())
                 .addOnSuccessListener(unused -> call.resolve())
@@ -163,5 +166,48 @@ public class WorkoutLocationPlugin extends Plugin {
         }
         call.resolve();
     }
+
+    @PluginMethod
+    public void setActiveTimer(PluginCall call) {
+        SharedPreferences settings = WorkoutLocationStore.preferences(getContext());
+        String user_uuid = call.getString("user_uuid", "");
+        if (!user_uuid.equals(settings.getString("user_uuid", "")) || !settings.contains("latitude")) {
+            call.resolve();
+            return;
+        }
+        String timer_uuid = call.getString("timer_uuid", "");
+        Integer expected_revision = call.getInt("expected_revision", 0);
+        if (timer_uuid.isEmpty() || expected_revision < 1) {
+            settings.edit().remove("active_timer").apply();
+        } else if (settings.getString("pending_exit", "").isEmpty()) {
+            JSObject active_timer = new JSObject();
+            active_timer.put("timer_uuid", timer_uuid);
+            active_timer.put("expected_revision", expected_revision);
+            active_timer.put("server_clock_offset", call.getDouble("server_clock_offset", 0.0));
+            settings.edit().putString("active_timer", active_timer.toString()).apply();
+        }
+        call.resolve();
+    }
+
+    @PluginMethod
+    public void peekPendingExit(PluginCall call) {
+        call.resolve(WorkoutLocationStore.readExit(getContext()));
+    }
+
+    @PluginMethod
+    public void recordExit(PluginCall call) {
+        WorkoutLocationStore.leave(getContext());
+        call.resolve(WorkoutLocationStore.readExit(getContext()));
+    }
+
+    @PluginMethod
+    public void acknowledgePendingExit(PluginCall call) {
+        String request_id = call.getString("request_id", "");
+        if (request_id.equals(WorkoutLocationStore.readExit(getContext()).optString("request_id"))) {
+            WorkoutLocationStore.preferences(getContext()).edit().remove("pending_exit").apply();
+        }
+        call.resolve();
+    }
+
 }
 

@@ -24,7 +24,7 @@
 
         </activity>
 
-        <!-- Replace stock restoration to discard expired workout alerts before restoring future ones. -->
+        <!-- Disable restoration; upgrade/boot cleanup removes legacy local workout alarms. -->
         <receiver android:name="com.capacitorjs.plugins.localnotifications.LocalNotificationRestoreReceiver" tools:node="remove" />
         <receiver android:name=".WorkoutReminderReceiver" android:exported="false">
             <intent-filter>
@@ -33,9 +33,10 @@
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
                 <action android:name="android.intent.action.TIME_SET" />
                 <action android:name="android.intent.action.TIMEZONE_CHANGED" />
-                <action android:name="android.app.action.SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED" />
             </intent-filter>
         </receiver>
+        <meta-data android:name="com.google.firebase.messaging.default_notification_channel_id" android:value="server-push" />
+        <meta-data android:name="com.google.firebase.messaging.default_notification_icon" android:resource="@drawable/ic_stat_attendance" />
         <receiver android:name=".WorkoutGeofenceReceiver" android:exported="false" />
         <receiver android:name=".WorkoutLocationBootReceiver" android:exported="false">
             <intent-filter>
@@ -64,5 +65,4 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
 </manifest>

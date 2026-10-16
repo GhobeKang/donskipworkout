@@ -1,5 +1,6 @@
 from pathlib import Path
 from typing import Literal
+from uuid import UUID
 
 from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -36,9 +37,9 @@ class serverSettings(BaseSettings):
     cors_origins: list[str] = ['http://localhost:3000']
     allowed_hosts: list[str] = ['localhost', '127.0.0.1']
     docs_enabled: bool = False
+    moderator_user_uuids: list[UUID] = []
     max_body_bytes: int = Field(default=16384, ge=1024, le=1048576)
     photo_storage_dir: str = 'media/photos'
-    photo_frame_dir: str = 'media/frames'
     notification_catalog_path: str = str(
         Path(__file__).resolve().parents[1] / 'notification-config' / 'catalog.json'
     )

@@ -1,11 +1,21 @@
 """Evidence-based personal comparisons; no population ranking or fitness estimates."""
 
 from collections import Counter, defaultdict
-from datetime import timedelta
+from datetime import date, timedelta
 
-from sqlalchemy import and_, case, select
+from sqlalchemy import and_, select
 
-from .database import exerciseItem, sharedExerciseItem, weeklyPromise, workoutSession, workoutSet
+from .database import (
+    exercise_report_area,
+    exerciseItem,
+    sharedExerciseItem,
+    userAccount,
+    weeklyPromise,
+    workoutSession,
+    workoutSet,
+)
+from .muscle_activity import muscle_activity_comparison
+from .workout_times import compare_workout_times, workout_time_days
 
 
 def exercise_key(workout_set):
@@ -46,10 +56,31 @@ def compare_conditions(previous_sets, current_sets):
     for dimension in ('reps', 'weight_kg'):
         previous_best = best_conditions(previous_sets, dimension)
         current_best = best_conditions(current_sets, dimension)
+        observations = []
+        for period_sets in (previous_sets, current_sets):
+            values_by_condition = defaultdict(dict)
+            for item in period_sets:
+                identity = exercise_key(item)
+                if identity is None:
+                    continue
+                condition = item.weight_kg if dimension == 'reps' else item.reps
+                value = item.reps if dimension == 'reps' else item.weight_kg
+                condition_key = (*identity, condition)
+                workout_date = item.workout_date.isoformat()
+                values_by_condition[condition_key][workout_date] = max(
+                    value, values_by_condition[condition_key].get(workout_date, value)
+                )
+            observations.append(values_by_condition)
         for condition_key in sorted(previous_best.keys() & current_best.keys()):
             previous_value, previous_set = previous_best[condition_key]
             current_value, current_set = current_best[condition_key]
+            if dimension == 'weight_kg' and previous_value == current_value == 0:
+                continue  # Zero external load is not evidence of maintained strength.
             delta = current_value - previous_value
+            confirmation_dates = sorted(
+                workout_date for workout_date, value in observations[1][condition_key].items()
+                if value >= current_value
+            )
             comparisons.append(
                 {
                     **exercise_identity(current_set),
@@ -68,9 +99,105 @@ def compare_conditions(previous_sets, current_sets):
                     else 'maintained',
                     'previous_date': previous_set.workout_date.isoformat(),
                     'current_date': current_set.workout_date.isoformat(),
+                    'previous_observation_days': len(observations[0][condition_key]),
+                    'current_observation_days': len(observations[1][condition_key]),
+                    'confirmation_dates': confirmation_dates,
+                    'confirmation_days': len(confirmation_dates),
+                    'evidence_status': 'repeated' if len(confirmation_dates) >= 2 else 'observed',
                 }
             )
     return comparisons
+
+
+def performance_summary(previous_sets, current_sets):
+    """Count exercises once; volume, attendance and unrelated exercises cannot imply progress."""
+    comparisons = compare_conditions(previous_sets, current_sets)
+    comparisons_by_exercise = defaultdict(list)
+    for item in comparisons:
+        comparisons_by_exercise[(item['exercise_source'], item['exercise_id'])].append(item)
+    exercise_keys = {
+        exercise_key(item) for item in [*previous_sets, *current_sets] if exercise_key(item)
+    }
+    summary = {
+        'improved_count': 0, 'maintained_count': 0, 'review_count': 0, 'mixed_count': 0,
+        'repeated_improved_count': 0, 'repeated_maintained_count': 0,
+        'exercise_count': len(exercise_keys), 'comparable_count': len(comparisons_by_exercise),
+        'uncomparable_count': len(exercise_keys - comparisons_by_exercise.keys()),
+        'comparisons': comparisons,
+    }
+    for conditions in comparisons_by_exercise.values():
+        directions = {item['direction'] for item in conditions}
+        category = (
+            'mixed' if {'improved', 'declined'} <= directions else
+            'improved' if 'improved' in directions else
+            'review' if 'declined' in directions else 'maintained'
+        )
+        summary[f'{category}_count'] += 1
+        for direction in ('improved', 'maintained'):
+            if category == direction and any(
+                item['direction'] == direction and item['confirmation_days'] >= 2
+                for item in conditions
+            ):
+                summary[f'repeated_{direction}_count'] += 1
+    summary['status'] = (
+        'mixed' if summary['mixed_count'] or (summary['improved_count'] and summary['review_count'])
+        else 'improving' if summary['improved_count']
+        else 'review_needed' if summary['review_count']
+        else 'maintaining' if summary['maintained_count'] else 'insufficient_data'
+    )
+    return summary
+
+
+def period_behavior(consistency, recovery, period_start, period_end):
+    """Keep unchanged goals and distinguish a return from a completed recovery."""
+    start_text, end_text = period_start.isoformat(), period_end.isoformat()
+    selected_weeks = [
+        week for week in consistency['weeks']
+        if week['status'] in {'kept', 'missed'}
+        and start_text <= (
+            date.fromisoformat(week['week_start']) + timedelta(days=6)
+        ).isoformat() <= end_text
+    ]
+    period_weeks = [
+        week for week in consistency['weeks']
+        if (
+            week['status'] in {'kept', 'missed', 'rest'}
+            and start_text <= (
+                date.fromisoformat(week['week_start']) + timedelta(days=6)
+            ).isoformat() <= end_text
+        ) or (
+            week['status'] == 'in_progress'
+            and week['week_start'] <= end_text
+            and (date.fromisoformat(week['week_start']) + timedelta(days=6)).isoformat() >= start_text
+        )
+    ]
+    period_events = [
+        event for event in recovery['events']
+        if start_text <= (event['first_return_date'] or event['return_week']) <= end_text
+    ]
+    selected_events = [
+        event for event in period_events
+        if event['status'] in {'recovered', 'pending'}
+        and event['first_return_date']
+        and start_text <= event['first_return_date'] <= end_text
+    ]
+    resolved_events = [event for event in period_events if event['status'] != 'pending']
+    recovered_count = sum(event['status'] == 'recovered' for event in selected_events)
+    return {
+        'consistency': {
+            **consistency, 'weeks': selected_weeks,
+            'period_weeks': period_weeks,
+            'period_evaluated_weeks': len(selected_weeks),
+            'period_kept_weeks': sum(week['status'] == 'kept' for week in selected_weeks),
+        },
+        'recovery': {
+            **recovery, 'events': selected_events,
+            'opportunity_count': len(resolved_events), 'recovered_count': recovered_count,
+            'recovery_percent': round(recovered_count / len(resolved_events) * 100)
+            if resolved_events else None,
+            'pending_count': sum(event['status'] == 'pending' for event in selected_events),
+        },
+    }
 
 
 def comparison_summary(previous_sets, current_sets):
@@ -228,23 +355,22 @@ def recovery_history(weeks, completed_dates):
     }
 
 
-def evaluate_report(recent, journey, consistency, recovery, challenges, completed_count):
+def evaluate_report(performance, journey_performance, consistency, recovery, challenges, completed_count):
     # Transparent rule composition, not an invented weighted score.
-    has_growth = recent['improved_count'] > 0
-    has_decline = recent['declined_count'] > 0
-    has_consistency = consistency['current_streak'] >= 3
+    has_growth = performance['improved_count'] > 0 or performance['mixed_count'] > 0
+    has_review = performance['review_count'] > 0 or performance['mixed_count'] > 0
+    has_consistency = consistency['current_streak'] >= 2
     latest_recovery = recovery['events'][-1] if recovery['events'] else None
-    latest_week = consistency['weeks'][-1]['week_start'] if consistency['weeks'] else None
     is_returning = bool(
         latest_recovery
-        and latest_recovery['return_week'] == latest_week
+        and latest_recovery['status'] in {'recovered', 'pending'}
         and latest_recovery['first_return_date']
     )
     if completed_count == 0:
         profile = 'no_activity'
-    elif has_growth and has_decline:
+    elif has_growth and has_review:
         profile = 'mixed_progress'
-    elif has_decline:
+    elif has_review:
         profile = 'review_conditions'
     elif is_returning:
         profile = 'returning'
@@ -256,28 +382,28 @@ def evaluate_report(recent, journey, consistency, recovery, challenges, complete
         profile = 'consistent'
     elif challenges['new_areas']:
         profile = 'exploring'
-    elif recent['comparable_count']:
+    elif performance['comparable_count']:
         profile = 'maintaining'
     else:
         profile = 'building_baseline'
     evidence_codes = []
     for condition, code in (
         (has_growth, 'recent_improvement'),
-        (has_decline, 'recent_decline'),
-        (journey['improved_count'] > 0, 'long_term_improvement'),
+        (has_review, 'matching_records_need_review'),
+        (journey_performance['improved_count'] > 0, 'long_term_improvement'),
         (has_consistency, 'consistent_weeks'),
         (is_returning, 'returned_after_miss'),
         (bool(challenges['personal_record_areas']), 'personal_record'),
         (bool(challenges['new_areas']), 'new_exercise'),
-        (recent['uncomparable_count'] > 0, 'incomplete_comparison'),
+        (performance['uncomparable_count'] > 0, 'incomplete_comparison'),
     ):
         if condition:
             evidence_codes.append(code)
     focus_code = (
         'log_comparable_sets'
-        if not recent['comparable_count']
+        if not performance['comparable_count']
         else 'review_comparison'
-        if has_decline
+        if has_review
         else 'keep_next_promise'
         if not has_consistency
         else 'maintain_own_pace'
@@ -286,7 +412,7 @@ def evaluate_report(recent, journey, consistency, recovery, challenges, complete
         'profile': profile,
         'evidence_codes': evidence_codes,
         'focus_code': focus_code,
-        'method_version': 'body_area_report_v2',
+        'method_version': 'performance_report_v3',
     }
 
 
@@ -319,10 +445,7 @@ def personal_report_output(
             workoutSet.weight_kg,
             workoutSet.reps,
             workoutSession.workout_date,
-            case(
-                (workoutSet.exercise_source == 'shared', sharedExerciseItem.target_area),
-                else_=exerciseItem.target_area,
-            ).label('target_area'),
+            exercise_report_area().label('target_area'),
         )
         .join(workoutSession, workoutSession.session_id == workoutSet.session_id)
         .outerjoin(
@@ -354,7 +477,18 @@ def personal_report_output(
     previous_sets = [
         item for item in valid_sets if previous_start <= item.workout_date <= previous_end
     ]
+    account = database.get(userAccount, user_id)
+    time_days = workout_time_days(
+        database, {user_id: account.timezone}, previous_start, as_of_date,
+    )[user_id]
+    workout_time = compare_workout_times(
+        {day: values for day, values in time_days.items()
+         if previous_start.isoformat() <= day <= previous_end.isoformat()},
+        {day: values for day, values in time_days.items() if day >= period_start.isoformat()},
+        previous_sets, current_sets,
+    )
     recent = comparison_summary(previous_sets, current_sets)
+    performance = performance_summary(previous_sets, current_sets)
 
     sets_by_exercise = defaultdict(list)
     for item in valid_sets:
@@ -391,6 +525,7 @@ def personal_report_output(
     )
     journey['baseline_start'] = first_period_start.isoformat() if first_period_start else None
     journey['baseline_end'] = first_period_end.isoformat() if first_period_end else None
+    journey_performance = performance_summary(first_sets, current_sets) if first_sets else performance_summary([], [])
     historical_sets = [item for item in valid_sets if item.workout_date < period_start]
     personal_records = [
         item
@@ -432,6 +567,7 @@ def personal_report_output(
     last_week_start = as_of_date - timedelta(days=as_of_date.weekday())
     consistency = promise_history(goal_changes, completed_dates, last_week_start, closure_date)
     recovery = recovery_history(consistency['weeks'], completed_dates)
+    behavior = period_behavior(consistency, recovery, period_start, as_of_date)
 
     current_days = {item.workout_date for item in current_sets}
     previous_days = {item.workout_date for item in previous_sets}
@@ -472,8 +608,13 @@ def personal_report_output(
         'history_start': completed_dates[0].isoformat() if completed_dates else None,
         'recent': recent,
         'journey': journey,
-        'consistency': consistency,
-        'recovery': recovery,
+        'performance': performance,
+        'journey_performance': journey_performance,
+        'workout_time': workout_time,
+        'muscle_activity': muscle_activity_comparison(
+            database, user_id, period_start, as_of_date, previous_start, previous_end,
+        ),
+        **behavior,
         'challenges': challenges,
         'preferences': preferences,
         'coverage': {
@@ -485,6 +626,7 @@ def personal_report_output(
             ),
         },
         'evaluation': evaluate_report(
-            recent, journey, consistency, recovery, challenges, len(current_dates)
+            performance, journey_performance, behavior['consistency'], behavior['recovery'],
+            challenges, len(current_dates)
         ),
     }

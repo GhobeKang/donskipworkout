@@ -11,6 +11,7 @@ final class WorkoutLocationManager: NSObject, CLLocationManagerDelegate {
     private let region_id = "workout_place"
     private let notification_id = "workout_arrival"
     private var position_completion: ((Result<CLLocation, Error>) -> Void)?
+    private var position_request_id = UUID()
 
     private override init() {
         super.init()
@@ -56,8 +57,22 @@ final class WorkoutLocationManager: NSObject, CLLocationManagerDelegate {
                 userInfo: [NSLocalizedDescriptionKey: "정확한 위치 권한을 먼저 허용해 주세요."])))
             return
         }
+        guard position_completion == nil else {
+            completion(.failure(NSError(domain: "WorkoutLocation", code: 3,
+                userInfo: [NSLocalizedDescriptionKey: "위치 확인이 이미 진행 중입니다."])))
+            return
+        }
+        let request_id = UUID()
+        position_request_id = request_id
         position_completion = completion
         manager.requestLocation()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 12) { [weak self] in
+            guard let self, self.position_request_id == request_id,
+                  let pending_completion = self.position_completion else { return }
+            self.position_completion = nil
+            pending_completion(.failure(NSError(domain: "WorkoutLocation", code: 4,
+                userInfo: [NSLocalizedDescriptionKey: "위치 확인 시간이 초과되었습니다."])))
+        }
     }
 
     func savePlace(user_uuid: String, name: String, latitude: Double, longitude: Double, language: String) {
@@ -79,7 +94,8 @@ final class WorkoutLocationManager: NSObject, CLLocationManagerDelegate {
         UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: [notification_id])
         for key in ["workout_place_user_uuid", "workout_place_name", "workout_place_latitude",
                     "workout_place_longitude", "workout_place_language", "workout_place_inside", "workout_place_request_id",
-                    "workout_place_notified_at", "workout_place_monitoring_error"] {
+                    "workout_place_notified_at", "workout_place_monitoring_error",
+                    "workout_active_timer", "workout_pending_exit"] {
             defaults.removeObject(forKey: key)
         }
     }
@@ -134,10 +150,42 @@ final class WorkoutLocationManager: NSObject, CLLocationManagerDelegate {
     }
 
     private func leave() {
+        recordExit()
         defaults.set(false, forKey: "workout_place_inside")
         defaults.removeObject(forKey: "workout_place_request_id")
         UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [notification_id])
         UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: [notification_id])
+    }
+
+    func setActiveTimer(user_uuid: String, timer_uuid: String, expected_revision: Int, server_clock_offset: Double) {
+        guard has_place, defaults.string(forKey: "workout_place_user_uuid") == user_uuid else { return }
+        if timer_uuid.isEmpty || expected_revision < 1 {
+            defaults.removeObject(forKey: "workout_active_timer")
+        } else if defaults.dictionary(forKey: "workout_pending_exit") == nil {
+            let active_timer: [String: Any] = ["timer_uuid": timer_uuid,
+                "expected_revision": expected_revision, "server_clock_offset": server_clock_offset]
+            defaults.set(active_timer, forKey: "workout_active_timer")
+        }
+    }
+
+    func pendingExit() -> [String: Any] {
+        return defaults.dictionary(forKey: "workout_pending_exit") ?? [:]
+    }
+
+    @discardableResult func recordExit() -> [String: Any] {
+        if !pendingExit().isEmpty { return pendingExit() }
+        guard has_place, var exit = defaults.dictionary(forKey: "workout_active_timer") else { return [:] }
+        exit["request_id"] = UUID().uuidString.lowercased()
+        exit["exited_at"] = Date().timeIntervalSince1970 * 1000
+        defaults.set(exit, forKey: "workout_pending_exit")
+        defaults.removeObject(forKey: "workout_active_timer")
+        return exit
+    }
+
+    func acknowledgeExit(request_id: String) {
+        if pendingExit()["request_id"] as? String == request_id {
+            defaults.removeObject(forKey: "workout_pending_exit")
+        }
     }
 
     func locationManager(_ manager: CLLocationManager, didEnterRegion region: CLRegion) {
@@ -171,7 +219,7 @@ final class WorkoutLocationManager: NSObject, CLLocationManagerDelegate {
         guard let completion = position_completion else { return }
         position_completion = nil
         guard let location = locations.last, location.horizontalAccuracy >= 0,
-              location.horizontalAccuracy <= 150 else {
+              location.horizontalAccuracy <= 150, abs(location.timestamp.timeIntervalSinceNow) <= 30 else {
             completion(.failure(NSError(domain: "WorkoutLocation", code: 2,
                 userInfo: [NSLocalizedDescriptionKey: "현재 위치를 정확히 확인하지 못했습니다. 잠시 후 다시 시도해 주세요."])))
             return
@@ -196,7 +244,11 @@ public class WorkoutLocationPlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "getCurrentPosition", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "savePlace", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "clearPlace", returnType: CAPPluginReturnPromise),
-        CAPPluginMethod(name: "validateStart", returnType: CAPPluginReturnPromise)
+        CAPPluginMethod(name: "validateStart", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "setActiveTimer", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "peekPendingExit", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "recordExit", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "acknowledgePendingExit", returnType: CAPPluginReturnPromise)
     ]
 
     @objc func getStatus(_ call: CAPPluginCall) {
@@ -277,4 +329,30 @@ public class WorkoutLocationPlugin: CAPPlugin, CAPBridgedPlugin {
             call.resolve(["valid": valid])
         }
     }
+
+    @objc func setActiveTimer(_ call: CAPPluginCall) {
+        DispatchQueue.main.async {
+            WorkoutLocationManager.shared.setActiveTimer(
+                user_uuid: call.getString("user_uuid") ?? "", timer_uuid: call.getString("timer_uuid") ?? "",
+                expected_revision: call.getInt("expected_revision") ?? 0,
+                server_clock_offset: call.getDouble("server_clock_offset") ?? 0)
+            call.resolve()
+        }
+    }
+
+    @objc func peekPendingExit(_ call: CAPPluginCall) {
+        DispatchQueue.main.async { call.resolve(WorkoutLocationManager.shared.pendingExit()) }
+    }
+
+    @objc func recordExit(_ call: CAPPluginCall) {
+        DispatchQueue.main.async { call.resolve(WorkoutLocationManager.shared.recordExit()) }
+    }
+
+    @objc func acknowledgePendingExit(_ call: CAPPluginCall) {
+        DispatchQueue.main.async {
+            WorkoutLocationManager.shared.acknowledgeExit(request_id: call.getString("request_id") ?? "")
+            call.resolve()
+        }
+    }
+
 }

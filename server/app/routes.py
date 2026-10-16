@@ -1,13 +1,14 @@
 from datetime import date, datetime, time, timedelta, timezone
-from zoneinfo import ZoneInfo
 from typing import Literal
 from uuid import UUID, uuid4
+from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, HTTPException, Query, Request, Response
 from sqlalchemy import delete, func, select, update
 from sqlalchemy.exc import IntegrityError
 
 from .challenge_service import record_activity_for_challenges
+from .community_policy import community_policy_version
 from .database import (
     attendanceSetting,
     authSession,
@@ -19,6 +20,7 @@ from .database import (
     weeklyPromise,
     workoutSession,
 )
+from .muscle_activity import muscle_activity_comparison
 from .notification_catalog import notificationCatalog, read_notification_catalog
 from .presentation import (
     calendar_output,
@@ -35,6 +37,7 @@ from .presentation import (
 from .schemas import (
     authenticationData,
     loginRequest,
+    muscleActivityComparison,
     periodReportData,
     recordsData,
     registerRequest,
@@ -63,6 +66,7 @@ from .security import (
     utc_now,
 )
 from .sharing import monday_of, period_report_output, schedule_next_promise, weekly_share_output
+from .workout_times import workout_time_days
 from .workouts import replace_workout_groups, workout_groups_output
 
 router = APIRouter(prefix='/api/v1')
@@ -89,10 +93,13 @@ def register(
     response: Response,
     database: databaseDependency,
 ):
+    if payload.accepted_policy_version != community_policy_version:
+        raise HTTPException(409, '최신 이용약관을 확인하고 동의해 주세요.')
     password_hash = password_hasher.hash(payload.password.get_secret_value())
     user = userAccount(
         user_uuid=str(uuid4()), email=payload.email, display_name=payload.display_name,
         country_code=payload.country_code, timezone=payload.timezone,
+        community_policy_version=community_policy_version, community_policy_accepted_at=utc_now(),
     )
     try:
         database.add(user)
@@ -159,7 +166,8 @@ def logout(
 
 @router.get('/me', response_model=userData)
 def me(user: userDependency):
-    return {'user_uuid': user.user_uuid, 'email': user.email, 'display_name': user.display_name}
+    return {'user_uuid': user.user_uuid, 'email': user.email, 'display_name': user.display_name,
+            'community_policy_version': user.community_policy_version}
 
 
 @router.get('/settings', response_model=settingsData)
@@ -380,12 +388,16 @@ def records(
     ).all()
     account = database.get(userAccount, user.user_id)
     account_created_date = account.created_at.replace(tzinfo=timezone.utc).astimezone(ZoneInfo(user.timezone)).date() if account else today
+    time_days = workout_time_days(
+        database, {user.user_id: user.timezone}, first_date, next_date - timedelta(days=1),
+    )[user.user_id]
     return {
         'calendar': calendar_output(
             sessions, year, month, today, scheduled_days, account_created_date
         ),
         'records': [
-            session_output(session, today) for session in sessions[offset : offset + limit]
+            session_output(session, today, time_days.get(session.workout_date.isoformat()))
+            for session in sessions[offset : offset + limit]
         ],
         'pagination': {
             'offset': offset,
@@ -406,7 +418,30 @@ def read_session(session_uuid: UUID, user: userDependency, database: databaseDep
     )
     if session is None:
         raise HTTPException(404, '기록을 찾을 수 없습니다.')
-    return session_output(session, local_today(user.timezone))
+    time_days = workout_time_days(
+        database, {user.user_id: user.timezone}, session.workout_date, session.workout_date,
+    )[user.user_id]
+    return session_output(
+        session, local_today(user.timezone), time_days.get(session.workout_date.isoformat()),
+    )
+
+
+@router.get('/muscle-activity', response_model=muscleActivityComparison)
+def weekly_muscle_activity(
+    user: userDependency, database: databaseDependency, response: Response,
+    start_date: date | None = None,
+):
+    response.headers['Cache-Control'] = 'no-store'
+    today = local_today(user.timezone)
+    selected_date = start_date or today
+    week_start = selected_date - timedelta(days=selected_date.weekday())
+    if selected_date.year < 2000 or selected_date.year > 2100 or week_start > today:
+        raise HTTPException(422, '조회할 수 없는 리포트 기간입니다.')
+    week_end = min(today, week_start + timedelta(days=6))
+    return muscle_activity_comparison(
+        database, user.user_id, week_start, week_end,
+        week_start - timedelta(days=7), week_end - timedelta(days=7),
+    )
 
 
 @router.get('/stats', response_model=statsData)

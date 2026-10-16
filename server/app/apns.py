@@ -1,8 +1,11 @@
 import time
+from datetime import timezone
 from pathlib import Path
 
 import httpx
 import jwt
+
+from .workout_notifications import parse_notification_time
 
 
 class apnsSender:
@@ -13,7 +16,8 @@ class apnsSender:
         self.topic = topic
         self.host = (
             'https://api.sandbox.push.apple.com'
-            if environment == 'sandbox' else 'https://api.push.apple.com'
+            if environment == 'sandbox'
+            else 'https://api.push.apple.com'
         )
         self.client = httpx.Client(http2=True, timeout=10)
         self.provider_token = None
@@ -33,10 +37,20 @@ class apnsSender:
 
     def send(self, event, device):
         event_data = {
-            key: value for key, value in event.payload.items()
+            key: value
+            for key, value in event.payload.items()
             if isinstance(value, (str, int, float, bool))
         }
         event_data.update({'event_uuid': event.event_uuid, 'category': event.category})
+        expires_at = parse_notification_time(event.payload.get('expires_at'))
+        expiration = (
+            str(int(expires_at.replace(tzinfo=timezone.utc).timestamp()))
+            if expires_at
+            else str(int(time.time()) + 86400)
+        )
+        english = device.language == 'en'
+        title = event.payload.get('title_en', event.title) if english else event.title
+        body = event.payload.get('body_en', event.body) if english else event.body
         return self.client.post(
             f'{self.host}/3/device/{device.token}',
             headers={
@@ -44,9 +58,11 @@ class apnsSender:
                 'apns-topic': self.topic,
                 'apns-push-type': 'alert',
                 'apns-priority': '10',
+                'apns-expiration': expiration,
+                'apns-collapse-id': event.event_uuid,
             },
             json={
-                'aps': {'alert': {'title': event.title, 'body': event.body}, 'sound': 'default'},
+                'aps': {'alert': {'title': title, 'body': body}, 'sound': 'default'},
                 **event_data,
             },
         )

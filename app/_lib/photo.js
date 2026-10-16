@@ -8,6 +8,15 @@ export function create_submission_id() {
   return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
 }
 
+export function pick_photo_character(catalog) {
+  const character_ids = catalog.character_ids;
+  if (!Array.isArray(character_ids) || character_ids.length === 0) {
+    throw new Error(t("사용할 수 있는 캐릭터가 없습니다. 화면을 새로고침해 주세요."));
+  }
+  const random_value = crypto.getRandomValues(new Uint32Array(1))[0];
+  return character_ids[random_value % character_ids.length];
+}
+
 export function load_photo_image(photo_url) {
   return new Promise((resolve, reject) => {
     const photo_image = new Image();
@@ -51,7 +60,7 @@ export async function crop_photo(source, catalog) {
   return photo_blob;
 }
 
-export function draw_photo(canvas, photo_image, catalog, frame_id, frame_image = null) {
+export function draw_photo(canvas, photo_image, catalog, branding_image) {
   canvas.width = catalog.width;
   canvas.height = catalog.height;
   const context = canvas.getContext('2d', { willReadFrequently: true });
@@ -66,17 +75,5 @@ export function draw_photo(canvas, photo_image, catalog, frame_id, frame_image =
     }
   }
   context.putImageData(pixels, 0, 0);
-  const frame = catalog.frames.find((item) => item.frame_id === frame_id);
-  if (!frame) throw new Error(t("선택한 프레임을 찾을 수 없습니다."));
-  for (const shape of frame.shapes || []) {
-    context.fillStyle = shape.color;
-    context.fillRect(...shape.box);
-  }
-  if (frame_image) {
-    const frame_scale = Math.min(canvas.width / frame_image.naturalWidth, canvas.height / frame_image.naturalHeight);
-    const frame_width = frame_image.naturalWidth * frame_scale;
-    const frame_height = frame_image.naturalHeight * frame_scale;
-    context.drawImage(frame_image, (canvas.width - frame_width) / 2, (canvas.height - frame_height) / 2,
-      frame_width, frame_height);
-  }
+  context.drawImage(branding_image, 0, 0, canvas.width, canvas.height);
 }

@@ -1,10 +1,13 @@
+import logging
 from datetime import datetime, time, timedelta
 from uuid import UUID, uuid4
 from zoneinfo import ZoneInfo
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Request
 from sqlalchemy import func, or_, select
 
+from .community_policy import community_policy_version
+from .community_safety import blocked_user_ids, require_room_visible, users_are_blocked
 from .database import (
     challengeCheckin,
     challengePeriod,
@@ -19,10 +22,17 @@ from .database import (
     userAccount,
 )
 from .notification_service import device_token_hash, next_allowed_send_at
-from .schemas import challengeNudgeRequest, notificationPreferenceUpdate, pushDeviceRegistration
+from .schemas import (
+    challengeNudgeRequest,
+    notificationPreferenceUpdate,
+    pushDeviceRegistration,
+    pushTestRequest,
+)
 from .security import databaseDependency, userDependency, utc_now
+from .workout_notifications import parse_notification_time
 
 router = APIRouter(prefix='/api/v1')
+logger = logging.getLogger(__name__)
 
 
 def get_member_round(database, round_uuid: UUID, user_id: int):
@@ -38,6 +48,7 @@ def get_member_round(database, round_uuid: UUID, user_id: int):
     ).first()
     if result is None:
         raise HTTPException(404, '방을 찾을 수 없습니다.')
+    require_room_visible(database, user_id, database.get(challengeRoom, result[0].room_id))
     return result
 
 
@@ -57,6 +68,7 @@ def read_notification_inbox(
     database: databaseDependency,
     limit: int = Query(default=30, ge=1, le=100),
 ):
+    blocked_ids = blocked_user_ids(database, user.user_id)
     rows = database.execute(
         select(notificationEvent, notificationInbox)
         .join(notificationInbox, notificationInbox.event_id == notificationEvent.event_id)
@@ -64,6 +76,10 @@ def read_notification_inbox(
         .outerjoin(challengeRoom, challengeRoom.room_id == challengeRound.room_id)
         .where(
             notificationInbox.user_id == user.user_id,
+            or_(notificationEvent.sender_user_id.is_(None),
+                notificationEvent.sender_user_id.not_in(blocked_ids)),
+            or_(challengeRoom.host_user_id.is_(None),
+                challengeRoom.host_user_id.not_in(blocked_ids)),
             or_(notificationEvent.round_id.is_(None), challengeRoom.status != 'cancelled'),
         )
         .order_by(notificationEvent.created_at.desc(), notificationEvent.event_id.desc())
@@ -178,6 +194,8 @@ def register_push_device(
     user: userDependency,
     database: databaseDependency,
 ):
+    if payload.user_uuid is not None and str(payload.user_uuid) != user.user_uuid:
+        raise HTTPException(401, '현재 로그인 계정으로 푸시를 다시 등록해 주세요.')
     provider = 'fcm' if payload.platform == 'android' else 'apns'
     current_token_hash = device_token_hash(payload.token)
     device = database.scalar(
@@ -214,6 +232,8 @@ def register_push_device(
             provider=provider,
             token=payload.token,
             token_hash=current_token_hash,
+            workout_push_enabled=payload.workout_push_enabled,
+            language=payload.language,
             active=True,
             updated_at=utc_now(),
         )
@@ -225,10 +245,16 @@ def register_push_device(
         target_device.provider = provider
         target_device.token = payload.token
         target_device.token_hash = current_token_hash
+        target_device.workout_push_enabled = payload.workout_push_enabled
+        target_device.language = payload.language
         target_device.active = True
         target_device.updated_at = utc_now()
     database.commit()
-    return {'registered': True, 'platform': payload.platform}
+    return {
+        'registered': True,
+        'platform': payload.platform,
+        'workout_push_enabled': target_device.workout_push_enabled,
+    }
 
 
 @router.delete('/push-devices/current', status_code=204)
@@ -262,6 +288,8 @@ def send_challenge_nudges(
     room = database.get(challengeRoom, current_round.room_id)
     if room.host_user_id != user.user_id:
         raise HTTPException(403, '방장만 참가자를 재촉할 수 있습니다.')
+    if user.community_policy_version != community_policy_version:
+        raise HTTPException(409, '커뮤니티 이용약관을 확인하고 동의해 주세요.')
     now = utc_now()
     if current_round.status != 'active':
         raise HTTPException(409, '진행 중인 회차에서만 재촉할 수 있습니다.')
@@ -295,13 +323,19 @@ def send_challenge_nudges(
     sent_count = 0
     skipped = []
     for target_uuid, (member, account) in targets:
-        accepted_count = database.scalar(
-            select(func.count(challengeCheckin.checkin_id)).where(
-                challengeCheckin.period_id == active_period.period_id,
-                challengeCheckin.user_id == member.user_id,
-                challengeCheckin.status == 'accepted',
+        if users_are_blocked(database, user.user_id, member.user_id):
+            skipped.append(str(target_uuid))
+            continue
+        accepted_count = (
+            database.scalar(
+                select(func.count(challengeCheckin.checkin_id)).where(
+                    challengeCheckin.period_id == active_period.period_id,
+                    challengeCheckin.user_id == member.user_id,
+                    challengeCheckin.status == 'accepted',
+                )
             )
-        ) or 0
+            or 0
+        )
         if accepted_count >= active_period.target_count:
             skipped.append(str(target_uuid))
             continue
@@ -316,13 +350,15 @@ def send_challenge_nudges(
         local_day_start = datetime.combine(recipient_now.date(), time.min, recipient_timezone)
         day_start_utc = local_day_start.astimezone(ZoneInfo('UTC')).replace(tzinfo=None)
         recent_nudges = database.scalars(
-            select(notificationEvent).where(
+            select(notificationEvent)
+            .where(
                 notificationEvent.round_id == current_round.round_id,
                 notificationEvent.recipient_user_id == member.user_id,
                 notificationEvent.sender_user_id == user.user_id,
                 notificationEvent.category == 'host_nudge',
                 notificationEvent.created_at >= day_start_utc,
-            ).order_by(notificationEvent.created_at.desc())
+            )
+            .order_by(notificationEvent.created_at.desc())
         ).all()
         if len(recent_nudges) >= 2 or (
             recent_nudges and recent_nudges[0].created_at > now - timedelta(hours=4)
@@ -376,3 +412,175 @@ def send_challenge_nudges(
         sent_count += 1
     database.commit()
     return {'accepted_count': sent_count, 'skipped_user_uuids': skipped}
+
+
+@router.get('/notifications/status')
+def read_push_status(request: Request, user: userDependency, database: databaseDependency):
+    worker = getattr(request.app.state, 'notification_worker_state', {})
+    devices = database.scalars(
+        select(pushDevice).where(pushDevice.user_id == user.user_id, pushDevice.active.is_(True))
+    ).all()
+    latest_deliveries = database.execute(
+        select(notificationOutbox.status, notificationOutbox.last_error, notificationEvent.category)
+        .join(notificationEvent, notificationEvent.event_id == notificationOutbox.event_id)
+        .where(notificationEvent.recipient_user_id == user.user_id)
+        .order_by(notificationOutbox.outbox_id.desc())
+        .limit(5)
+    ).all()
+    last_schedule_at = parse_notification_time(worker.get('last_schedule_at'))
+    scheduler_running = bool(
+        worker.get('running')
+        and last_schedule_at
+        and utc_now() - last_schedule_at < timedelta(minutes=2)
+        and worker.get('last_error') not in {'workout_schedule_failed', 'push_batch_failed'}
+    )
+    return {
+        'delivery_mode': 'server_push',
+        'worker_running': bool(worker.get('running')),
+        'fcm_initialized': bool(worker.get('fcm_initialized')),
+        'apns_initialized': bool(worker.get('apns_initialized')),
+        'scheduler_running': scheduler_running,
+        'last_error': worker.get('last_error'),
+        'registered_devices': [
+            {
+                'installation_uuid': device.installation_uuid,
+                'platform': device.platform,
+                'workout_push_enabled': device.workout_push_enabled,
+            }
+            for device in devices
+        ],
+        'recent_deliveries': [
+            {
+                'status': status,
+                'error': error,
+                'category': category,
+            }
+            for status, error, category in latest_deliveries
+        ],
+    }
+
+
+@router.post('/notifications/test', status_code=202)
+def queue_push_test(
+    request: Request,
+    user: userDependency,
+    database: databaseDependency,
+    installation_uuid: UUID | None = None,
+    payload: pushTestRequest | None = None,
+):
+    payload = payload or pushTestRequest()
+    if (
+        installation_uuid is not None
+        and payload.installation_uuid is not None
+        and installation_uuid != payload.installation_uuid
+    ):
+        raise HTTPException(422, '조회 조건과 본문의 기기 ID가 일치하지 않습니다.')
+    installation_uuid = installation_uuid or payload.installation_uuid
+    worker = getattr(request.app.state, 'notification_worker_state', {})
+    device_query = select(pushDevice).where(
+        pushDevice.user_id == user.user_id,
+        pushDevice.active.is_(True),
+    )
+    if installation_uuid is not None:
+        device_query = device_query.where(pushDevice.installation_uuid == str(installation_uuid))
+    devices = database.scalars(device_query.limit(2)).all()
+    if not devices:
+        raise HTTPException(409, '이 기기의 푸시 등록을 먼저 완료해 주세요.')
+    if len(devices) > 1:
+        raise HTTPException(422, '등록된 기기가 여러 대입니다. installation_uuid를 지정해 주세요.')
+    device = devices[0]
+    if not worker.get('running') or not worker.get(f'{device.provider}_initialized'):
+        raise HTTPException(503, '서버 푸시 발송이 활성화되지 않았습니다.')
+    # Serialize test requests per account so concurrent taps cannot bypass the limit.
+    database.scalar(
+        select(userAccount).where(userAccount.user_id == user.user_id).with_for_update()
+    )
+    now = utc_now()
+    previous_test = database.scalar(
+        select(notificationEvent.event_id)
+        .where(
+            notificationEvent.recipient_user_id == user.user_id,
+            notificationEvent.category == 'push_test',
+            notificationEvent.created_at > now - timedelta(minutes=1),
+        )
+        .limit(1)
+    )
+    if previous_test:
+        raise HTTPException(429, '테스트 알림은 1분 뒤 다시 요청해 주세요.')
+    scheduled_at = now + timedelta(seconds=payload.delay_seconds)
+    channel_id = 'workout-push' if payload.channel == 'workout' else 'server-push'
+    event = notificationEvent(
+        event_uuid=str(uuid4()),
+        event_key=f'push-test:{uuid4()}',
+        recipient_user_id=user.user_id,
+        category='push_test',
+        title='서버 푸시 테스트',
+        body='서버에서 전송한 테스트 알림입니다.',
+        payload={
+            'channel_id': channel_id,
+            'scheduled_at': scheduled_at.isoformat() + 'Z',
+            'expires_at': (scheduled_at + timedelta(seconds=payload.ttl_seconds)).isoformat() + 'Z',
+            'delay_seconds': payload.delay_seconds,
+            'ttl_seconds': payload.ttl_seconds,
+            'title_en': 'Server push test',
+            'body_en': 'This test notification was sent by the server.',
+        },
+        created_at=now,
+    )
+    database.add(event)
+    database.flush()
+    outbox = notificationOutbox(
+        event_id=event.event_id,
+        device_id=device.device_id,
+        next_attempt_at=scheduled_at,
+        created_at=now,
+    )
+    database.add(outbox)
+    database.commit()
+    logger.info(
+        'Push test queued event_uuid=%s outbox_id=%s provider=%s channel_id=%s scheduled_at=%s',
+        event.event_uuid,
+        outbox.outbox_id,
+        device.provider,
+        channel_id,
+        event.payload['scheduled_at'],
+    )
+    return {
+        'queued': True,
+        'installation_uuid': device.installation_uuid,
+        'provider': device.provider,
+        **push_test_output(event, outbox),
+    }
+
+
+def push_test_output(event: notificationEvent, outbox: notificationOutbox):
+    return {
+        'event_uuid': event.event_uuid,
+        'outbox_id': outbox.outbox_id,
+        'status': outbox.status,
+        'channel_id': event.payload.get('channel_id', 'server-push'),
+        'created_at': event.created_at.isoformat() + 'Z',
+        'scheduled_at': event.payload.get('scheduled_at'),
+        'expires_at': event.payload.get('expires_at'),
+        'delay_seconds': event.payload.get('delay_seconds', 15),
+        'ttl_seconds': event.payload.get('ttl_seconds'),
+        'attempt_count': outbox.attempt_count,
+        'provider_message_id': outbox.provider_message_id,
+        'last_error': outbox.last_error,
+    }
+
+
+@router.get('/notifications/test/{event_uuid}')
+def read_push_test(event_uuid: UUID, user: userDependency, database: databaseDependency):
+    result = database.execute(
+        select(notificationEvent, notificationOutbox)
+        .join(notificationOutbox, notificationOutbox.event_id == notificationEvent.event_id)
+        .where(
+            notificationEvent.event_uuid == str(event_uuid),
+            notificationEvent.recipient_user_id == user.user_id,
+            notificationEvent.category == 'push_test',
+        )
+    ).first()
+    if result is None:
+        raise HTTPException(404, '테스트 알림을 찾을 수 없습니다.')
+    return push_test_output(*result)

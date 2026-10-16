@@ -1,3 +1,4 @@
+import InfoTooltip from '../ui/InfoTooltip';
 import { useLanguage } from '../../_hooks/useLanguage';
 import { report_period_choices, report_year } from '../../_lib/reportPeriods';
 

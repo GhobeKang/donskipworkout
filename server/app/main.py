@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse
 from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
+from .account_deletion import run_photo_cleanup
 from .challenge_routes import router as challenge_router
 from .coaching_routes import router as coaching_router
 from .config import serverSettings
@@ -15,6 +16,7 @@ from .middleware import configure_logging, requestSecurityMiddleware
 from .notification_routes import router as notification_router
 from .photo_routes import router as photo_router
 from .routes import router
+from .safety_routes import router as safety_router
 from .timer_routes import router as timer_router
 from .workouts import router as workout_router
 
@@ -31,6 +33,15 @@ def create_app(settings=None, database_engine=None):
     @asynccontextmanager
     async def lifespan(app):
         notification_worker = None
+        photo_cleanup_worker = asyncio.create_task(run_photo_cleanup(
+            app.state.session_factory, settings.photo_storage_dir,
+        ))
+        app.state.notification_worker_state = {
+            'running': False,
+            'fcm_initialized': False,
+            'apns_initialized': False,
+            'last_error': 'provider_not_configured',
+        }
         if settings.firebase_project_id or settings.apns_key_id:
             from .notification_worker import run_notification_worker
 
@@ -44,11 +55,16 @@ def create_app(settings=None, database_engine=None):
                     settings.apns_auth_key_path,
                     settings.apns_topic,
                     settings.apns_environment,
+                    settings.notification_catalog_path,
+                    app.state.notification_worker_state,
                 )
             )
         try:
             yield
         finally:
+            photo_cleanup_worker.cancel()
+            with suppress(asyncio.CancelledError):
+                await photo_cleanup_worker
             if notification_worker:
                 notification_worker.cancel()
                 with suppress(asyncio.CancelledError):
@@ -72,6 +88,7 @@ def create_app(settings=None, database_engine=None):
     app.include_router(workout_router)
     app.include_router(timer_router)
     app.include_router(notification_router)
+    app.include_router(safety_router)
 
     @app.get('/health')
     def health():

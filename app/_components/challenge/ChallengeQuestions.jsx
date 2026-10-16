@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { api_request } from '../../_lib/api';
+import SafetyActions from '../safety/SafetyActions';
 import { useLanguage } from '../../_hooks/useLanguage';
 import MaterialIcon from '../ui/MaterialIcon';
 
@@ -52,7 +53,7 @@ function QuestionComposer({ is_question = false, is_host = false, on_submit }) {
   </form>;
 }
 
-function QuestionConversation({ round_uuid, question_uuid, is_host, is_active, on_back, on_unauthorized }) {
+function QuestionConversation({ round_uuid, question_uuid, user_uuid, is_host, is_active, on_back, on_unauthorized, on_blocked }) {
   const { t, language, localize_message } = useLanguage();
   const [question, set_question] = useState(null);
   const [loading, set_loading] = useState(false);
@@ -104,9 +105,11 @@ function QuestionConversation({ round_uuid, question_uuid, is_host, is_active, o
     {error_message && <p className="requestState" role="alert">{error_message}</p>}
     {loading && <p className="infoText" role="status">{t('불러오는 중…')}</p>}
     {question && <>
+      <SafetyActions content_type="user" content_id={is_host ? question.author_uuid : question.host_uuid} target_user_uuid={is_host ? question.author_uuid : question.host_uuid} on_unauthorized={on_unauthorized} on_blocked={on_blocked} />
       <div className="questionOriginal"><span className="questionCategory">{t(question_categories.find(([value]) => value === question.category)?.[1] || '기타 요청')}</span><h3>{question.author_name}</h3><p>{question.body}</p><time dateTime={question.created_at}>{format_date(question.created_at)}</time></div>
+      {question.author_uuid !== user_uuid && !question.is_removed && <SafetyActions content_type="question" content_id={question.question_uuid} on_unauthorized={on_unauthorized} />}
       {question.next_cursor && <button className="quietButton" type="button" disabled={loading} onClick={() => load_question(question.next_cursor)}>{t('이전 메시지 보기')}</button>}
-      <ol className="questionMessages">{question.replies.map((reply) => <li key={reply.reply_id} className={reply.is_host ? 'isHost' : ''}><div><strong>{t(reply.is_host ? '방장' : '참가자')}</strong><time dateTime={reply.created_at}>{format_date(reply.created_at)}</time></div><p>{reply.body}</p></li>)}</ol>
+      <ol className="questionMessages">{question.replies.map((reply) => <li key={reply.reply_id} className={reply.is_host ? 'isHost' : ''}><div><strong>{t(reply.is_host ? '방장' : '참가자')}</strong><time dateTime={reply.created_at}>{format_date(reply.created_at)}</time></div><p>{reply.body}</p>{reply.sender_uuid !== user_uuid && !reply.is_removed && <SafetyActions content_type="reply" content_id={reply.reply_id} on_unauthorized={on_unauthorized} />}</li>)}</ol>
       <div ref={message_end} />
       {notice && <p className="challengeSuccess" role="status">{notice}</p>}
       {question.can_reply ? <QuestionComposer is_host={is_host} on_submit={send_reply} /> : <p className="infoText">{t('이 대화는 조회만 가능합니다.')}</p>}
@@ -114,7 +117,7 @@ function QuestionConversation({ round_uuid, question_uuid, is_host, is_active, o
   </div>;
 }
 
-export default function ChallengeQuestions({ round_uuid, is_host, is_active, can_write, on_unauthorized }) {
+export default function ChallengeQuestions({ round_uuid, user_uuid, is_host, is_active, can_write, on_unauthorized, on_blocked }) {
   const { t, localize_message } = useLanguage();
   const [panel_open, set_panel_open] = useState(false);
   const [show_composer, set_show_composer] = useState(false);
@@ -201,7 +204,7 @@ export default function ChallengeQuestions({ round_uuid, is_host, is_active, can
       </header>
       <div className="questionDialogBody">
       <p className="questionPrivacy" id={`${dialog_id}-privacy`}><MaterialIcon>lock</MaterialIcon>{t('질문과 답변은 작성자와 방장만 볼 수 있어요. 다른 참가자에게는 공개되지 않아요.')}</p>
-      {selected_question ? <QuestionConversation key={selected_question} round_uuid={round_uuid} question_uuid={selected_question} is_host={is_host} is_active={is_active && panel_open} on_back={() => set_selected_question(null)} on_unauthorized={on_unauthorized} /> : <>
+      {selected_question ? <QuestionConversation key={selected_question} round_uuid={round_uuid} question_uuid={selected_question} user_uuid={user_uuid} is_host={is_host} is_active={is_active && panel_open} on_back={() => set_selected_question(null)} on_unauthorized={on_unauthorized} on_blocked={on_blocked} /> : <>
         {!is_host && can_write && <button className="wideButton secondary" type="button" aria-expanded={show_composer} onClick={() => set_show_composer((current) => !current)}><MaterialIcon>{show_composer ? 'close' : 'edit_square'}</MaterialIcon>{t(show_composer ? '작성란 접기' : '새 질문 남기기')}</button>}
         {error_message && <p className="requestState" role="alert">{error_message}</p>}
         <div hidden={!show_composer}>{!is_host && can_write && <QuestionComposer is_question on_submit={create_question} />}</div>

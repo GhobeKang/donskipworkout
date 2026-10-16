@@ -126,11 +126,18 @@ function AttendanceContent() {
     set_auth_error('');
     set_toast_message(message);
   };
+  const finish_account_deletion = (message) => {
+    auth_controller.current?.abort();
+    set_user(null);
+    set_auth_error('');
+    set_session_restore_error('');
+    set_toast_message(message);
+  };
   if (auth_loading) return <div className="phoneShell">
     <StatusBar />
     <main className="appContent"><p className="infoText">{t("로그인 상태를 확인하는 중…")}</p></main>
   </div>;
-  if (user) return <AuthenticatedApp key={user.user_uuid} user={user} on_unauthorized={expire_session} on_logout={finish_logout} />;
+  if (user) return <AuthenticatedApp key={user.user_uuid} user={user} on_unauthorized={expire_session} on_logout={finish_logout} on_account_deleted={finish_account_deletion} />;
   if (session_restore_error) return <div className="phoneShell">
     <StatusBar />
     <main className="appContent"><RequestState error={session_restore_error} on_retry={() => set_session_restore_revision((value) => value + 1)} /></main>

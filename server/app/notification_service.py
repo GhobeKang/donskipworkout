@@ -5,6 +5,7 @@ from zoneinfo import ZoneInfo
 
 from sqlalchemy import select
 
+from .community_safety import users_are_blocked
 from .database import (
     challengeRoundMember,
     notificationEvent,
@@ -62,6 +63,8 @@ def create_room_news_events(
     created_count = 0
     queued_count = 0
     for member in recipients:
+        if users_are_blocked(database, sender_user_id, member.user_id):
+            continue
         event_key = f'rulebook:{current_round.round_uuid}:{rulebook_version}:{member.user_id}'
         if database.scalar(
             select(notificationEvent.event_id).where(notificationEvent.event_key == event_key)

@@ -15,6 +15,9 @@
   --outside: #e8e9e5;
   --layout-side-gap: 22px;
   --component-gap: 24px;
+  --form_field_gap: 20px;
+  --form_label_gap: 12px;
+  --form_column_gap: 12px;
   --bottom-nav-height: 78px;
   --card-radius: 22px;
 }
@@ -67,6 +70,16 @@ img { max-width: 100%; }
 .sectionHeading h2, .recentHeading h2, .memorySection h2 { margin: 0; font-size: 16px; letter-spacing: -.03em; }
 .sectionHeading .eyebrow { margin: 0; }
 .infoText { color: var(--muted); font-size: 13px; line-height: 1.7; }
+.infoTooltip { display: inline-flex; vertical-align: middle; flex-shrink: 0; line-height: 1; }
+.infoTooltipTrigger { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 12px; background: transparent; color: var(--muted); vertical-align: middle; }
+.infoTooltipTrigger .material-symbols-rounded { font-size: 18px; }
+.infoTooltipTrigger:hover, .infoTooltipTrigger[aria-expanded="true"] { color: var(--accent-text); background: var(--card-2); }
+.infoTooltipContent { position: fixed; z-index: 10000; display: block; overflow-y: auto; overscroll-behavior: contain; padding: 14px 16px; border: 1px solid var(--line); border-radius: 14px; background: var(--card); color: var(--white); box-shadow: 0 8px 28px #0002; font-size: 13px; font-weight: 400; line-height: 1.7; text-align: left; white-space: normal; overflow-wrap: anywhere; }
+.infoTooltipParagraph { display: block; }
+.infoTooltipParagraph + .infoTooltipParagraph { margin-top: 8px; }
+.infoEntry { display: flex; align-items: center; gap: 8px; }
+.infoEntry > button:first-child { flex: 1; min-width: 0; margin: 0; }
+.infoCaption { display: flex; align-items: center; gap: 4px; color: var(--muted); font-size: 12px; }
 .quietButton { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; border: 0; padding: 6px 4px; background: transparent; color: var(--muted); font-size: 13px; }
 .quietButton .material-symbols-rounded { font-size: 18px; }
 .textButton { min-height: 44px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 12px; color: var(--white); background: var(--card); font-size: 13px; }
@@ -152,8 +165,8 @@ img { max-width: 100%; }
 .challengeSuccess { padding: 12px 14px; border-radius: 14px; background: var(--card-2); color: var(--rest); font-size: 13px; }
 .challengeCard > .sectionHeading { margin-bottom: 12px; }
 .challengeCard > .challengeForm + .wideButton { margin-top: 16px; }
-.challengeForm { display: grid; gap: 12px; }
-.challengeForm label { display: grid; gap: 6px; color: var(--muted); font-size: 12px; font-weight: 650; }
+.challengeForm { display: grid; gap: var(--form_field_gap); }
+.challengeForm label { display: grid; gap: var(--form_label_gap); color: var(--muted); font-size: 12px; font-weight: 650; }
 .challengeForm input, .challengeForm select, .challengeForm textarea { width: 100%; min-height: 48px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--bg); color: var(--white); font-size: 14px; }
 .challengeForm textarea { resize: vertical; }
 .challengeForm .infoText { margin: 0; }
@@ -182,7 +195,7 @@ img { max-width: 100%; }
 .challengeRulebookPaper { position: relative; padding: 14px; border: 1px solid var(--line); border-radius: 15px; background: var(--bg); box-shadow: 0 4px 12px rgb(0 0 0 / 4%); }
 .challengeRulebookPaperHeading { display: flex; align-items: center; gap: 7px; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--line); color: var(--accent-text); font-size: 11px; font-weight: 750; }
 .challengeRulebookPaperHeading .material-symbols-rounded { font-size: 17px; }
-.challengeRulebookFields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 11px; }
+.challengeRulebookFields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--form_field_gap) var(--form_column_gap); }
 .challengeRulebookFields .challengeRulebookDescription { grid-column: 1 / -1; }
 .challengeRulebookEndDate { display: grid; align-content: center; gap: 5px; min-height: 61px; padding: 8px 11px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); }
 .challengeRulebookEndDate > span { color: var(--muted); font-size: 10px; }
@@ -323,7 +336,7 @@ img { max-width: 100%; }
 .challengeNotificationOption input[type="checkbox"] { width: 18px; min-height: 18px; height: 18px; margin: 2px 0 0; accent-color: var(--accent); }
 .challengeNotificationOption span { display: grid; gap: 4px; min-width: 0; }
 .challengeNotificationOption small { color: var(--muted); font-size: 11px; font-weight: 450; line-height: 1.5; }
-.challengeQuietHours { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.challengeQuietHours { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--form_column_gap); }
 .challengeNotificationRow { display: flex; flex: 1; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-height: 58px; padding: 8px 0; border: 0; background: transparent; color: var(--white); text-align: left; }
 .challengeNotificationRow > span:first-child { display: grid; gap: 4px; min-width: 0; }
 .challengeNotificationRow small { color: var(--muted); font-size: 11px; }
@@ -366,6 +379,7 @@ img { max-width: 100%; }
 .recordEntry.isFocused { outline: 2px solid var(--accent-text); outline-offset: 3px; border-radius: 12px; }
 .recordItemButton { width: 100%; display: grid; grid-template-columns: minmax(0, 1fr) clamp(104px, 28vw, 112px); gap: 4px 12px; min-height: 90px; padding: 16px 0; border: 0; border-bottom: 1px solid var(--line); background: transparent; color: var(--white); text-align: left; }
 .recordDate { grid-column: 1; color: var(--muted); font-size: 12px; }
+.recordDuration { grid-column: 1 / -1; grid-row: 3; color: var(--accent-text); font-size: 12px; overflow-wrap: anywhere; }
 .recordTitle { grid-column: 1; grid-row: 2; min-width: 0; overflow-wrap: anywhere; white-space: pre-wrap; font-size: 15px; font-weight: 600; }
 .recordMeta { grid-column: 2; grid-row: 1; justify-self: end; color: var(--accent-text); font-size: 11px; white-space: nowrap; }
 .recordOpenLabel { grid-column: 2; grid-row: 2; display: flex; align-items: center; justify-content: end; gap: 3px; color: var(--muted); font-size: 11px; white-space: nowrap; }
@@ -395,6 +409,11 @@ img { max-width: 100%; }
 .recordDetailHeading > span { color: var(--accent-text); font-size: 12px; }
 .recordDetailDate, .recordDetailNote { margin: 0; color: var(--muted); font-size: 13px; white-space: pre-wrap; overflow-wrap: anywhere; }
 .recordDetailGroups { display: grid; gap: 12px; }
+.recordWorkoutTime { padding: 16px; border-radius: 14px; background: var(--bg); }
+.recordWorkoutTime h3 { margin: 0 0 8px; font-size: 14px; }
+.recordWorkoutTime > strong { display: block; font-size: 26px; line-height: 1.4; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.recordWorkoutTime p { margin: 10px 0 0; color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
+.recordWorkoutTime small { display: block; margin-top: 8px; color: var(--muted); font-size: 12px; }
 .recordDetailGroup { padding: 14px; border-radius: 14px; background: var(--bg); }
 .recordDetailGroup h3 { margin: 0 0 8px; font-size: 15px; }
 .recordDetailGroup ul { display: grid; gap: 6px; margin: 0; padding: 0; color: var(--muted); font-size: 14px; list-style: none; }
@@ -410,8 +429,8 @@ img { max-width: 100%; }
 .weeklyShare { display: grid; gap: 16px; min-width: 0; }
 .weeklyShare .sectionHeading, .weeklyShare .infoText { margin: 0; }
 .reportPeriodPicker { display: grid; gap: 12px; min-width: 0; }
-.reportPeriodFields { display: flex; flex-wrap: wrap; gap: 12px; }
-.reportPeriodFields label { display: grid; gap: 6px; flex: 1 1 230px; min-width: 0; font-size: 13px; color: var(--muted); }
+.reportPeriodFields { display: flex; flex-wrap: wrap; gap: var(--form_field_gap) var(--form_column_gap); }
+.reportPeriodFields label { display: grid; gap: var(--form_label_gap); flex: 1 1 230px; min-width: 0; font-size: 13px; color: var(--muted); }
 .reportPeriodFields label:first-child { flex: 1 1 90px; }
 .reportPeriodFields select { width: 100%; min-width: 0; min-height: 44px; padding: 10px; border: 1px solid var(--line); border-radius: 12px; color: var(--white); background: var(--card); font: inherit; cursor: pointer; }
 .reportPeriodFields select:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 3px; }
@@ -449,7 +468,77 @@ img { max-width: 100%; }
 .reportDirection { flex-shrink: 0; font-size: 11px; color: var(--muted); }
 .reportDirection.isimproved { color: var(--accent-text); }
 .reportDirection.isdeclined { color: var(--red); }
+.reportDirection.ismaintained { color: var(--accent-text); }
+.reportDirection.isreview { color: var(--muted); }
+.teamGrowthSummary { margin-bottom: 16px; padding: 16px; border: 1px solid var(--line); border-radius: var(--card-radius); background: var(--bg); }
+.teamGrowthSummary h3, .challengeGrowthHero h4 { margin: 8px 0; font-size: 20px; line-height: 1.45; overflow-wrap: anywhere; }
+.teamGrowthSummary p { color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
+.teamGrowthSummary dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.teamGrowthSummary dt { font-size: 12px; color: var(--muted); }
+.teamGrowthSummary dd { margin: 5px 0 0; font-size: 20px; color: var(--accent-text); }
+.challengeMemberReport > .reportSection { margin-top: 12px; }
 .reportComparisons progress { display: block; width: 100%; height: 8px; margin-top: 10px; accent-color: var(--orange); }
+.srOnly { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+.reportDataTable { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 12px; font-variant-numeric: tabular-nums; }
+.reportDataTable th, .reportDataTable td { padding: 10px 5px; border-bottom: 1px solid var(--line); vertical-align: top; text-align: left; overflow-wrap: anywhere; }
+.reportDataTable thead th { color: var(--muted); font-size: 11px; font-weight: 500; }
+.reportDataTable tbody th { font-weight: 600; }
+.reportDataTable th:first-child { width: 36%; padding-left: 0; }
+.reportDataTable th:last-child, .reportDataTable td:last-child { padding-right: 0; }
+.reportDataTable small, .reportDataTable td > strong { display: block; margin-top: 4px; }
+.reportDataTable small { color: var(--muted); font-size: 11px; font-weight: 400; }
+.reportDataTable .reportDirection { white-space: normal; }
+.reportDataTable.isDetailed th:first-child { width: 30%; }
+.reportDataTable.isDetailed th:nth-child(2), .reportDataTable.isDetailed th:nth-child(3) { width: 20%; }
+.reportDataTable.isGoals th:first-child { width: 34%; }
+.reportTableArrow { color: var(--muted); }
+.personalPerformanceGraphic { margin: 0; padding: 0 0 18px; }
+.personalPerformanceGraphic figcaption { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 10px; font-size: 14px; }
+.personalPerformanceGraphic figcaption small { color: var(--muted); font-size: 12px; }
+.personalPerformanceDelta { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px; margin: 10px 0 16px; }
+.personalPerformanceDelta strong { color: var(--accent-text); font-size: 34px; line-height: 1.3; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.personalPerformanceDelta span { font-size: 12px; color: var(--muted); }
+.personalPerformanceBars { display: grid; gap: 12px; }
+.personalPerformanceBar { display: grid; grid-template-columns: 34px minmax(0, 1fr) minmax(48px, max-content); gap: 9px; align-items: center; font-size: 12px; }
+.personalPerformanceBar strong { text-align: right; font-variant-numeric: tabular-nums; }
+.personalPerformanceTrack { height: 13px; border-radius: 4px; background: var(--card-2); overflow: hidden; }
+.personalPerformanceFill { height: 100%; border-radius: 4px; background: var(--muted); }
+.personalPerformanceFill.isCurrent { background: var(--orange); }
+.personalPerformanceConfirmation { margin: 12px 0 0; font-size: 12px; color: var(--muted); }
+.personalTimeGraphic { margin: 16px 0; padding-top: 16px; border-top: 1px solid var(--line); }
+.workoutTimeEvidence { min-width: 0; }
+.workoutTimeComparison { margin: 12px 0; font-size: 18px; font-weight: 750; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.workoutTimeMetrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 12px; margin: 16px 0; }
+.workoutTimeMetrics dt { color: var(--muted); font-size: 12px; }
+.workoutTimeMetrics dd { margin: 4px 0 0; font-size: 16px; font-weight: 650; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.workoutTimeTable caption { padding: 10px 0; text-align: left; color: var(--muted); }
+.personalGoalGraphic, .personalReturnGraphic, .personalPerformanceTable { padding: 16px 0 0; border-top: 1px solid var(--line); }
+.personalGoalGraphic + section, .personalReturnGraphic + section { margin-top: 16px; }
+.personalGoalHeading { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 12px; font-size: 13px; }
+.personalGoalHeading h4 { margin: 0; font-size: 14px; }
+.personalGoalHeading > span, .personalGoalHeading > small { color: var(--muted); }
+.personalGoalHeading > strong { font-size: 15px; overflow-wrap: anywhere; }
+.personalGoalWeeks { display: grid; grid-template-columns: repeat(auto-fit, minmax(54px, 1fr)); gap: 6px; margin: 12px 0 0; padding: 0; list-style: none; }
+.personalGoalWeeks li { display: grid; gap: 3px; padding: 9px 4px; border-radius: 9px; background: var(--card-2); text-align: center; font-size: 12px; }
+.personalGoalWeeks li.iskept { color: var(--accent-text); }
+.personalGoalWeeks li.isin_progress, .personalGoalWeeks li.isrest { color: var(--muted); }
+.personalGoalWeeks time, .personalGoalWeeks small { font-size: 11px; }
+.personalReturnGraphic ol { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; padding: 0; margin: 12px 0 0; list-style: none; }
+.personalReturnGraphic li { display: grid; gap: 4px; padding-top: 9px; border-top: 3px solid var(--line); font-size: 12px; overflow-wrap: anywhere; }
+.personalReturnGraphic li.isRecovered { border-top-color: var(--orange); color: var(--accent-text); }
+.personalReturnGraphic small { color: var(--muted); font-size: 11px; }
+.personalReportNotice { margin: 0 0 16px; padding: 10px 12px; border-radius: 10px; background: var(--card-2); font-size: 12px; }
+.personalReportDetails { border: 1px solid var(--line); border-radius: 16px; background: var(--card); }
+.personalReportDetails > summary { min-height: 48px; padding: 14px 16px; cursor: pointer; font-size: 13px; }
+.personalReportDetails > summary:focus-visible { outline: 2px solid var(--accent-text); outline-offset: -3px; border-radius: 16px; }
+.personalReportDetailBody { display: grid; gap: 12px; padding: 0 12px 12px; }
+.teamGrowthGuide, .teamTrainingTable { margin: 16px 0; }
+.teamGrowthGuide > ul { list-style: none; margin: 12px 0 0; padding: 0; }
+.teamGrowthGuide li { padding: 12px 0; border-top: 1px solid var(--line); font-size: 13px; overflow-wrap: anywhere; }
+.teamGrowthGuide li > strong, .teamGrowthGuide li > span { display: block; }
+.teamGrowthGuide li > span { margin-top: 4px; color: var(--accent-text); font-size: 12px; }
+.teamGrowthGuide li > p { margin: 6px 0 0; color: var(--muted); font-size: 12px; }
+.teamTrainingTable .reportDataTable th:first-child { width: 28%; }
 .reportWeekList li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; padding: 10px 0; border-top: 1px solid var(--line); font-size: 12px; }
 .reportWeekList strong { font-weight: 600; }
 .shareImagePreview summary { min-height: 48px; padding: 12px 0; cursor: pointer; }
@@ -461,7 +550,15 @@ img { max-width: 100%; }
 .workoutSaveError { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 8px; color: var(--red); }
 .workoutBuilder { display: grid; gap: 16px; }
 .workoutBuilder h2 { margin: 0; font-size: 17px; }
+.workoutBuilderHeading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
 .workoutBuilderHeading .infoText { margin: 6px 0 0; }
+.workoutAreaImportButton { display: inline-flex; align-items: center; justify-content: center; gap: 5px; min-height: 44px; }
+.workoutAreaImportContent { min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding-bottom: calc(20px + env(safe-area-inset-bottom)); }
+.workoutAreaGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 8px 0 16px; }
+.workoutAreaOption { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 60px; padding: 14px; border: 1px solid var(--line); border-radius: 14px; color: var(--white); background: var(--bg); text-align: left; }
+.workoutAreaOption > .material-symbols-rounded { color: var(--accent-text); }
+.workoutImportResult { margin: 0; color: var(--accent-text); font-size: 13px; }
+.workoutImportSource { margin: 6px 4px 12px; color: var(--accent-text); font-size: 11px; overflow-wrap: anywhere; }
 .workoutBuilder .emptyState button { display: block; margin-top: 10px; }
 .workoutGroup { min-width: 0; padding: 18px 14px; border-radius: var(--card-radius); background: var(--card); }
 .workoutGroupHeading { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
@@ -488,7 +585,7 @@ img { max-width: 100%; }
 .exercisePickerModal { display: flex; flex-direction: column; overflow: hidden; padding-inline: 18px; }
 .exercisePickerHeader { flex-shrink: 0; padding-right: 42px; }
 .exercisePickerHeader .modalMessage { margin-bottom: 16px; }
-.exercisePickerModal > .fieldLabel { margin-bottom: 7px; }
+.exercisePickerModal > .fieldLabel { margin-bottom: var(--form_label_gap); }
 .exercisePickerSearch { display: flex; min-height: 50px; flex-shrink: 0; align-items: center; gap: 9px; padding: 0 13px; border: 1px solid var(--line); border-radius: 14px; background: var(--bg); }
 .exercisePickerSearch > .material-symbols-rounded { color: var(--muted); }
 .exercisePickerSearch input { width: 100%; min-width: 0; height: 48px; padding: 0; border: 0; outline: 0; color: var(--white); background: transparent; font-size: 16px; }
@@ -508,11 +605,8 @@ img { max-width: 100%; }
 .exerciseLibraryHeader > .textButton { justify-self: start; }
 .exerciseLibraryTitle { display: flex; align-items: center; justify-content: space-between; gap: 16px; width: 100%; }
 .exerciseLibraryTitle > .material-symbols-rounded { color: var(--white); }
-.exerciseEditor { padding: 18px; border-radius: var(--card-radius); background: var(--card); }
-.exerciseEditorRow { display: flex; gap: 8px; }
-.exerciseEditorRow input { min-width: 0; flex: 1; }
-.exerciseEditorRow button { flex-shrink: 0; }
-.exerciseCancel { margin-top: 8px; }
+.exerciseEditorHeader { margin-bottom: var(--form_field_gap); padding-right: 34px; }
+.exerciseEditorActions { margin-top: var(--form_field_gap); }
 .exerciseLibrary { display: grid; gap: 12px; }
 .exerciseLibraryItem { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; padding: 14px 0; border-bottom: 1px solid var(--line); }
 .exerciseLibraryItem > div:first-child { min-width: 0; }
@@ -537,7 +631,8 @@ img { max-width: 100%; }
 .weekdayPicker { display: flex; gap: 5px; margin: 16px 0 20px; }
 .weekdayButton { flex: 1; min-width: 0; min-height: 44px; padding: 5px 0; border: 1px solid var(--line); border-radius: 10px; background: transparent; color: var(--muted); font-size: 12px; }
 .weekdayButton.isSelected { color: var(--on-orange); border-color: transparent; background: var(--orange); }
-.fieldLabel { display: block; margin-bottom: 8px; color: var(--muted); font-size: 13px; }
+.fieldLabel { display: block; margin-bottom: var(--form_label_gap); color: var(--muted); font-size: 13px; }
+.timeInput + .fieldLabel, .progressSelect + .fieldLabel { margin-top: var(--form_field_gap); }
 .timeInput { width: 100%; min-height: 48px; padding: 11px 12px; border: 1px solid var(--line); border-radius: 12px; color: var(--white); background: var(--card); font-size: 16px; }
 textarea.timeInput { resize: vertical; }
 .toggleRow { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 14px 0; border-top: 1px solid var(--line); font-size: 14px; }
@@ -555,15 +650,15 @@ textarea.timeInput { resize: vertical; }
 .roastPreview { display: flex; align-items: flex-start; gap: 8px; margin-top: 16px; color: var(--muted); }
 .roastPreview p { margin: 0; font-size: 14px; }
 .languageSetting { width: 100%; }
-.workoutTimePicker { display: flex; align-items: center; gap: 10px; }
+.workoutTimePicker { display: flex; align-items: center; gap: var(--form_column_gap); }
 .workoutTimePicker select { min-width: 0; flex: 1; }
 .accountBar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 20px; font-size: 13px; }
 .accountBar > span { min-width: 0; overflow-wrap: anywhere; }
 .authScreen { padding-top: 16px; }
 .authScreen h1 { font-size: clamp(28px, 8.2vw, 34px); }
-.authForm label { display: grid; gap: 8px; margin: 18px 0; font-size: 13px; }
+.authForm label { display: grid; gap: var(--form_label_gap); margin: var(--form_field_gap) 0; font-size: 13px; }
 .authForm input, .localeFields select { width: 100%; min-height: 48px; padding: 12px; border: 1px solid var(--line); border-radius: 12px; color: var(--white); background: var(--bg); font-size: 16px; }
-.localeFields label { display: grid; gap: 8px; margin: 0 0 14px; color: var(--muted); font-size: 13px; }
+.localeFields label { display: grid; gap: var(--form_label_gap); margin: 0 0 var(--form_field_gap); color: var(--muted); font-size: 13px; }
 .authForm .textButton { width: 100%; margin-top: 12px; }
 
 /* Photo treatment stays inside the photo; surrounding controls stay quiet. */
@@ -572,7 +667,6 @@ textarea.timeInput { resize: vertical; }
 .photoComposer { margin-bottom: 24px; }
 .photoStage { position: relative; aspect-ratio: 9 / 16; overflow: hidden; border-radius: var(--card-radius); background: #182024; }
 .photoCanvas { display: block; width: 100%; height: 100%; object-fit: cover; }
-.photoOverlay { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
 .photoPlaceholder { display: flex; height: 100%; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 28px; color: var(--white); text-align: center; background: var(--card); }
 .photoPlaceholder .material-symbols-rounded { color: var(--accent-text); font-size: 40px; }
 .photoPlaceholder strong { font-size: 18px; }
@@ -581,14 +675,6 @@ textarea.timeInput { resize: vertical; }
 .photoHint { margin: 12px 0; color: var(--muted); font-size: 12px; }
 .photoActions { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
 .photoActions > button { flex: 1; min-height: 48px; margin: 0; }
-.photoFramePicker legend { margin-bottom: 12px; font-size: 14px; font-weight: 700; }
-.photoFrameOptions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-.photoFrameOption { display: flex; flex-direction: column; align-items: center; gap: 8px; min-height: 146px; padding: 8px 4px; border: 1px solid var(--line); border-radius: 12px; color: var(--muted); background: var(--card); font-size: 11px; }
-.photoFrameOption.isSelected { border: 2px solid var(--accent-text); padding: 7px 3px; color: var(--white); }
-.photoFrameOption small { color: var(--accent-text); font-weight: 700; }
-.photoFrameSample { display: block; width: 56px; aspect-ratio: 9 / 16; background: #26343d; }
-.photoFrameSample svg, .photoFrameSample img { display: block; width: 100%; height: 100%; }
-.photoFrameSample img { object-fit: contain; }
 .photoManual { width: 100%; margin-top: 12px; }
 .savedPhoto { display: block; width: 100%; height: auto; object-fit: contain; border-radius: var(--card-radius); margin-bottom: 16px; }
 .checkinSuccess { padding: 24px; border-radius: var(--card-radius); background: var(--card); text-align: center; }
@@ -606,6 +692,8 @@ textarea.timeInput { resize: vertical; }
 .modalBackdrop { position: fixed; inset: 0; z-index: 50; display: flex; align-items: flex-end; margin: 0; padding: 12px; background: #00000080; }
 .exercisePickerBackdrop { align-items: flex-start; padding: 0; }
 .actionModal { width: min(100%, 430px); max-height: calc(100dvh - 24px); overflow: auto; margin: 0 auto; position: relative; padding: 16px 24px calc(24px + env(safe-area-inset-bottom)); border: 1px solid var(--line); border-radius: 26px; color: var(--white); background: var(--card); }
+.actionModal.exerciseEditorModal { position: fixed; inset: 0; width: min(calc(100% - 24px), 430px); max-height: calc(100dvh - 24px - env(safe-area-inset-top)); margin: auto; padding-top: 24px; overscroll-behavior: contain; }
+.exerciseEditorModal::backdrop { background: #00000080; }
 .actionModal.exercisePickerModal { height: 100dvh; max-height: 100dvh; overflow: hidden; padding: calc(16px + env(safe-area-inset-top)) 18px 0; border: 0; border-radius: 0; }
 .exercisePickerModal > .modalHandle { display: none; }
 .exercisePickerModal > .modalCloseButton { top: calc(14px + env(safe-area-inset-top)); }
@@ -697,3 +785,7 @@ html[lang="en"] .authScreen h1 { font-size: clamp(28px, 8.2vw, 34px); }
 .challengeWorkoutLogs ol { display: flex; flex-wrap: wrap; gap: 4px 10px; margin: 3px 0; padding: 0; list-style: none; }
 .challengeGrowthMethod { margin-top: 18px; padding-top: 8px; border-top: 1px solid var(--line); font-size: 11px; }
 .challengeGrowthMethod p { margin: 8px 0; color: var(--muted); overflow-wrap: anywhere; }
+
+.serverNotificationStatus { display: grid; gap: 8px; margin: 16px 0; }
+.serverNotificationStatus p { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin: 0; color: var(--muted); font-size: 13px; }
+.serverNotificationStatus strong { color: var(--white); }

@@ -7,6 +7,7 @@ import useApiResource from '../../_hooks/useApiResource';
 import { api_request } from '../../_lib/api';
 import WorkoutSetBuilder from '../workout/WorkoutSetBuilder';
 import WorkoutFloatingActions from '../workout/WorkoutFloatingActions';
+import AreaWorkoutImportModal from '../workout/AreaWorkoutImportModal';
 import MaterialIcon from '../ui/MaterialIcon';
 import RequestState from '../ui/RequestState';
 
@@ -82,6 +83,10 @@ export default function WorkoutLogScreen({ user_uuid, initial_workout_date, is_a
   const initial_date_applied_ref = useRef(Boolean(initial_workout_date));
   const [resource_revision, set_resource_revision] = useState(0);
   const [exercise_groups, set_exercise_groups] = useState([]);
+  const exercise_groups_ref = useRef(exercise_groups);
+  exercise_groups_ref.current = exercise_groups;
+  const [area_import_is_open, set_area_import_is_open] = useState(false);
+  const [import_message, set_import_message] = useState('');
   const [expanded_exercise_key, set_expanded_exercise_key] = useState('');
   const [archived_groups, set_archived_groups] = useState([]);
   const [hydrated_date, set_hydrated_date] = useState('');
@@ -89,7 +94,7 @@ export default function WorkoutLogScreen({ user_uuid, initial_workout_date, is_a
   const [save_error, set_save_error] = useState('');
   const api_revision = `${resource_revision}:${catalog_revision}`;
   const log_resource = useApiResource(`/sessions/by-date/${selected_date}/sets`, api_revision, on_unauthorized);
-  const exercises = useApiResource('/exercises', api_revision, on_unauthorized);
+  const exercises = useApiResource(`/exercises?before_date=${selected_date}`, api_revision, on_unauthorized);
   const hydrated_date_ref = useRef('');
   const hydrated_catalog_revision_ref = useRef(catalog_revision);
   const selected_date_ref = useRef(selected_date);
@@ -106,6 +111,11 @@ export default function WorkoutLogScreen({ user_uuid, initial_workout_date, is_a
     initial_date_applied_ref.current = true;
     set_selected_date(initial_workout_date);
   }, [initial_workout_date]);
+
+  useEffect(() => {
+    set_area_import_is_open(false);
+    set_import_message('');
+  }, [selected_date, is_active]);
 
   const flush_save = async () => {
     if (save_active_ref.current || !pending_save_ref.current) return;
@@ -130,6 +140,7 @@ export default function WorkoutLogScreen({ user_uuid, initial_workout_date, is_a
         set_exercise_groups(saved_groups
           .filter((group) => group.exercise_id !== null)
           .map((group) => ({
+            ...exercise_groups_ref.current.find((current_group) => exercise_key_for(current_group) === exercise_key_for(group)),
             exercise_source: group.exercise_source,
             exercise_id: group.exercise_id,
             exercise_name: group.exercise_name,
@@ -275,6 +286,7 @@ export default function WorkoutLogScreen({ user_uuid, initial_workout_date, is_a
   }, [log_resource.data, log_resource.loading, exercises.loading, selected_date, user_uuid, catalog_revision]);
 
   const change_groups = (next_groups, preferred_exercise_key = null) => {
+    exercise_groups_ref.current = next_groups;
     set_exercise_groups(next_groups);
     set_expanded_exercise_key((current_exercise_key) => {
       if (preferred_exercise_key !== null) return preferred_exercise_key;
@@ -283,6 +295,42 @@ export default function WorkoutLogScreen({ user_uuid, initial_workout_date, is_a
         : exercise_key_for(next_groups.at(-1));
     });
     queue_save(selected_date, next_groups);
+  };
+  const import_area_exercises = (import_result) => {
+    if (import_result.workout_date !== selected_date_ref.current || hydrated_date !== selected_date || !is_active) {
+      return { error_message: t('기록 날짜가 변경되었습니다. 다시 불러와 주세요.') };
+    }
+    const current_groups = exercise_groups_ref.current;
+    const selected_exercise_keys = new Set(current_groups.map(exercise_key_for));
+    const catalog_exercise_keys = new Set(exercises.data.map(exercise_key_for));
+    const new_groups = import_result.exercise_groups.filter((group) =>
+      !selected_exercise_keys.has(exercise_key_for(group)) && catalog_exercise_keys.has(exercise_key_for(group)));
+    if (!new_groups.length) {
+      return { info_message: t('추가할 종목이 없습니다. 이미 추가되었거나 삭제된 종목입니다.') };
+    }
+    if (current_groups.length + new_groups.length > 30) {
+      return { error_message: t('종목을 모두 추가하려면 {0}개의 빈자리가 필요합니다. 현재 남은 자리는 {1}개입니다.', [new_groups.length, Math.max(0, 30 - current_groups.length)]) };
+    }
+    const imported_groups = new_groups.map((group) => ({
+      exercise_source: group.exercise_source,
+      exercise_id: group.exercise_id,
+      exercise_name: group.exercise_name,
+      sets: group.sets.map((workout_set) => ({ ...workout_set })),
+      import_record: {
+        workout_date: group.source_workout_date,
+        session_count: group.session_count,
+        sets: group.sets.map((workout_set) => ({ ...workout_set })),
+      },
+    }));
+    change_groups([...current_groups, ...imported_groups], exercise_key_for(imported_groups[0]));
+    window.requestAnimationFrame(() => {
+      const first_group = imported_groups[0];
+      document.getElementById(`workout-group-${first_group.exercise_source}-${first_group.exercise_id}`)
+        ?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'center' });
+    });
+    const existing_count = import_result.exercise_groups.filter((group) => selected_exercise_keys.has(exercise_key_for(group))).length;
+    set_import_message(t('{0}개 추가 · {1}개 이미 있음', [imported_groups.length, existing_count]));
+    return {};
   };
   const add_exercise = (exercise) => {
     const exercise_key = `${exercise.exercise_source}:${exercise.exercise_id}`;
@@ -328,17 +376,20 @@ export default function WorkoutLogScreen({ user_uuid, initial_workout_date, is_a
     </div>
     <RequestState loading={log_resource.loading || exercises.loading} error={log_resource.error || exercises.error} on_retry={() => set_resource_revision((value) => value + 1)} />
     {log_resource.data && exercises.data && hydrated_date === selected_date && <>
+      {import_message && <p className="workoutImportResult" role="status">{localize_message(import_message)}</p>}
       <WorkoutSetBuilder
         exercises={exercises.data}
         exercise_groups={exercise_groups}
         expanded_exercise_key={expanded_exercise_key}
         on_change={change_groups}
+        on_open_area_import={() => set_area_import_is_open(true)}
         on_toggle_exercise={(exercise_key) => set_expanded_exercise_key(
           (current_exercise_key) => current_exercise_key === exercise_key ? '' : exercise_key,
         )}
         disabled={false}
       />
       <WorkoutFloatingActions exercises={exercises.data} exercise_groups={exercise_groups} on_add_exercise={add_exercise} on_open_library={on_open_library} />
+      {is_active && <AreaWorkoutImportModal is_open={area_import_is_open} workout_date={selected_date} on_import={import_area_exercises} on_close={() => set_area_import_is_open(false)} on_unauthorized={on_unauthorized} />}
     </>}
     {archived_groups.length > 0 && <section className="workoutBuilder" aria-labelledby="archived-workout-heading">
       <div><h2 id="archived-workout-heading">{t("삭제한 종목의 기록")}</h2><p className="infoText">{t("종목을 삭제해도 저장된 세트 기록은 남습니다.")}</p></div>

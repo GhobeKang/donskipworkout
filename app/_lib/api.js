@@ -48,7 +48,8 @@ export async function api_request(path, { method = 'GET', body, signal, response
       };
       const server_detail = response.status < 500 && typeof response_data?.detail === 'string'
         ? response_data.detail : null;
-      throw new apiError(error_messages[response.status] || server_detail || t("서버 요청에 실패했습니다."), response.status);
+      throw new apiError((response.status === 401 ? error_messages[401] : server_detail)
+        || error_messages[response.status] || t("서버 요청에 실패했습니다."), response.status);
     }
     if (!response_data) throw new apiError(t("서버 응답을 읽을 수 없습니다."));
     return response_data;

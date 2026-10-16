@@ -24,5 +24,11 @@ media/
 .next/
 legacy/
 scripts/
-supabase/
+supabase/*
+!supabase/migrations/
+supabase/migrations/*
+!supabase/migrations/20261009045020_server_workout_push.sql
+!supabase/migrations/20261013054943_add_exercise_target_subarea.sql
 .gradle/
+etc/
+out/

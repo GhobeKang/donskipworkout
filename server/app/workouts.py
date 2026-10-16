@@ -1,8 +1,11 @@
+from datetime import date
+
 from fastapi import APIRouter, HTTPException, Response
 from sqlalchemy import case, delete, func, select
 from sqlalchemy.exc import IntegrityError
 
 from .database import (
+    exercise_report_area,
     exerciseItem,
     sharedExerciseItem,
     userAccount,
@@ -10,10 +13,112 @@ from .database import (
     workoutSession,
     workoutSet,
 )
-from .schemas import exerciseData, exerciseGroupInput, exerciseInput
+from .schemas import (
+    areaWorkoutImportData,
+    exercise_target_area,
+    exerciseData,
+    exerciseGroupInput,
+    exerciseInput,
+)
 from .security import databaseDependency, userDependency
 
 router = APIRouter(prefix='/api/v1')
+
+
+@router.get('/sessions/by-date/{workout_date}/area-import', response_model=areaWorkoutImportData)
+def read_area_workout_import(
+    workout_date: date,
+    target_area: exercise_target_area,
+    user: userDependency,
+    database: databaseDependency,
+):
+    custom_exercise_join = (
+        (workoutSet.exercise_source == 'custom')
+        & (exerciseItem.exercise_id == workoutSet.exercise_id)
+        & (exerciseItem.user_id == user.user_id)
+    )
+    shared_exercise_join = (workoutSet.exercise_source == 'shared') & (
+        sharedExerciseItem.exercise_id == workoutSet.shared_exercise_id
+    )
+    matching_area = func.coalesce(sharedExerciseItem.target_area, exerciseItem.target_area)
+    matching_sets = (
+        select(workoutSet.set_id)
+        .outerjoin(exerciseItem, custom_exercise_join)
+        .outerjoin(sharedExerciseItem, shared_exercise_join)
+        .where(
+            workoutSet.session_id == workoutSession.session_id,
+            matching_area == target_area,
+        )
+        .exists()
+    )
+    # Limit sessions before fetching sets; multiple sets still count as one appearance.
+    recent_sessions = (
+        select(workoutSession.session_id, workoutSession.workout_date)
+        .where(
+            workoutSession.user_id == user.user_id,
+            workoutSession.workout_date < workout_date,
+            matching_sets,
+        )
+        .order_by(workoutSession.workout_date.desc())
+        .limit(3)
+        .subquery('recent_area_sessions')
+    )
+    referenced_exercise_id = case(
+        (workoutSet.exercise_source == 'shared', workoutSet.shared_exercise_id),
+        else_=workoutSet.exercise_id,
+    )
+    rows = database.execute(
+        select(
+            workoutSet.session_id,
+            recent_sessions.c.workout_date,
+            workoutSet.exercise_source,
+            referenced_exercise_id.label('exercise_id'),
+            func.coalesce(sharedExerciseItem.name, exerciseItem.name).label('exercise_name'),
+            workoutSet.weight_kg,
+            workoutSet.reps,
+        )
+        .join(recent_sessions, recent_sessions.c.session_id == workoutSet.session_id)
+        .outerjoin(exerciseItem, custom_exercise_join)
+        .outerjoin(sharedExerciseItem, shared_exercise_join)
+        .where(matching_area == target_area)
+        .order_by(
+            recent_sessions.c.workout_date.desc(),
+            workoutSet.exercise_order,
+            workoutSet.exercise_source,
+            referenced_exercise_id,
+            workoutSet.set_order,
+        )
+    )
+    session_ids = set()
+    sessions_by_exercise = {}
+    latest_groups = {}
+    for row in rows:
+        session_ids.add(row.session_id)
+        exercise_key = (row.exercise_source, row.exercise_id)
+        sessions_by_exercise.setdefault(exercise_key, set()).add(row.session_id)
+        group = latest_groups.setdefault(
+            exercise_key,
+            {
+                'exercise_source': row.exercise_source,
+                'exercise_id': row.exercise_id,
+                'exercise_name': row.exercise_name,
+                'target_area': target_area,
+                'source_workout_date': row.workout_date.isoformat(),
+                'sets': [],
+            },
+        )
+        if group['source_workout_date'] == row.workout_date.isoformat():
+            group['sets'].append({'weight_kg': float(row.weight_kg), 'reps': row.reps})
+    return {
+        'workout_date': workout_date.isoformat(),
+        'target_area': target_area,
+        'session_count': len(session_ids),
+        'exercise_groups': [
+            {**group, 'session_count': len(sessions_by_exercise[exercise_key])}
+            for exercise_key, group in latest_groups.items()
+            if len(sessions_by_exercise[exercise_key]) >= 2
+        ],
+    }
 
 
 @router.get('/exercise-progress')
@@ -22,7 +127,7 @@ def exercise_progress(user: userDependency, database: databaseDependency):
     exercise_name = func.coalesce(
         sharedExerciseItem.name, exerciseItem.name, workoutSet.exercise_name
     )
-    target_area = func.coalesce(sharedExerciseItem.target_area, exerciseItem.target_area)
+    target_area = exercise_report_area()
     archived_name = case(
         (
             workoutSet.exercise_id.is_(None) & workoutSet.shared_exercise_id.is_(None),
@@ -95,6 +200,7 @@ def exercise_output(exercise, exercise_source='custom', last_sets=None):
         'exercise_source': exercise_source,
         'name': exercise.name,
         'target_area': getattr(exercise, 'target_area', None),
+        'target_subarea': getattr(exercise, 'target_subarea', None),
         'last_sets': (exercise.last_sets if last_sets is None else last_sets) or [],
     }
 
@@ -261,25 +367,68 @@ def replace_workout_groups(database, user_id, session, exercise_groups: list[exe
 
 
 @router.get('/exercises', response_model=list[exerciseData])
-def list_exercises(user: userDependency, database: databaseDependency):
+def list_exercises(
+    user: userDependency, database: databaseDependency, before_date: date | None = None
+):
     custom_exercises = database.scalars(
         select(exerciseItem).where(exerciseItem.user_id == user.user_id)
     ).all()
     shared_exercises = database.scalars(select(sharedExerciseItem)).all()
-    progress_by_exercise_id = {
-        progress.shared_exercise_id: progress.last_sets
-        for progress in database.scalars(
-            select(userSharedExerciseProgress).where(
-                userSharedExerciseProgress.user_id == user.user_id
-            )
-        )
-    }
-    exercises = [exercise_output(exercise) for exercise in custom_exercises]
+    previous_sets = latest_sets_by_exercise(database, user.user_id, before_date)
+    exercises = [
+        exercise_output(exercise, last_sets=previous_sets.get(('custom', exercise.exercise_id), []))
+        for exercise in custom_exercises
+    ]
     exercises.extend(
-        exercise_output(exercise, 'shared', progress_by_exercise_id.get(exercise.exercise_id, []))
+        exercise_output(exercise, 'shared', previous_sets.get(('shared', exercise.exercise_id), []))
         for exercise in shared_exercises
     )
     return sorted(exercises, key=lambda exercise: (exercise['name'], exercise['exercise_source']))
+
+
+def latest_sets_by_exercise(database, user_id, before_date=None):
+    referenced_exercise_id = case(
+        (workoutSet.exercise_source == 'shared', workoutSet.shared_exercise_id),
+        else_=workoutSet.exercise_id,
+    )
+    ranked_sets = (
+        select(
+            workoutSet.exercise_source,
+            referenced_exercise_id.label('exercise_id'),
+            workoutSet.weight_kg,
+            workoutSet.reps,
+            workoutSet.exercise_order,
+            workoutSet.set_order,
+            func.dense_rank()
+            .over(
+                partition_by=(workoutSet.exercise_source, referenced_exercise_id),
+                order_by=workoutSession.workout_date.desc(),
+            )
+            .label('session_rank'),
+        )
+        .join(workoutSession, workoutSession.session_id == workoutSet.session_id)
+        .where(workoutSession.user_id == user_id, referenced_exercise_id.is_not(None))
+    )
+    if before_date is not None:
+        ranked_sets = ranked_sets.where(workoutSession.workout_date < before_date)
+    previous_sets = ranked_sets.subquery('previous_exercise_sets')
+    rows = database.execute(
+        select(previous_sets)
+        .where(previous_sets.c.session_rank == 1)
+        .order_by(
+            previous_sets.c.exercise_source,
+            previous_sets.c.exercise_id,
+            previous_sets.c.exercise_order,
+            previous_sets.c.set_order,
+        )
+    )
+    sets_by_exercise = {}
+    for row in rows:
+        exercise_key = (row.exercise_source, row.exercise_id)
+        sets_by_exercise.setdefault(exercise_key, []).append(
+            {'weight_kg': float(row.weight_kg), 'reps': row.reps}
+        )
+    return sets_by_exercise
 
 
 @router.post('/exercises', response_model=exerciseData, status_code=201)
@@ -302,6 +451,7 @@ def create_exercise(payload: exerciseInput, user: userDependency, database: data
         user_id=user.user_id,
         name=payload.name,
         target_area=payload.target_area,
+        target_subarea=payload.target_subarea,
         last_sets=[],
     )
     database.add(exercise)
@@ -332,6 +482,7 @@ def rename_exercise(
         raise HTTPException(409, '기본 운동 종목에 이미 등록되어 있습니다.')
     exercise.name = payload.name
     exercise.target_area = payload.target_area
+    exercise.target_subarea = payload.target_subarea
     try:
         database.commit()
     except IntegrityError:

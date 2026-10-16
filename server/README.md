@@ -23,8 +23,9 @@ Copy-Item .env.example .env
 ```powershell
 # 프로젝트 루트에서 실행
 Copy-Item server/.env.example server/.env
-# server/.env에 운영 DB, CORS_ORIGINS, ALLOWED_HOSTS를 입력
+# server/.env에 운영 DB, CORS_ORIGINS, ALLOWED_HOSTS, FIREBASE_PROJECT_ID를 입력
 $env:DOCKER_IMAGE_NAME = 'your-docker-id/donskipworkout-api:latest'
+$env:FIREBASE_SERVICE_ACCOUNT_FILE = 'C:/private/firebase-service-account.json'
 docker compose pull attendance_api
 docker compose up -d --no-build attendance_api
 docker compose ps
@@ -33,6 +34,13 @@ docker compose logs -f attendance_api
 
 운영용 `compose.yaml`은 Dockerfile을 사용하지 않고 Docker Hub에서 이미지를 받아 실행합니다.
 Dockerfile 빌드는 프로젝트 루트의 Docker Hub push 스크립트에서만 수행합니다.
+
+기본 `compose.yaml`에 Firebase 서비스 계정 JSON 연결도 포함되어 있습니다.
+`DOCKER_IMAGE_NAME`과 `FIREBASE_SERVICE_ACCOUNT_FILE`은 셸 또는 프로젝트 루트 `.env`에
+설정합니다. JSON 경로는 Docker 호스트의 절대 경로이며 위 Windows 예시를 실제 서버의
+경로로 바꾸세요. `FIREBASE_PROJECT_ID`는 `server/.env`에 설정합니다.
+JSON 경로가 없으면 Compose가 실행을 중단합니다. 파일은 이미지에 복사하지 않고
+컨테이너 내부 `/run/secrets/firebase_service_account`로 읽기 전용 연결합니다.
 
 ## Docker Hub push
 
@@ -54,6 +62,7 @@ compose로 push된 이미지를 실행할 때는 이미지명을 지정한 뒤 �
 
 ```powershell
 $env:DOCKER_IMAGE_NAME = 'your-docker-id/donskipworkout-api:latest'
+$env:FIREBASE_SERVICE_ACCOUNT_FILE = 'C:/private/firebase-service-account.json'
 docker compose pull attendance_api
 docker compose up -d --no-build attendance_api
 ```
@@ -63,14 +72,15 @@ Direct connection은 IPv6가 필요합니다. Transaction pooler(6543)는 현재
 
 사진 파일은 `attendance_photo_storage` 볼륨, 파일 로그는 `attendance_api_logs` 볼륨에
 보존됩니다. 컨테이너는 비루트 사용자와 읽기 전용 루트 파일시스템으로 실행되며, 로그와
-사진 디렉터리만 쓸 수 있습니다. `server/photo-frames`는 `/app/media/frames`에 읽기 전용으로
-마운트됩니다. Docker 이미지에는 `.env`, 로그, 사진, 프레임 PNG, 가상환경을 넣지 않습니다.
+사진 디렉터리만 쓸 수 있습니다. Docker 이미지에는 고정 인증사진 캐릭터와 한글 글꼴을 포함하고,
+`.env`, 로그, 사용자 사진, 가상환경은 넣지 않습니다.
 
 운영 시에는 다음 순서로 진행합니다.
 
 1. 새 프로젝트는 DB 관리자 계정으로 `supabase/migrations/*.sql`을 파일명 순서대로 적용합니다.
-2. `server/.env`에 실제 DB 접속 정보와 운영용 `CORS_ORIGINS`, `ALLOWED_HOSTS`를 입력합니다.
-3. `DOCKER_IMAGE_NAME`을 push한 이미지로 설정하고 `docker compose pull attendance_api`를 실행합니다.
+2. `server/.env`에 실제 DB 접속 정보, 운영용 `CORS_ORIGINS`, `ALLOWED_HOSTS`, `FIREBASE_PROJECT_ID`를 입력합니다.
+3. 프로젝트 루트 `.env` 또는 셸에 `DOCKER_IMAGE_NAME`과 `FIREBASE_SERVICE_ACCOUNT_FILE`을 설정하고
+   `docker compose pull attendance_api`를 실행합니다.
 4. `docker compose up -d --no-build attendance_api`로 실행하고 `docker compose ps`에서 `healthy` 상태를 확인합니다.
 
 마이그레이션은 데이터 변경을 일으키므로 Docker 시작 명령에 포함하지 않았습니다. compose는
@@ -79,6 +89,39 @@ API 포트 `8000`을 호스트의 `127.0.0.1`에만 공개하므로 HTTPS revers
 `ports` 대신 같은 Docker network를 사용하도록 compose를 조정해야 합니다.
 
 ## Supabase 연결 및 스키마
+
+선택형 종목 세부분류를 사용하려면 API 배포 전에
+`20261013054943_add_exercise_target_subarea.sql`을 적용합니다.
+`POST /api/v1/exercises`와 `PUT /api/v1/exercises/custom/{exercise_id}`는
+선택 필드 `target_subarea`를 받습니다. 생략·빈 문자열·`null`이면 기본 부위로 분류하며,
+기본 부위에 속하지 않는 세부분류는 422로 거부합니다.
+선택 목록은 프론트엔드와 API가 `server/app/exercise_target_areas.json`을 함께 사용합니다.
+공통 종목에도 세부분류를 사용하려면 API 배포 전에
+`20261014022929_add_shared_exercise_target_subarea.sql`을 적용합니다.
+이 마이그레이션은 `attendance.shared_exercise_items.target_subarea`를 추가하고,
+현재 공통 종목 31개의 이름과 기본 부위를 기준으로 세부분류를 채웁니다.
+`GET /api/v1/exercises`는 개인·공통 종목 모두 `target_subarea`를 반환합니다.
+기본 자세의 대표 세부 부위 하나를 지정한 분류이며, 해당 근육만 사용한다는 뜻은 아닙니다.
+일반 컬은 `상완이두근`, 딥스·푸시다운은 `상완삼두근`으로 분류합니다.
+이름에 그립·팔 각도 정보가 없으므로 특정 장두·단두로 단정하지 않습니다.
+벤치프레스·플라이는 `대흉근`, 인클라인 벤치프레스는 `윗가슴`,
+데드리프트는 `척추기립근`, 나머지 등 종목은 `광배근`을 대표 부위로 사용합니다.
+어깨는 프레스 `전면 삼각근`, 사이드 레이즈 `측면 삼각근`, 리어 플라이 `후면 삼각근`,
+허벅지는 레그 컬·루마니안 데드리프트 `햄스트링`, 나머지 종목 `대퇴사두근`,
+복근은 크런치 `상복부`·플랭크 `복횡근`, 카프 레이즈는 `비복근`으로 분류합니다.
+개인 주간·월간 리포트, 공유 리포트, 부위별 성장 추이는 세부분류가 있으면
+`가슴 · 윗가슴`처럼 집계하고, 없으면 기존 기본 부위로 집계합니다.
+종목의 분류를 수정하면 기존 기록도 현재 분류로 다시 집계됩니다.
+
+`20261014023434_add_shared_exercises_and_transfer_duplicates.sql`은 공통 종목 12개와
+대표 세부 부위를 추가하고, 이름·명시된 별칭이 일치하는 개인 종목을 공통 종목으로 통합합니다.
+`브이 스쿼트 머신`은 `브이 스쿼트`로 통합하며 공백·하이픈·일부 표기 차이도 처리합니다.
+`인클라인 프레스`와 기존 `인클라인 벤치프레스`, 시티드 레그 컬과 일반 레그 컬은
+별도 종목으로 유지합니다. 사용자별 최근 세트는 통합 후 가장 최근 기록에서 복원하고,
+기록이 없으면 기존 공통 종목 캐시나 최근 개인 종목 캐시를 보존합니다.
+운동 세트의 공통 종목 연결을 먼저 변경한 뒤 개인 종목을 삭제합니다.
+전체 작업은 한 트랜잭션에서 실행하며 세트 ID·운동일·중량·반복 수·순서와
+관련 없는 종목의 보존 검증에 실패하면 전체 작업을 취소합니다.
 
 현재 대상은 deradera (`vtqhjpyqwhcwpeuagmne`)입니다. 앱은 `public.users`나 Supabase `auth.users`를
 사용하지 않고, `attendance` 스키마의 전용 테이블을 사용합니다. 기존 프로젝트 테이블과 사용자 데이터는
@@ -167,11 +210,24 @@ FCM은 AWS ARN이 아니라 Firebase 프로젝트 ID와 신뢰된 서버 자격 
    Firebase Admin SDK 문서는 `Firebase Cloud Messaging API Admin` 역할을 안내합니다.
 3. 로컬 개발 환경에서는 `server/.env`에 `FIREBASE_PROJECT_ID`를 설정하고,
    `GOOGLE_APPLICATION_CREDENTIALS`를 서비스 계정 JSON 파일의 절대 경로로 지정합니다.
-   Docker에서는 JSON을 이미지/저장소에 복사하지 말고 읽기 전용 secret으로 컨테이너에 마운트한 뒤,
-   `GOOGLE_APPLICATION_CREDENTIALS`를 컨테이너 내부 경로로 설정합니다.
-4. API를 재시작합니다. 자격 증명이 없거나 잘못되면 API는 계속 실행되지만 FCM 작업자는 초기화되지 않으므로,
+   Docker에서는 프로젝트 루트 `.env` 또는 셸에 `FIREBASE_SERVICE_ACCOUNT_FILE`을 설정합니다.
+   값은 배포 호스트에 실제로 존재하는 서비스 계정 JSON의 절대 경로입니다.
+   기본 `compose.yaml`이 파일을 `/run/secrets/firebase_service_account`로 읽기 전용 연결하고
+   `GOOGLE_APPLICATION_CREDENTIALS`도 해당 컨테이너 내부 경로로 설정합니다.
+   `FIREBASE_PROJECT_ID`는 Docker에서도 `server/.env`에 설정해야 합니다.
+
+   ~~~bash
+   docker compose up -d --no-build --force-recreate attendance_api
+   ~~~
+
+   이전 분리 설정은 `legacy/server-push-migration/compose.push.yaml`에서 리뷰할 수 있습니다.
+
+   인증 파일은 Docker 이미지나 Git에 포함하지 않습니다. 로컬 Windows 경로를 컨테이너에 그대로 넘기지 않습니다.
+4. Docker 환경에서 설정을 변경하면 위 명령으로 컨테이너를 재생성합니다. FCM 초기화에 실패하면
+   API는 계속 실행되지만 FCM 작업자는 초기화되지 않으므로,
    FCM outbox가 전송되지 않습니다. FCM이 `provider_accepted`를 반환하면 전송 수락으로 기록되고,
-   미등록 토큰은 기기 등록을 비활성화합니다. 일시 오류는 최초 발송을 포함해 최대 3회 시도합니다.
+   미등록 토큰은 기기 등록을 비활성화합니다. 서버 작업은 최초 실행을 포함해 최대 3회 시도합니다.
+   Firebase SDK의 내부 통신 재시도는 이 작업 횟수와 별도입니다.
 
 서비스 계정 키는 `.gitignore` 대상이며, 유출되었다면 Firebase/Google Cloud Console에서 즉시 폐기하세요.
 APNs만 설정해도 동일한 작업자가 실행됩니다. Apple Developer 계정에서 Push Notifications를 앱 ID에 활성화하고,
@@ -181,10 +237,91 @@ APNs 인증 키(`.p8`), Key ID, Team ID를 준비합니다. `server/.env`에 `AP
 Docker 이미지에 넣지 말고 서버 비밀 파일로 마운트합니다. iOS 앱은 Push Notifications capability가 포함된
 프로비저닝 프로필로 서명하고 실기기에서 권한, 토큰 등록, 로그아웃 후 수신을 확인해야 합니다.
 
-로그아웃은 세션만 종료합니다. 이미 예약한 운동 로컬 알림과 등록한 챌린지 푸시는 유지됩니다.
-운동 로컬 알림은 현재 최대 30일치를 예약하므로, 그 뒤에도 받으려면 앱을 다시 열고 로그인해 예약을 갱신해야 합니다.
-같은 설치에서 다른 계정으로 로그인하면 기존 계정의 푸시 등록과 운동 알림을 해제합니다.
+로그아웃은 세션만 종료하며 등록한 서버 푸시는 유지됩니다.
+같은 설치에서 다른 계정으로 로그인하면 기존 계정의 등록을 해제하고 현재 계정으로 변경합니다.
+발송 직전에도 기기 소유자를 확인해 이전 계정의 대기 알림을 취소합니다.
 기기 알림 권한을 끄거나 앱을 삭제하면 OS가 표시를 중단할 수 있습니다.
+
+### 서버 운동 시간 알림
+
+20261009045020_server_workout_push.sql을 서버 코드 배포 전에 적용합니다.
+업데이트된 앱은 기존 로컬 운동 예약을 취소한 뒤 workout_push_enabled=true와 언어를 등록합니다.
+기존 기기의 기본값은 false이므로 업데이트 전 기기에 중복 운동 알림을 보내지 않습니다.
+FCM은 높은 우선순위의 notification + data 메시지를 사용해 Android 백그라운드에서 OS가 표시합니다.
+로컬 운동 시간 알람, 정확한 알람 권한, 매일 예약 보충은 제거했습니다.
+
+- 사용자 시간대와 운동 요일·시각으로 10초마다 생성하며 당일 세션이 없어도 계산합니다.
+- 출발 전에는 운동 30분 전, 미루기 후 예정 시각, 예정 시각 30·60·90분 후의 미인증 재촉,
+  자유운동 권유를 각각 설정에 따릅니다.
+- `지금 출발`로 `started` 상태가 되면 해당 운동일의 일반 알림과 기존 재촉을 중단합니다.
+  최초 `started_at`부터 정확히 3시간 뒤에도 미인증이면 재촉 푸시를 한 번만 생성합니다.
+  재촉 알림을 꺼 둔 사용자는 받지 않으며, 반복 출발 요청이나 일정 변경으로 기준 시각을 늦추지 않습니다.
+  자정을 넘겨도 출발 시각부터 3시간을 기준으로 하며, 사진·수동 출석 인증 또는 휴식이면 취소합니다.
+- 완료·휴식·미실시 세션은 제외하고 변경된 시각·요일·설정의 대기 작업도 전송 직전 취소합니다.
+- 운동 알림은 예정 시각부터 10분 후 만료합니다. 장애 복구 시 오래된 알림을 몰아서 보내지 않습니다.
+- 이벤트와 기기별 작업에 고유 제약을 적용하고 발송 중 작업에는 2분 임대를 적용합니다.
+  공급자 요청 중에는 DB 연결/잠금을 보유하지 않습니다. 서버 작업의 일시 오류 재시도는 최대 2회입니다.
+  공급자 응답 후 기록 전 장애가 발생하면 재전송될 수 있어 이벤트 UUID를 표시 식별자로 사용합니다.
+- 방 알림의 조용한 시간 규칙은 유지하며, 사용자가 직접 정한 운동 시각과 테스트에는 적용하지 않습니다.
+- 영어 기기에는 catalog.json의 localized.en 문구를 사용합니다.
+- 출발 후 재촉은 `defaults.departure_unverified`와 `departure_messages_by_roast_level`의
+  인증 전용 문구를 사용합니다. 기존 카탈로그에 이 항목이 없으면 기본 미인증 안내 문구를 사용합니다.
+
+GET /api/v1/notifications/status는 현재 계정의 등록·작업 상태·최근 전송 결과만 반환하며 토큰을 노출하지 않습니다.
+fcm_initialized는 SDK 초기화 상태이므로 Firebase 발송 권한이나 실기기 표시까지 보증하지 않습니다.
+앱 설정의 15초 서버 테스트 알림은 POST /api/v1/notifications/test?installation_uuid=...에 빈 JSON을 보내
+본인 기기 한 대에만 테스트를 예약합니다. 기본 채널은 실제 운동 알림과 같은 `workout-push`이며,
+테스트는 예약한 발송 시각부터 기본 10분 후 만료합니다. 요청은 계정당 1분에 한 번입니다.
+API의 /health는 생존 확인이므로 푸시 활성화 판단에 사용하지 않습니다.
+권한 동의 후 자동 등록과 설정 카드 상태 갱신을 연결했습니다. 수동 등록은 거부·실패 때만 표시하며,
+상태 조회의 성공·실패와 조회 시각을 화면에서 확인할 수 있습니다.
+
+2026-10-09 검증: 격리 DB/HTTP/작업자 27개와 앱 등록·로컬 정리 14개 모의 시나리오 통과.
+실제 Supabase 스키마 변경과 RLS 유지 확인, Next.js 빌드 및 Ruff 검증을 수행했습니다.
+사용자 승인 후 등록된 Android 토큰으로 FCM validate-only 요청 수락을 확인했습니다.
+현재 자격 증명의 발송 권한을 확인했으며 실제 알림은 전송하지 않았습니다.
+Android 수신 검증, 서버 배포·앱 설치는 포함하지 않았습니다.
+
+### 서버에서 운동 알림 테스트
+
+서버의 curl 또는 API 클라이언트에서도 로그인 쿠키로 테스트를 예약할 수 있습니다.
+`POST /api/v1/auth/login`에서 받은 쿠키를 사용하며, 본인 계정에 등록된 기기에만 전송합니다.
+아래 예시는 로그인 응답 쿠키를 저장한 `cookies.txt`를 사용합니다.
+
+`POST /api/v1/notifications/test`의 JSON 본문은 다음 필드를 받습니다.
+
+| 필드 | 기본값 | 허용 값 |
+| --- | --- | --- |
+| `installation_uuid` | 생략 | 본인 기기의 UUID. 활성 기기가 한 대면 자동 선택하며, 여러 대면 필수 |
+| `channel` | `workout` | `workout`: 운동 알림 채널, `server`: 챌린지 알림 채널 |
+| `delay_seconds` | `15` | 0~86400초. 0이면 다음 작업자 주기에 발송 시도 |
+| `ttl_seconds` | `600` | 예약한 발송 시각 이후 유효기간, 30~86400초 |
+
+채널 선택은 Android에 적용됩니다. iOS 기기는 기존 APNs 발송 경로로 테스트합니다.
+기존 쿼리 매개변수 `installation_uuid`와 빈 본문 `{}`도 계속 지원합니다.
+본문과 쿼리에 기기 ID를 함께 넣었다면 두 값이 같아야 합니다.
+
+```bash
+# 한 시간 뒤 실제 운동 알림 채널로 발송: 요청 후 앱을 다시 열지 않고 확인합니다.
+curl --fail-with-body -X POST "$API_BASE_URL/api/v1/notifications/test" \
+  --cookie cookies.txt \
+  -H 'Content-Type: application/json' \
+  --data '{"channel":"workout","delay_seconds":3600,"ttl_seconds":600}'
+
+# 위 응답의 event_uuid로 전송 결과를 조회합니다.
+curl --fail-with-body "$API_BASE_URL/api/v1/notifications/test/$EVENT_UUID" \
+  --cookie cookies.txt
+```
+
+예약 응답은 HTTP 202이며 `event_uuid`, `outbox_id`, `status`, `channel_id`,
+`scheduled_at`, `expires_at`, `delay_seconds`, `ttl_seconds`를 반환합니다.
+시각은 UTC의 `Z` 형식입니다. 결과 조회에서는 `attempt_count`, `provider_message_id`,
+`last_error`도 확인할 수 있습니다. 초기 상태는 `queued`입니다.
+`provider_accepted`는 FCM/APNs 접수 성공이며 기기 수신·표시 완료를 뜻하지 않습니다.
+다른 계정의 테스트 ID는 404, 기기 미등록은 409, 발송 작업 비활성은 503을 반환합니다.
+상태 조회는 추가 알림을 발송하지 않으며 앱을 열어 기기를 재등록할 필요도 없습니다.
+로그에는 예약과 처리 결과를 이벤트 UUID로 남기며 기기 토큰은 기록하지 않습니다.
+API 코드 배포·재시작 후 사용할 수 있고 DB 마이그레이션은 필요하지 않습니다.
 
 ## API 계약
 
@@ -231,7 +368,7 @@ Docker 이미지에 넣지 말고 서버 비밀 파일로 마운트합니다. iO
 ```
 
 요일은 JavaScript `getDay()`와 동일하게 일요일 0~토요일 6입니다. 빈 배열은 정기 일정 없음입니다.
-알림 옵션은 기기 알림 예약과 챌린지 푸시 발송에 사용됩니다. `notification_free_workout_enabled`는
+알림 옵션은 서버 운동 알림 생성과 챌린지 푸시 발송에 사용됩니다. `notification_free_workout_enabled`는
 정기 일정이 없는 날의 저장된 운동 시간에 기기 로컬 권유 알림을 한 번 예약합니다.
 로그인 이메일은 소문자로 정규화하며 비밀번호는 Argon2로 해시합니다.
 로그인은 JSON 방식으로, OAuth2 form 토큰 엔드포인트는 아닙니다.
@@ -272,7 +409,8 @@ localStorage에 저장하지 않습니다.
 
 | API | 동작 |
 | --- | --- |
-| GET `/api/v1/photo-effects` | 로그인 사용자에게 고정 필터·프레임 카탈로그 반환 |
+| GET `/api/v1/photo-effects` | 로그인 사용자에게 고정 필터·브랜딩 버전 반환 |
+| GET `/api/v1/photo-branding` | 상단 로고·운동 요약 오버레이와 요약 해시를 JSON으로 반환 |
 | POST `/api/v1/sessions/today/photo` | multipart 사진 검증, 서버 합성, 사진 저장 후 출석 완료; 세트 입력은 받지 않음 |
 | GET `/api/v1/sessions/{session_uuid}/photo` | 해당 사용자 소유의 합성 사진만 반환; 원본 조회 API 없음 |
 
@@ -300,14 +438,16 @@ PUT은 해당 날짜의 세트 전체를 한 트랜잭션으로 교체하며, �
 인증을 아직 하지 않은 날에도 세트를 기록할 수 있고, 이후 해당 날짜에 연결된 세트로 조회됩니다.
 사진 인증은 사진과 선택 메모만 저장하며, 운동 세트 기록과 별도로 진행합니다.
 
-업로드 필드: `photo`(JPEG 파일), `frame_id`, `filter_id`, `effect_version`, `workout_date`(서울 날짜),
+업로드 필드: `photo`(JPEG 파일), `captured_at`(시간대가 포함된 ISO 8601), `capture_timezone`(기기의 IANA 시간대),
+`workout_summary_hash`(미리보기 응답의 SHA-256), `branding_language`(ko/en), `character_id`(카탈로그의 캐릭터 ID),
+`filter_id`, `effect_version`, `workout_date`(계정 시간대의 오늘 날짜),
 `submission_id`(UUID), `note`(선택, 최대 1000자). 브라우저의 Origin은 CORS_ORIGINS 목록에 있어야 합니다.
 일반 JSON API의 16KB 제한을 유지하고 사진 경로만 2MB + multipart 메타데이터 16KB를 허용합니다.
 사진 본문 수신 제한은 30초이며 프런트엔드 요청 제한은 45초입니다.
 
 파일 확장자를 신뢰하지 않고 Pillow로 JPEG 형식·완전 디코딩·900×1600 해상도·2MB 이하를 검증합니다.
-EXIF/GPS 등 메타데이터를 제거하고, 서버가 원본 픽셀로 고정 필터와 프레임을 다시 합성합니다.
-여기서 원본은 기기 원본 전체가 아니라 클라이언트가 자르지 않고 9:16 캔버스에 담은 **효과 적용 전 JPEG**입니다.
+EXIF/GPS 등 메타데이터를 제거하고, 서버가 원본 픽셀에 고정 웜 톤과 상단 로고·계정 이름·현지 촬영 시각·당일 운동 요약·캐릭터 하나를 합성합니다.
+여기서 원본은 기기 원본 전체가 아니라 클라이언트가 9:16으로 중앙 크롭한 **효과 적용 전 JPEG**입니다.
 원본과 합성본을 비공개 `PHOTO_STORAGE_DIR`(기본 `server` 작업 디렉터리 기준 `media/photos`)에 저장합니다.
 경로는 외부 정적 파일 서버에 노출하지 말고, 운영에서는 영속 볼륨과 DB를 함께 백업하세요.
 여러 API 인스턴스는 같은 저장 볼륨을 사용해야 하며 현재 구현은 object storage를 사용하지 않습니다.
@@ -319,13 +459,75 @@ EXIF/GPS 등 메타데이터를 제거하고, 서버가 원본 픽셀로 고정 
 저장 성공 후 DB에 출석을 반영합니다. 커밋 결과가 불확실한 실패에서는 파일을 보존하므로,
 운영자는 실패 로그를 확인하고 오래된 UUID 디렉터리를 DB의 storage_key와 대조해 미참조 파일을 정리해야 합니다.
 
-PNG 이미지 프레임은 `server/photo-frames`에 추가하면 파일 이름(확장자 제외)이 `frame_id`가 되고,
-그 이름이 화면에 표시됩니다. API는 `/photo-effects` 요청마다 마운트 폴더를 검색하고 이미지는 인증된
-`/photo-frames/{frame_id}` 경로로 전달하므로, PNG를 추가할 때 서버나 웹 앱을 다시 빌드하거나 재시작할
-필요가 없습니다. 이미 열려 있는 인증 화면은 새로고침하면 새 목록을 읽습니다. 파일 이름은 영문·숫자·하이픈·
-밑줄로 최대 64자까지 사용할 수 있습니다. 프레임 이미지는 투명 PNG를 권장하며 서버가 900×1600 사진 안에
-비율을 유지해 알파 합성합니다. 도형 프레임은 `app/photo_effects.json`의 `frames`에서 관리합니다.
-기존 효과를 바꿀 때는 새 frame_id/filter_id와 effect_version을 사용하세요. 저장된 합성본은 바뀌지 않습니다.
+프레임 선택·프레임 PNG API·동적 프레임 폴더 로딩을 제거했습니다. 기존 프레임 이미지와 전용 UI는
+`etc/review-unused-photo-frames`로 옮겼습니다. 이미 저장된 합성본은 유지됩니다.
+`GET /photo-branding?captured_at=...&capture_timezone=...&workout_date=...&branding_language=ko&character_id=...`는
+인증된 계정의 이름과 해당 계정 시간대의 당일 세트 기록을 사용합니다. JSON 응답의 `image_data_url`은
+투명 PNG의 data URL이며, `workout_summary_hash`는 서버가 조회한 종목명·세트 수·총 중량·부위 목록의 해시입니다.
+상단에는 기존 앱 로고 아이콘과 DON’T SKIP 문구를 나란히 배치하고, 하단 운동 목록은 모든 종목과 전체 이름을
+표시합니다. 기본 글씨는 21px(기존 27px)이며 11개 이상은 두 열로 배치합니다. 긴 이름은 줄바꿈하고,
+유효한 최대 30종목·종목명 100자도 사진 안에 들어가도록 필요할 때 글씨를 추가로 줄입니다.
+총 중량은 각 세트의 중량×반복 수를 Decimal로 합산한 kg 값입니다. 주 운동 부위는 공용/개인 종목의
+등록된 큰 부위별 세트 수로 집계하며, 최다 세트 부위가 동률이면 모두 표시합니다. 개인 종목 분류는
+해당 사용자 소유의 종목만 조회하고 삭제·미설정 종목은 미분류로 표시하며 이름으로 추측하지 않습니다.
+기록이 없으면 목록과 통계를 표시하지 않으며 다른 계정·날짜의 운동은 포함하지 않습니다.
+미리보기와 저장 모두 `render_photo_branding`으로 같은 오버레이를 생성합니다. 업로드 시 요약 해시를
+다시 확인해 종목·중량·반복 수·부위가 바뀌었으면 409를 반환하며, 화면의 운동 목록 새로고침으로 재촬영 없이 갱신합니다.
+촬영 시각은 카메라 결과 수신 직후의 기기 시각이며 EXIF의 셔터 시각을 보증하지 않습니다.
+UTC 오프셋을 함께 표시하고 일광절약시간·날짜 경계도 기기 시간대로 변환합니다.
+DB 변경 없이 기존 `frame_id` 열에 고정 브랜딩 버전과 촬영 시각·운동 요약·표시 언어·캐릭터 ID의 해시를 저장하여,
+같은 업로드 식별자로 촬영 정보만 바꿔 재전송한 경우도 충돌로 처리합니다.
+한글 계정명 렌더링에는 Noto Sans CJK가 필요합니다. Docker는 `fonts-noto-cjk`를 설치하고,
+Windows는 맑은 고딕, macOS는 Apple SD Gothic Neo를 사용합니다.
+캐릭터는 `app/photo_processing.py`의 `photo_characters`에 등록한 coach 전용 5종을 사용합니다.
+기존 윙크 포즈와 새로 생성한 더블 바이셉스·엄지척·덤벨 컬·승리 포즈만 포함하며,
+`mascot_*`와 `coach_front/side/back`은 후보에서 제거했습니다. 제외한 서버·public 이미지 사본은
+`etc/review-unused-photo-characters`로 옮겨 리뷰할 수 있게 보존했습니다.
+`GET /photo-effects`의 `character_ids`에서 클라이언트가 Web Crypto 난수로 촬영당 한 번 선택하고,
+같은 ID를 미리보기 GET과 업로드 폼에 전달합니다. 운동 목록 새로고침·언어/메모 변경 시 다시 뽑지 않으며
+서버는 등록된 ID만 허용하고 같은 업로드 식별자의 캐릭터 변경은 충돌로 처리합니다.
+후보 추가 시 이미지를 `app/photo_assets`에 포함하고 레지스트리에 안정적인 ID로 등록한 뒤 효과 버전을 올립니다.
+모든 캐릭터는 독립된 투명 PNG이며 최대 180×252 안에 맞춰 캐시한 뒤 사진 우측 하단에 배치합니다.
+mascot 스프라이트 분리 코드는 제거했습니다. 로고는 `app/photo_assets/logo.png`의 기존 앱 아이콘입니다.
+
+<details>
+<summary>Coach 포즈 생성 프롬프트 · 2026-10-16</summary>
+
+내장 `image_gen`으로 기존 `app/photo_assets/coach.png`를 참조해 포즈마다 별도로 생성했습니다.
+각 호출은 `transparent_background=true`이며 아래 공통 프롬프트와 포즈별 프롬프트를 이어서 사용했습니다.
+
+공통 프롬프트:
+
+```text
+Use case: stylized-concept. Asset type: one transparent PNG character sticker used small at the bottom-right of a workout verification photo. Input image 1 is the strict character identity and material reference, not a requested background. Generate exactly ONE full-body version of this SAME coach in a new action pose. Preserve the reference's squat, very broad muscular charcoal-gray body, spiky short charcoal hair, round nonhuman stylized face with simple cream-white graphic eyes/eyebrows/mouth, textured matte clay-like 3D material, bare torso, burgundy-red athletic shorts with cream piping, and chunky off-white sneakers. Preserve the recognizable face, proportions, outfit colors, and high-quality 3D rendering. Use a friendly and encouraging expression appropriate after a workout. Full body, entire hair, hands, fingers, and BOTH shoes must be visible, centered with comfortable transparent padding. Use soft neutral studio lighting on the character. Background must be truly transparent RGBA, no floor, no cast shadow on a background, no glow or haze, no scenery, no text, no logos, no borders, no contact sheet, no extra people. This is a new expressive/action pose of the coach, never a neutral front/side/back turnaround. Change only pose and expression; keep character identity and outfit.
+```
+
+저장 경로: `server/app/photo_assets/coach_double_biceps.png`
+
+```text
+Pose: celebratory DOUBLE BICEPS flex. Both elbows lifted outward, both fists near head height, chest proud, broad friendly closed-mouth smile, eyes open, feet firmly planted slightly apart. A clear compact silhouette that reads at thumbnail size.
+```
+
+저장 경로: `server/app/photo_assets/coach_thumbs_up.png`
+
+```text
+Pose: enthusiastic DOUBLE THUMBS-UP toward the viewer, both arms bent comfortably in front of the torso with clearly readable thumbs. Friendly smile, both eyes open, weight shifted slightly onto one leg. Keep the hands anatomically clean and entirely visible.
+```
+
+저장 경로: `server/app/photo_assets/coach_dumbbell_curl.png`
+
+```text
+Pose: performing a standing one-arm DUMBBELL CURL. Hold one simple dark gray dumbbell in one hand at mid-curl near chest height; the other hand rests on the hip. Small confident smile and focused eyes. Stable feet shoulder-width apart. Only this one workout prop, held securely and fully visible.
+```
+
+저장 경로: `server/app/photo_assets/coach_victory.png`
+
+```text
+Pose: triumphant workout-completed VICTORY. One bent arm raised overhead with a closed celebratory fist, other fist at the waist, proud cheerful smile, one foot slightly forward while both feet stay grounded. Dynamic, friendly, compact pose; show the whole raised arm and hand within the canvas.
+```
+
+</details>
+
 공유 픽셀 변환식은 `clamp(floor(((channel - 128) * contrast + 128) * brightness + offset + 0.5))`입니다.
 Canvas.filter의 브라우저별 지원 차이를 피하기 위해 프런트엔드도 같은 픽셀 변환을 수행합니다.
 
@@ -504,3 +706,88 @@ UTF-8 내보내기를 확인했습니다. Next.js 빌드와 서버 Ruff 통과. 
 삭제 성공 시 방·회차를 취소 상태로 보존하고 모든 참가자의 목록·상세 조회에서 제외합니다.
 초대를 철회하고 아직 발송 대기 중인 알림을 취소하며 참가자 알림함에 삭제 사실을 남깁니다.
 새 테이블이나 마이그레이션은 없으며, 목록의 삭제 버튼 표시에는 서버와 앱 번들 갱신이 모두 필요합니다.
+
+## 운동 장소 이탈 시 운동 종료
+
+`POST /api/v1/workout-timers/{timer_uuid}/location-exit`는 세션 쿠키로 인증하며
+`request_id`(UUID), `expected_revision`(정수), `client_action_at`(시간대가 포함된 시각)을 받습니다.
+운동 시간을 요청 도착 시각이 아니라 기기에 저장된 이탈 감지 시각까지 계산하고 타이머를
+`finished`로 전환하고 종료 시각도 이탈 감지 시각으로 저장합니다. 수동 일시정지 상태에서
+이탈하면 일시정지 이후의 시간을 더하지 않고 종료합니다. 이탈 시각은 현재 열린 구간의 시작 이후여야 하며 서버 시각보다
+30초 이상 미래인 값은 거부합니다. 기기의 서버 시각 보정값을 이탈 시각에 적용합니다.
+
+중복 요청은 같은 상태를 반환합니다. 저장한 버전과 달라진 타이머나 이미 종료한 타이머에는 늦게 도착한
+이탈 요청을 적용하지 않습니다. 6시간 만료 처리만 진행된 타이머는 복구할 수 있으나,
+다른 타이머를 새로 시작했다면 기존 타이머를 다시 활성화하지 않습니다.
+기존 타이머·구간·이벤트 테이블을 사용하므로 DB 마이그레이션은 없습니다.
+Android·iOS 백그라운드에서 이탈 시각을 기기에 저장하고 앱 복귀 또는 연결 복구 시 반영하며,
+서버와 앱 번들을 함께 업데이트해야 합니다.
+
+## 2026-10-12: 기존 데이터 기반 수행·유지·복귀 리포트
+
+개인 리포트 해석은 `performance_report_v3`입니다. `insights.performance`와
+`insights.journey_performance`에 동일 종목·중량의 최고 반복 수, 동일 종목·반복 수의 최고 중량을
+비교합니다. 종목 ID와 소스를 함께 사용하며 삭제된 종목을 이름으로 연결하지 않습니다.
+`confirmation_days`는 현재 최고 기록이 확인된 서로 다른 운동일 수입니다.
+같은 날 여러 세트는 1일로 계산하며 2일 이상이면 반복 확인, 1일이면 관찰로 구분합니다.
+맨몸 운동은 같은 0kg 조건에서 반복 수를 비교하고 0kg → 0kg을 중량 유지 근거로 세지 않습니다.
+
+수행 향상·유지·확인 필요·혼합·자료 부족은 총중량과 분리합니다. 한 종목의 여러 비교 조건은
+종목 수에서 중복 집계하지 않습니다. 총중량·세트·운동일 변화는 보조 훈련량이며 수행 저하의
+판정 입력으로 사용하지 않습니다. 자세·가동 범위·운동 강도가 같았는지는 기존 데이터로 확인할 수 없습니다.
+
+출석이 같은 완료 목표 주도 표시합니다. 개인 목표 연속 달성은 저장된 목표 이력에서 계산하며
+진행 중인 주는 연속 달성에 추가하지 않습니다. 미달 후 운동 재개는 복귀 진행 중,
+완료 목표 주의 목표를 채우면 복귀 달성으로 구분하고 선택 기간의 첫 복귀일을 확인합니다.
+한국어·영어 상세 화면, 텍스트 내보내기, 공유 이미지의 대표 근거에 같은 해석을 사용합니다.
+
+팀 리포트의 새 해석 버전은 `performance_evidence_v1`이며 기존 `growth_v2` 점수와 별개입니다.
+방장 전용 목록 API에 `growth_summary`와 `team_summary`, 상세에 `growth_evidence`를 제공합니다.
+팀 집계는 전체 인원, 동일 조건 비교 가능 인원, 자료 부족 인원을 공개하고 향상·반복 유지·목표 달성·복귀를
+분리합니다. 목표 달성 분모는 저장된 개인 목표를 평가할 수 있는 인원입니다. 항목 간 중복은 허용합니다.
+팀 목표 주는 월~일이 아니라 회차 시작일부터 7일 구간이며, 연속 달성은 저장된 이전·현재 비교 기간 안에서만 계산합니다.
+
+이미 저장된 `growth_v2` 리포트는 저장된 종목별 세트 로그와 주차별 목표·출석으로 해석을 도출합니다.
+이번 해석 추가로 확정 점수·원본 스냅샷을 수정하거나 현재 운동 기록을 다시 조회하지 않습니다.
+기존 점수는 참고 상세에 남기고 팀원 목록·대표 해석에는 사용하지 않습니다. 기존 v1 → v2 처리 흐름은 유지합니다.
+DB 마이그레이션이나 입력 항목 추가는 없으며 서버와 웹/앱 번들을 함께 업데이트해야 합니다.
+
+개인 화면은 전후 수행 그래프·목표 주 상태·복귀 흐름·짧은 비교 표로 요약하고 상세 근거를 접습니다.
+`consistency.period_weeks`는 표시용 목표 주이며 휴식·진행 중 주를 포함합니다. 기존 `weeks`와 목표 달성
+분모는 완료된 목표 주만 유지합니다. 과거 월말의 불완전한 목표 주는 부분 주로 표시하고 평가에서 제외합니다.
+팀 화면은 비교 날짜·기록일·반복 확인, 저장된 이전·현재 목표, 유지된 훈련량 수치와 비교 기준이 없는
+종목의 세트 로그까지 보여줍니다. 성장 방향 논의는 기록에서 도출한 확인 항목이며 방장의 판단을 대체하지 않습니다.
+공유 PNG는 수행·목표 유지·복귀 요약과 전후 그래프를 사용하고 텍스트 내보내기는 전체 근거를 유지합니다.
+
+변경 전후 재현 데이터, 검증 범위와 결과: [개선 비교 리포트](../docs/report-improvement-2026-10-12.html).
+
+
+## 계정 삭제·커뮤니티 안전 기능 (2026-10-16)
+
+배포 전 `supabase/migrations/20261016044732_account_deletion_and_community_safety.sql`을 적용해야 합니다.
+운영자 권한은 서버 환경변수 `MODERATOR_USER_UUIDS`의 계정 UUID 허용 목록으로 부여하며 기본값 `[]`는 접근을 거부합니다.
+신고 조회·처리는 앱 설정의 운영자 신고 관리에서 수행합니다. 이메일 주소는 권한 판단에 사용하지 않습니다.
+
+| API | 기능 |
+| --- | --- |
+| `GET /api/v1/policies/community` | 현재 약관 버전과 한국어·영어 전문 |
+| `PUT /api/v1/me/community-consent` | 현재 버전 동의 저장 |
+| `DELETE /api/v1/me/account` | 로그인 계정 삭제, 현재 비밀번호·DELETE 확인 필요 |
+| `POST /api/v1/auth/delete-account` | 세션 없이 이메일·비밀번호·DELETE로 계정 삭제. 이용 제한 계정도 사용 가능 |
+| `GET /api/v1/safety/status` | 동의 상태와 운영자 여부 |
+| `GET /api/v1/safety/blocks` | 내가 차단한 사용자 목록 |
+| `PUT/DELETE /api/v1/safety/blocks/{user_uuid}` | 사용자 차단·해제 |
+| `POST /api/v1/safety/reports` | 사용자·방·질문·답변 신고 |
+| `GET /api/v1/moderation/reports` | 운영자 전용 미처리/처리 이력·사진 삭제 대기/실패 수 |
+| `POST /api/v1/moderation/reports/{report_uuid}/resolve` | 사유와 함께 숨김·이용 제한·종결 |
+| `POST /api/v1/moderation/photo-cleanup/retry` | 운영자가 실패 파일 삭제를 명시적으로 재시도 |
+
+가입 요청에는 `accepted_policy_version`이 필요합니다. 기존 계정은 커뮤니티 참여 전에 현재 정책을 수락하며, 개인 기록과 계정 삭제에는 새 정책 동의를 강제하지 않습니다.
+계정 삭제는 자격 증명·전체 세션과 연관 개인 기록, 챌린지 평가 JSON의 현재·과거 사용자 사본까지 제거합니다.
+탈퇴한 방장의 방은 개인정보가 담길 수 있는 이름·설명을 지우고 방장 공석으로 처리하며, 다른 참가자의 개인 기록은 유지합니다.
+원본/가공 사진 삭제 작업은 DB 트랜잭션과 함께 저장되고 별도 작업자가 30초 주기로 최대 25개씩 처리합니다.
+최초 시도와 재시도 두 번 후에는 실패 상태·로그를 남기며 운영자가 확인해야 합니다.
+공급자가 이미 전달한 푸시, 오프라인 기기, 백업 및 외부 공유 사본 회수는 별도 운영 문제입니다.
+
+외부 계정 삭제 페이지는 정적 빌드의 `/delete-account.html`입니다. 앱 설치·로그인 세션을 요구하지 않으며 실제 HTTPS API 주소와 CORS 설정으로 빌드·배포해야 합니다.
+자세한 데이터 범위·보관 정책 미정 항목·검증 결과는 [개인정보 및 게시 안내](../docs/privacy-policy/README.md)를 참고하세요.

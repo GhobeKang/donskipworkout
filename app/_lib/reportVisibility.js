@@ -37,12 +37,10 @@ export function personal_report_changes(report) {
     }
     const week_end = new Date(`${week.week_start}T00:00:00Z`);
     week_end.setUTCDate(week_end.getUTCDate() + 6);
-    if (previous_week && in_period(week_end.toISOString().slice(0, 10))
-      && (measured_change(previous_week.completed_count, week.completed_count)
-        || previous_week.status !== week.status)) weeks.push({ ...week, previous: previous_week });
+    if (in_period(week_end.toISOString().slice(0, 10))) weeks.push({ ...week, previous: previous_week });
     previous_week = week;
   }
-  const recovery_events = insights.recovery.events.filter((event) => event.status === 'recovered'
+  const recovery_events = insights.recovery.events.filter((event) => ['recovered', 'pending'].includes(event.status)
     && in_period(event.first_return_date));
   const new_areas = insights.challenges.new_areas.filter((area) => area.target_area !== '타겟 부위 미설정'
     && in_period(area.first_date));
@@ -67,16 +65,8 @@ export function personal_report_changes(report) {
 
 export function member_report_changes(report) {
   const metrics = report.metrics.filter((metric) => {
-    if (!metric.comparable || !Number.isFinite(metric.points)
-      || !measured_change(metric.previous, metric.current)) return false;
+    if (!metric.comparable || !Number.isFinite(metric.points)) return false;
     if (['volume', 'extra'].includes(metric.key) && !Number.isFinite(metric.growth_value)) return false;
-    if (metric.key === 'attendance') return report.attendance.previous_dates.length > 0;
-    if (metric.key === 'punctuality') return ['previous', 'current'].every((period) => {
-      const timing = report.punctuality[period];
-      return timing.measured_days > 0 && timing.missing_days === 0
-        && timing.records.length === timing.attendance_days
-        && timing.records.every((record) => record.scheduled_time && record.certified_at);
-    });
     return true;
   });
   const exercises = report.exercises.flatMap((exercise) => {
@@ -84,8 +74,7 @@ export function member_report_changes(report) {
       || !(exercise.current?.workout_days > 0) || !(exercise.previous?.set_count > 0)
       || !(exercise.current?.set_count > 0)) return [];
     const fields = changed_fields(exercise.previous, exercise.current, exercise_fields);
-    const conditions = exercise.conditions.filter((condition) => condition.previous_date && condition.current_date
-      && measured_change(condition.previous_value, condition.current_value));
+    const conditions = exercise.conditions.filter((condition) => condition.previous_date && condition.current_date);
     if (!fields.length && !conditions.length) return [];
     return [{ ...exercise, changed_fields: fields, conditions }];
   });

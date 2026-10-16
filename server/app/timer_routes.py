@@ -1,4 +1,4 @@
-from datetime import date, datetime, time, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from math import floor
 from uuid import uuid4
 from zoneinfo import ZoneInfo
@@ -17,10 +17,12 @@ from .database import (
 from .schemas import (
     workoutTimerAction,
     workoutTimerCorrection,
+    workoutTimerLocationExit,
     workoutTimerReconcile,
     workoutTimerStart,
 )
 from .security import databaseDependency, userDependency, utc_now
+from .workout_times import workout_time_days
 
 router = APIRouter(prefix='/api/v1')
 maximum_running_seconds = 6 * 60 * 60
@@ -297,6 +299,62 @@ def act_on_workout_timer(
     return timer_output(database, timer, now)
 
 
+@router.post('/workout-timers/{timer_uuid}/location-exit')
+def finish_timer_on_location_exit(
+    timer_uuid: str,
+    payload: workoutTimerLocationExit,
+    user: userDependency,
+    database: databaseDependency,
+):
+    request_id = str(payload.request_id)
+    lock_user(database, user.user_id)
+    timer = find_owned_timer(database, timer_uuid, user.user_id, lock=True)
+    now = utc_now()
+    if previous_request(database, timer.timer_id, request_id):
+        database.commit()
+        return timer_output(database, timer, now)
+    # A delayed exit must never finish a newer resumed segment or change a finished timer.
+    expired_timer = (
+        timer.status == 'needs_review'
+        and timer.needs_review_reason == '종료 시각을 확인해 주세요.'
+        and timer.revision == payload.expected_revision + 1
+    )
+    if expired_timer:
+        active_timer = database.scalar(
+            select(workoutTimer).where(
+                workoutTimer.user_id == user.user_id,
+                workoutTimer.timer_id != timer.timer_id,
+                workoutTimer.status.in_(['running', 'paused']),
+            ).with_for_update()
+        )
+        if active_timer:
+            database.commit()
+            return timer_output(database, active_timer, now)
+    if not expired_timer and (
+        timer.status not in {'running', 'paused'} or timer.revision != payload.expected_revision
+    ):
+        database.commit()
+        return timer_output(database, timer, now)
+    if payload.client_action_at.tzinfo is None:
+        raise HTTPException(422, '기기 시각에는 시간대 정보가 필요합니다.')
+    client_action_at = payload.client_action_at.astimezone(timezone.utc).replace(tzinfo=None)
+    if client_action_at > now + timedelta(seconds=30) or client_action_at < timer.started_at:
+        raise HTTPException(409, '기기 시각을 확인할 수 없어 측정 시간을 복구하지 못했습니다.')
+    ended_at = min(client_action_at, now)
+    if timer.status != 'paused':
+        close_open_segment(database, timer, ended_at, 'timer_recorded')
+    timer.measured_seconds = segment_seconds(database, timer.timer_id)
+    timer.status = 'finished'
+    timer.finished_at = ended_at
+    timer.needs_review_reason = None
+    timer.revision += 1
+    add_timer_event(
+        database, timer, request_id, 'finish', payload.expected_revision, now, client_action_at
+    )
+    database.commit()
+    return timer_output(database, timer, now)
+
+
 @router.post('/workout-timers/{timer_uuid}/reconcile')
 def reconcile_offline_timer(
     timer_uuid: str,
@@ -414,56 +472,11 @@ def read_workout_times(
     date_from = date_from or today - timedelta(days=30)
     if date_to < date_from or (date_to - date_from).days > 365:
         raise HTTPException(422, '조회 기간은 1년 이내로 선택해 주세요.')
-    timers = database.scalars(
-        select(workoutTimer).where(
-            workoutTimer.user_id == user.user_id,
-            workoutTimer.status == 'finished',
-            workoutTimer.started_at < datetime.combine(date_to + timedelta(days=1), time.min, user_timezone)
-            .astimezone(timezone.utc).replace(tzinfo=None),
-        )
-    ).all()
-    totals_by_date = {}
-    for timer in timers:
-        for segment in database.scalars(
-            select(workoutTimerSegment).where(
-                workoutTimerSegment.timer_id == timer.timer_id,
-                workoutTimerSegment.segment_status == 'accepted',
-                workoutTimerSegment.segment_ended_at.is_not(None),
-            )
-        ):
-            segment_start = segment.segment_started_at.replace(tzinfo=timezone.utc)
-            segment_end = segment.segment_ended_at.replace(tzinfo=timezone.utc)
-            cursor = segment_start
-            while cursor < segment_end:
-                local_date = cursor.astimezone(user_timezone).date()
-                next_local_day = datetime.combine(
-                    local_date + timedelta(days=1), time.min, user_timezone
-                ).astimezone(timezone.utc)
-                slice_end = min(segment_end, next_local_day)
-                seconds = (slice_end - cursor).total_seconds()
-                if date_from <= local_date <= date_to:
-                    day_entry = totals_by_date.setdefault(local_date.isoformat(), {
-                        'measured_seconds': 0.0,
-                        'timer_recorded_seconds': 0.0,
-                        'self_reported_seconds': 0.0,
-                        'timer_ids': set(),
-                    })
-                    day_entry['measured_seconds'] += seconds
-                    day_entry[f'{segment.record_source}_seconds'] += seconds
-                    day_entry['timer_ids'].add(timer.timer_uuid)
-                cursor = slice_end
+    time_days = workout_time_days(
+        database, {user.user_id: user.timezone}, date_from, date_to,
+    )[user.user_id]
     return {
         'date_from': date_from.isoformat(),
         'date_to': date_to.isoformat(),
-        'days': [
-            {
-                'workout_date': workout_date,
-                'measured_seconds': floor(values['measured_seconds']),
-                'timer_recorded_seconds': floor(values['timer_recorded_seconds']),
-                'self_reported_seconds': floor(values['self_reported_seconds']),
-                'timer_count': len(values['timer_ids']),
-                'measurement_status': 'measured',
-            }
-            for workout_date, values in sorted(totals_by_date.items())
-        ],
+        'days': list(time_days.values()),
     }

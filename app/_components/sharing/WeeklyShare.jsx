@@ -1,3 +1,4 @@
+import InfoTooltip from '../ui/InfoTooltip';
 import { useEffect, useRef, useState } from 'react';
 import useApiResource from '../../_hooks/useApiResource';
 import { useLanguage } from '../../_hooks/useLanguage';
@@ -88,9 +89,9 @@ function GeneratedReport({ report_path, revision, on_unauthorized }) {
     <RequestState loading={report_resource.loading} error={report_resource.error || image_error} on_retry={retry_count < 2 ? () => set_retry_count((count) => count + 1) : undefined} />
     {report?.insights && !report_resource.loading && !report_resource.error && <>
       <PersonalReport report={report} />
-      {report.is_baseline_week && <p className="infoText">{t('중간에 시작한 첫 주는 준비 기간입니다. 다음 주부터 미리 정한 약속으로 평가해요.')}</p>}
-      {report.is_current_week && report.next_target_count !== null && <p className="infoText">{t('다음 주 약속: {0}회 · 설정의 운동 요일 수로 정해져요.', [report.next_target_count])}</p>}
-      {ready_image ? <details className="shareImagePreview"><summary>{t('요약 이미지 미리보기')}</summary><img className="weeklySharePreview" src={ready_image.preview_url} alt={copy.caption} width={1080} height={1350} /></details> : !image_error && <p role="status" className="infoText">{t('공유 이미지 준비 중…')}</p>}
+      {report.is_baseline_week && <p className="infoCaption">{t('준비 기간')}<InfoTooltip label={t('준비 기간')}>{t('중간에 시작한 첫 주는 준비 기간입니다. 다음 주부터 미리 정한 약속으로 평가해요.')}</InfoTooltip></p>}
+      {report.is_current_week && report.next_target_count !== null && <p className="infoCaption">{t('다음 주 약속: {0}회', [report.next_target_count])}<InfoTooltip label={t('운동 일정')}>{t('다음 주 약속: {0}회 · 설정의 운동 요일 수로 정해져요.', [report.next_target_count])}</InfoTooltip></p>}
+      {ready_image ? <details className="shareImagePreview"><summary>{t('요약 이미지 미리보기')}</summary><img className="weeklySharePreview" src={ready_image.preview_url} alt={copy.caption} width={ready_image.width} height={ready_image.height} /></details> : !image_error && <p role="status" className="infoText">{t('공유 이미지 준비 중…')}</p>}
       <div className="shareActions">
         <button type="button" className="wideButton primary" disabled={!ready_image || pending} onClick={() => share_image('image')}><MaterialIcon>ios_share</MaterialIcon>{t(pending ? '공유 창 열림…' : '이미지 공유하기')}</button>
         <button type="button" className="wideButton secondary" disabled={pending} onClick={() => share_image('report')}>{t('전체 리포트 파일 공유')}</button>
@@ -99,14 +100,14 @@ function GeneratedReport({ report_path, revision, on_unauthorized }) {
           set_feedback(t('이미지 다운로드를 요청했습니다.'));
         }}>{t('이미지 저장')}</button>}
       </div>
-      <details className="shareRules"><summary>{t('어떻게 평가하나요?')}</summary>
-        <p>{t('월요일부터 일요일까지, 완료한 운동을 하루 1회 계산해요. 요일을 옮겨도 주간 횟수를 채우면 약속을 지킨 거예요.')}</p>
-        <p>{t('달성률은 최대 100%. 목표를 넘긴 횟수는 별도로 보여주며, 추가 운동이 없어도 감점하지 않아요.')}</p>
-        <p>{t('운동 요일과 알림은 저장 즉시 바뀌지만, 공유 평가의 목표 횟수는 다음 주부터 바뀌어요. 지난 약속은 바뀌지 않아요.')}</p>
-        <p>{t('부위별 세트 수와 운동량을 비교해요. 몸의 변화나 전체 운동 능력을 판정하는 점수는 아니에요.')}</p>
-        {report.period_type === 'monthly' && <p>{t('월간 운동량은 달 전체를 집계하고, 약속 달성은 완료된 주간 단위로 평가해요.')}</p>}
-        <p>{t('공유 이미지에는 이름, 사진, 메모를 넣지 않아요. 이미지 공유를 누른 뒤 올릴 앱을 선택하세요.')}</p>
-      </details>
+      <div className="infoCaption">{t('어떻게 평가하나요?')}<InfoTooltip label={t('어떻게 평가하나요?')}>
+        <span className="infoTooltipParagraph">{t('월요일부터 일요일까지, 완료한 운동을 하루 1회 계산해요. 요일을 옮겨도 주간 횟수를 채우면 약속을 지킨 거예요.')}</span>
+        <span className="infoTooltipParagraph">{t('달성률은 최대 100%. 목표를 넘긴 횟수는 별도로 보여주며, 추가 운동이 없어도 감점하지 않아요.')}</span>
+        <span className="infoTooltipParagraph">{t('운동 요일과 알림은 저장 즉시 바뀌지만, 공유 평가의 목표 횟수는 다음 주부터 바뀌어요. 지난 약속은 바뀌지 않아요.')}</span>
+        <span className="infoTooltipParagraph">{t('동일 조건의 수행·목표 유지·복귀를 비교해요. 총중량 감소만으로 성장 저하를 판단하지 않아요.')}</span>
+        {report.period_type === 'monthly' && <span className="infoTooltipParagraph">{t('월간 운동량은 달 전체를 집계하고, 약속 달성은 완료된 주간 단위로 평가해요.')}</span>}
+        <span className="infoTooltipParagraph">{t('공유 이미지에는 이름, 사진, 메모를 넣지 않아요. 이미지 공유를 누른 뒤 올릴 앱을 선택하세요.')}</span>
+      </InfoTooltip></div>
     </>}
     <p className="shareFeedback" role="status" aria-live="polite">{feedback}</p>
   </div>;

@@ -14,6 +14,7 @@ from sqlalchemy import (
     String,
     Time,
     UniqueConstraint,
+    case,
     create_engine,
     event,
     func,
@@ -38,6 +39,8 @@ class userAccount(databaseBase):
     display_name: Mapped[str | None] = mapped_column(String(100))
     country_code: Mapped[str] = mapped_column(String(2), default='KR')
     timezone: Mapped[str] = mapped_column(String(64), default='Asia/Seoul')
+    community_policy_version: Mapped[str | None] = mapped_column(String(32))
+    community_policy_accepted_at: Mapped[datetime | None] = mapped_column(DateTime)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.current_timestamp(), onupdate=func.current_timestamp()
@@ -111,6 +114,7 @@ class exerciseItem(databaseBase):
     user_id: Mapped[int] = mapped_column(id_type, ForeignKey('users.user_id'))
     name: Mapped[str] = mapped_column(String(100))
     target_area: Mapped[str | None] = mapped_column(String(20))
+    target_subarea: Mapped[str | None] = mapped_column(String(30))
     last_sets: Mapped[list] = mapped_column(
         JSON().with_variant(JSONB(), 'postgresql'), default=list
     )
@@ -122,6 +126,7 @@ class sharedExerciseItem(databaseBase):
     exercise_id: Mapped[int] = mapped_column(id_type, primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String(100))
     target_area: Mapped[str | None] = mapped_column(String(20))
+    target_subarea: Mapped[str | None] = mapped_column(String(30))
 
 
 class userSharedExerciseProgress(databaseBase):
@@ -154,6 +159,28 @@ class workoutSet(databaseBase):
     reps: Mapped[int] = mapped_column(Integer)
 
 
+def exercise_report_area():
+    return case(
+        (
+            workoutSet.exercise_source == 'shared',
+            case(
+                (
+                    sharedExerciseItem.target_subarea.is_not(None),
+                    sharedExerciseItem.target_area + ' · ' + sharedExerciseItem.target_subarea,
+                ),
+                else_=sharedExerciseItem.target_area,
+            ),
+        ),
+        else_=case(
+            (
+                exerciseItem.target_subarea.is_not(None),
+                exerciseItem.target_area + ' · ' + exerciseItem.target_subarea,
+            ),
+            else_=exerciseItem.target_area,
+        ),
+    )
+
+
 class workoutPhoto(databaseBase):
     __tablename__ = 'workout_session_photos'
     photo_id: Mapped[int] = mapped_column(id_type, primary_key=True, autoincrement=True)
@@ -174,7 +201,7 @@ class challengeRoom(databaseBase):
     __tablename__ = 'challenge_rooms'
     room_id: Mapped[int] = mapped_column(id_type, primary_key=True, autoincrement=True)
     room_uuid: Mapped[str] = mapped_column(String(36), unique=True)
-    host_user_id: Mapped[int] = mapped_column(id_type, ForeignKey('users.user_id'))
+    host_user_id: Mapped[int | None] = mapped_column(id_type, ForeignKey('users.user_id'))
     name: Mapped[str] = mapped_column(String(60))
     description: Mapped[str | None] = mapped_column(String(300))
     member_limit: Mapped[int] = mapped_column(Integer, default=10)
@@ -230,6 +257,7 @@ class coachingQuestion(databaseBase):
     category: Mapped[str] = mapped_column(String(24))
     body: Mapped[str] = mapped_column(String(2000))
     awaiting_host: Mapped[bool] = mapped_column(Boolean, default=True)
+    is_removed: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime)
     updated_at: Mapped[datetime] = mapped_column(DateTime)
 
@@ -242,6 +270,7 @@ class coachingReply(databaseBase):
     sender_user_id: Mapped[int] = mapped_column(id_type, ForeignKey('users.user_id'))
     request_id: Mapped[str] = mapped_column(String(36))
     body: Mapped[str] = mapped_column(String(2000))
+    is_removed: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime)
 
 
@@ -385,6 +414,46 @@ class workoutTimerRevision(databaseBase):
     created_at: Mapped[datetime] = mapped_column(DateTime)
 
 
+class userBlock(databaseBase):
+    __tablename__ = 'user_blocks'
+    blocker_user_id: Mapped[int] = mapped_column(
+        id_type, ForeignKey('users.user_id'), primary_key=True
+    )
+    blocked_user_id: Mapped[int] = mapped_column(
+        id_type, ForeignKey('users.user_id'), primary_key=True
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())
+
+
+class contentReport(databaseBase):
+    __tablename__ = 'content_reports'
+    report_id: Mapped[int] = mapped_column(id_type, primary_key=True, autoincrement=True)
+    report_uuid: Mapped[str] = mapped_column(String(36), unique=True)
+    reporter_user_id: Mapped[int] = mapped_column(id_type, ForeignKey('users.user_id'))
+    target_user_id: Mapped[int | None] = mapped_column(id_type, ForeignKey('users.user_id'))
+    content_type: Mapped[str] = mapped_column(String(16))
+    content_id: Mapped[str] = mapped_column(String(36))
+    reason: Mapped[str] = mapped_column(String(24))
+    details: Mapped[str] = mapped_column(String(1000), default='')
+    content_snapshot: Mapped[str] = mapped_column(String(2400), default='')
+    status: Mapped[str] = mapped_column(String(16), default='open')
+    resolution: Mapped[str | None] = mapped_column(String(24))
+    resolution_note: Mapped[str | None] = mapped_column(String(1000))
+    reviewed_by_user_id: Mapped[int | None] = mapped_column(id_type, ForeignKey('users.user_id'))
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())
+    resolved_at: Mapped[datetime | None] = mapped_column(DateTime)
+
+
+class photoDeletionJob(databaseBase):
+    __tablename__ = 'photo_deletion_jobs'
+    job_id: Mapped[int] = mapped_column(id_type, primary_key=True, autoincrement=True)
+    storage_key: Mapped[str] = mapped_column(String(500), unique=True)
+    attempt_count: Mapped[int] = mapped_column(Integer, default=0)
+    status: Mapped[str] = mapped_column(String(16), default='pending')
+    last_error: Mapped[str | None] = mapped_column(String(100))
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())
+
+
 class notificationPreference(databaseBase):
     __tablename__ = 'notification_preferences'
     __table_args__ = (UniqueConstraint('round_id', 'user_id'),)
@@ -412,6 +481,8 @@ class pushDevice(databaseBase):
     provider: Mapped[str] = mapped_column(String(10))
     token: Mapped[str] = mapped_column(String(4096))
     token_hash: Mapped[str] = mapped_column(String(64))
+    workout_push_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
+    language: Mapped[str] = mapped_column(String(2), default='ko')
     active: Mapped[bool] = mapped_column(Boolean, default=True)
     updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())
 
@@ -421,9 +492,7 @@ class notificationEvent(databaseBase):
     event_id: Mapped[int] = mapped_column(id_type, primary_key=True, autoincrement=True)
     event_uuid: Mapped[str] = mapped_column(String(36), unique=True)
     event_key: Mapped[str] = mapped_column(String(200), unique=True)
-    round_id: Mapped[int | None] = mapped_column(
-        id_type, ForeignKey('challenge_rounds.round_id')
-    )
+    round_id: Mapped[int | None] = mapped_column(id_type, ForeignKey('challenge_rounds.round_id'))
     recipient_user_id: Mapped[int] = mapped_column(id_type, ForeignKey('users.user_id'))
     sender_user_id: Mapped[int | None] = mapped_column(id_type, ForeignKey('users.user_id'))
     category: Mapped[str] = mapped_column(String(24))
@@ -446,9 +515,7 @@ class notificationOutbox(databaseBase):
     __tablename__ = 'notification_outbox'
     __table_args__ = (UniqueConstraint('event_id', 'device_id'),)
     outbox_id: Mapped[int] = mapped_column(id_type, primary_key=True, autoincrement=True)
-    event_id: Mapped[int] = mapped_column(
-        id_type, ForeignKey('notification_events.event_id')
-    )
+    event_id: Mapped[int] = mapped_column(id_type, ForeignKey('notification_events.event_id'))
     device_id: Mapped[int] = mapped_column(id_type, ForeignKey('push_devices.device_id'))
     status: Mapped[str] = mapped_column(String(20), default='queued')
     attempt_count: Mapped[int] = mapped_column(Integer, default=0)
