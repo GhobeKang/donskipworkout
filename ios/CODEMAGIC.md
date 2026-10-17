@@ -56,6 +56,12 @@ Codemagic Personal account settings → Code signing identities에서 다음을 
 
 ## 빌드 번호와 검증
 
+2026-10-17 로그인 수정 커밋 `91bb153`을 [Codemagic 세 번째 빌드](https://codemagic.io/app/6ad2fb6fb2c924ab2bedd215/build/6ad30a1f7550aed8108f7db2)로 빌드·업로드했습니다.
+iOS 버전은 **1.0 (3)**이며 전체 빌드·업로드 시간은 3분 48초입니다.
+[TestFlight 1.0 (3)](https://appstoreconnect.apple.com/teams/29261b7d-3b33-41cc-864f-f9b608e445f2/apps/6823856877/testflight/ios/44cace96-f15f-4cc4-befd-f44069132dd9)의
+**빌드 업로드: 완료**, **진행 상태: 제출 준비 완료**, 기존 **내부** 그룹·테스터 2명 자동 연결을 확인했습니다.
+새 테스터 초대나 외부 베타 심사 제출은 실행하지 않았습니다. 실기기 로그인과 재실행 후 세션 복원은 새 빌드를 설치해 확인해야 합니다.
+
 ### 로그인 검증
 
 iOS API 요청은 `CapacitorHttp`로 전송하여 서버의 HttpOnly 세션 쿠키를 네이티브 저장소에서 유지합니다.

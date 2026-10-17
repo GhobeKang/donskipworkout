@@ -44,6 +44,36 @@ JSON 경로가 없으면 Compose가 실행을 중단합니다. 파일은 이미�
 
 ## Docker Hub push
 
+### 2026-10-17 iOS 인증 로그 배포 기록
+
+- 소스 커밋: `91bb153` (`codex/codemagic-ios-testflight`).
+- 배포 이미지: `ghobekang/donskipworkout-api:91bb153` (`linux/amd64`).
+- Registry manifest digest: `sha256:af0b16d1c922128bb46a4cbec892b2aaff66c654937e390ee24037b0c2841f2d`.
+- 운영 서버: Lightsail `kuuki-jp`, `/home/dontskip`, Compose 서비스 `attendance_api`.
+- 서버 `.env`의 `DOCKER_IMAGE_NAME`을 위 버전으로 고정했습니다. 이전 이미지는 서버 로컬의
+  `ghobekang/donskipworkout-api:before-91bb153` 태그로 보존했습니다.
+- 운영 HTTPS `/health`의 200 응답과, 쿠키 없는 `/api/v1/auth/session` 요청에 대한
+  `authentication_failed reason=missing_session_cookie` 및 같은 request ID의 401 로그를 확인했습니다.
+- 서버의 Docker Compose 1.29.2는 기존 컨테이너 재생성 시 `ContainerConfig` 오류가 발생했습니다.
+  해당 API의 중단된 컨테이너만 제거하고 재생성했으며, 볼륨 제거 옵션은 사용하지 않았습니다.
+- 운영 서버는 API 자체에서 TLS를 제공하므로 기본 HTTP 헬스체크와 맞지 않았습니다.
+  서버의 `docker-compose.override.yml`에 다음 헬스체크를 적용했습니다. 인증서 검증은 유지합니다.
+  저장소 기본 `compose.yaml`의 HTTP reverse proxy 구성에는 이 오버라이드가 필요하지 않습니다.
+- 오버라이드 적용 후 최종 컨테이너 상태 **healthy**와 배포 이미지 태그 `91bb153`을 확인했습니다.
+
+```yaml
+services:
+  attendance_api:
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request; urllib.request.urlopen("https://kuuki-jp.com:8000/health", timeout=3)
+```
+
+### 이미지 업로드
+
 Docker Hub 저장소를 만든 뒤 프로젝트 루트에서 아래 스크립트를 실행합니다. Docker CLI의
 로그인 정보만 사용하며 비밀번호를 스크립트 인자로 받지 않습니다.
 
