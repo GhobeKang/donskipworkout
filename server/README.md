@@ -546,6 +546,11 @@ SQLAlchemy는 INFO 레벨로 설정하여 결과 행을 로그에 출력하지 �
 오류에는 예외 종류와 파일/행/함수 경로를 기록합니다. 검증 오류도 제출된 값을 응답에 반사하지 않습니다.
 기본 로그는 콘솔과 `logs/api.log`에 출력하고 5MB마다 교체하여 백업 5개를 유지합니다.
 요청별 `X-Request-ID`, 상태코드, 소요시간, 수신/송신 크기와 라우트 템플릿을 남깁니다.
+인증 실패는 같은 request ID에 `attendance.auth authentication_failed reason=...`을 기록합니다.
+`missing_session_cookie`는 쿠키 미전달, `invalid_session_cookie`는 잘못된 길이,
+`session_not_found`는 세션 미존재·폐기, `session_expired`는 실제 만료,
+`account_inactive_or_missing`은 계정 비활성·미존재, `invalid_credentials`는 로그인 정보 불일치입니다.
+쿠키 값·이메일·비밀번호는 이 로그에 포함하지 않습니다.
 
 기본 입력 제한은 16KB 및 본문 수신 10초입니다. 추가 JSON 필드는 거부하며 페이지 크기는 최대 100입니다.
 로그인/가입 등 인증 요청은 IP당 분당 10회, 전체는 분당 120회로 제한합니다.
@@ -558,6 +563,11 @@ Uvicorn `--forwarded-allow-ips`로 지정하고 `--proxy-headers`를 활성화�
 세션 쿠키는 `HttpOnly`, `SameSite=Lax` 기본값으로 발급합니다. HTTPS 기반의 다른 사이트
 origin에서 호출하려면 `SESSION_COOKIE_SECURE=true`, `SESSION_COOKIE_SAMESITE=none`으로
 설정해야 합니다. CORS origin은 실제 프론트엔드만 명시해야 합니다.
+iOS Capacitor 앱은 WebKit의 외부 사이트 쿠키 제한을 피하도록 API 요청에
+`CapacitorHttp`와 iOS의 네이티브 쿠키 저장소를 사용합니다. JSON 요청·사진 업로드·사진 조회에
+동일하게 적용하며, 사진 업로드 검증을 위해 앱의 Origin을 명시합니다.
+웹·Android는 기존 `fetch`를 사용합니다. iOS 수정은 앱 재빌드와 TestFlight 업데이트가 필요하며,
+401 사유 로그 추가는 API 서버에도 배포해야 합니다.
 공개 회원가입은 이메일 소유권 확인을 포함하지 않습니다. 이메일 인증/비밀번호 재설정은 별도 기능입니다.
 
 참고: [Starlette 세션 쿠키](https://www.starlette.io/responses/#set-cookie),

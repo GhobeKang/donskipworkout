@@ -135,7 +135,7 @@ def login(
         credential.password_hash if credential else dummy_password_hash,
     )
     if not credential or not valid_password or not credential.is_active:
-        raise authentication_error()
+        raise authentication_error('invalid_credentials')
     release_previous_push_owner(database, payload.installation_uuid, user.user_id)
     raw_session_id, expires_in = create_session(request, database, user)
     set_session_cookie(response, request, raw_session_id, expires_in)

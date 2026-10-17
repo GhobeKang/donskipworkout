@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime, timedelta, timezone
 from hashlib import sha256
 from secrets import token_urlsafe
@@ -12,6 +13,7 @@ from .database import authSession, get_database, userAccount, userCredential
 
 password_hasher = PasswordHash.recommended()
 dummy_password_hash = password_hasher.hash(token_urlsafe(32))
+logger = logging.getLogger('attendance.auth')
 
 
 def database_dependency(request: Request):
@@ -21,7 +23,8 @@ def database_dependency(request: Request):
 databaseDependency = Annotated[Session, Depends(database_dependency)]
 
 
-def authentication_error():
+def authentication_error(reason: str):
+    logger.warning('authentication_failed reason=%s', reason)
     return HTTPException(
         401, '인증 정보가 유효하지 않습니다.', headers={'WWW-Authenticate': 'Session'}
     )
@@ -45,22 +48,24 @@ def current_session(
     database: databaseDependency,
 ) -> tuple[authSession, userAccount]:
     raw_session_id = request.cookies.get(session_cookie_name(request))
-    if not raw_session_id or len(raw_session_id) > 128:
-        raise authentication_error()
+    if not raw_session_id:
+        raise authentication_error('missing_session_cookie')
+    if len(raw_session_id) > 128:
+        raise authentication_error('invalid_session_cookie')
 
     stored_session = database.get(authSession, hash_session_id(raw_session_id))
     now = utc_now()
     if stored_session is None:
-        raise authentication_error()
+        raise authentication_error('session_not_found')
     if stored_session.expires_at <= now:
         database.delete(stored_session)
         database.commit()
-        raise authentication_error()
+        raise authentication_error('session_expired')
 
     credential = database.get(userCredential, stored_session.user_id)
     user = database.get(userAccount, stored_session.user_id)
     if not credential or not credential.is_active or user is None:
-        raise authentication_error()
+        raise authentication_error('account_inactive_or_missing')
     expires_in = request.app.state.settings.session_days * 86400
     stored_session.expires_at = now + timedelta(seconds=expires_in)
     database.commit()

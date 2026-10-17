@@ -56,6 +56,25 @@ Codemagic Personal account settings → Code signing identities에서 다음을 
 
 ## 빌드 번호와 검증
 
+### 로그인 검증
+
+iOS API 요청은 `CapacitorHttp`로 전송하여 서버의 HttpOnly 세션 쿠키를 네이티브 저장소에서 유지합니다.
+WebView의 일반 `fetch`는 `capacitor://localhost`와 외부 HTTPS API 사이의 쿠키 제한으로
+로그인 응답을 받은 뒤에도 후속 요청이 401로 실패할 수 있습니다. CORS 허용만으로 해결되지 않습니다.
+이 변경은 웹 자산에 포함되므로 새 TestFlight 빌드를 설치해야 합니다.
+
+새 빌드에서 로그인 → 오늘 화면 조회 → 앱 완전 종료·재실행 → 세션 복원 → 사진 업로드·조회 →
+로그아웃을 확인합니다. 요청 로그의 `transport=ios_native`로 전송 경로를 구분할 수 있습니다.
+API 서버의 인증 실패 사유 로그도 배포하면 `missing_session_cookie`와 `session_expired`를 구분할 수 있습니다.
+실기기 검증 전에는 로그인 문제가 완전히 해결됐다고 판단하지 않습니다.
+
+2026-10-17 로컬 검증: 쿠키 차단을 모의한 클라이언트 10개 시나리오, 격리된 메모리 DB의
+서버 인증 9개 시나리오, Next.js 빌드와 변경한 Python 파일의 Ruff 검사를 통과했습니다.
+운영 API의 iOS Origin preflight는 200이며, 쿠키 없는 세션 조회의 401 응답에도 올바른 CORS 헤더가 포함됩니다.
+이 결과는 iOS 실기기의 쿠키 저장·앱 재실행 검증을 대신하지 않습니다.
+
+### 빌드 설정
+
 - Apple의 App Store·TestFlight 전체 버전에서 최신 빌드 번호를 조회해 증가시키고, Codemagic의 프로젝트 빌드 번호가 더 크면 그 값을 사용합니다.
 - Apple 조회 실패를 0으로 덮어쓰지 않습니다. 잘못된 키·연결 오류가 나면 빌드를 중단합니다. API 재시도는 최대 2회로 설정했습니다.
 - 앱 버전 `1.0`은 Xcode 프로젝트에서 관리합니다. 다음 버전 출시 시 `MARKETING_VERSION`을 변경합니다.

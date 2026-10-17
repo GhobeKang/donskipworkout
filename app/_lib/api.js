@@ -1,4 +1,6 @@
+import { Capacitor } from '@capacitor/core';
 import { translate as t } from './i18n';
+import { ios_fetch } from './nativeHttp';
 const api_base_url = (process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000').replace(/\/+$/, '');
 
 export class apiError extends Error {
@@ -11,19 +13,21 @@ export class apiError extends Error {
 
 export async function api_request(path, { method = 'GET', body, signal, response_type = 'json' } = {}) {
   const is_upload = typeof FormData !== 'undefined' && body instanceof FormData;
+  const uses_ios_http = Capacitor.getPlatform() === 'ios';
+  const timeout_ms = is_upload ? 45000 : 12000;
   const request_controller = new AbortController();
   let timed_out = false;
   const cancel_request = () => request_controller.abort();
   const timeout_id = setTimeout(() => {
     timed_out = true;
     request_controller.abort();
-  }, is_upload ? 45000 : 12000);
+  }, timeout_ms);
   if (signal?.aborted) request_controller.abort();
   signal?.addEventListener('abort', cancel_request, { once: true });
   try {
     const request_url = `${api_base_url}/api/v1${path}`;
-    console.info(`[API_REQUEST] ${method} ${request_url}`);
-    const response = await fetch(request_url, {
+    console.info(`[API_REQUEST] ${method} ${request_url} transport=${uses_ios_http ? 'ios_native' : 'fetch'}`);
+    const request_options = {
       method,
       headers: {
         Accept: 'application/json',
@@ -34,7 +38,10 @@ export async function api_request(path, { method = 'GET', body, signal, response
       credentials: 'include',
       cache: 'no-store',
       redirect: 'error',
-    });
+    };
+    const response = uses_ios_http
+      ? await ios_fetch(request_url, request_options, { is_upload, timeout_ms, response_type })
+      : await fetch(request_url, request_options);
     console.info(`[API_RESPONSE] ${method} ${path} status=${response.status} request_id=${response.headers.get('x-request-id') || '-'}`);
     if (response.status === 204) return null;
     if (response.ok && response_type === 'blob') return await response.blob();
