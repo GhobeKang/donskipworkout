@@ -49,6 +49,8 @@ Codemagic Personal account settings → Code signing identities에서 다음을 
 - [Codemagic 빌드와 IPA](https://codemagic.io/app/6ad2fb6fb2c924ab2bedd215/build/6ad2ffe47550aed8108f7c2c): Xcode 아카이브·IPA 내보내기·앱 ID와 위치 권한 검증을 통과했고 Apple 업로드 도구가 `UPLOAD SUCCEEDED`를 반환했습니다.
 - [TestFlight 빌드 확인](https://appstoreconnect.apple.com/teams/29261b7d-3b33-41cc-864f-f9b608e445f2/apps/6823856877/testflight): 업로드 후 Apple의 처리가 끝나야 테스터에게 배정할 수 있습니다.
 - Apple 경고 `90068`: 현재 최소 지원 버전은 iOS 14.0이며, 2027년 4월부터 업로드하려면 iOS 15.0 이상을 대상으로 해야 합니다. 이번 업로드는 수락됐습니다. 이후 지원 버전을 올릴 때 Xcode 프로젝트와 Podfile을 함께 변경합니다.
+- 전송 수락 이후 Apple의 빌드 처리는 `90683`(`NSPhotoLibraryUsageDescription` 누락)으로 실패했습니다. 기본 TestFlight 주소에서는 빌드가 없는 것으로 보이므로, `/testflight/ios` → **빌드 업로드** → **실패** 상세에서 실제 처리 결과를 확인해야 합니다. 전송 성공만으로 TestFlight 준비 완료로 판단하지 않습니다.
+- 설치된 Capacitor Camera의 iOS 요구사항에 맞춰 사진 보관함 읽기·추가 목적 문구를 선언하고, IPA 업로드 전 카메라·사진 보관함 목적 문구 3개의 존재와 값을 검증합니다. 현재 사진 촬영은 계속 `CameraSource.Camera`, `saveToGallery: false`를 사용합니다. 이번 수정은 추가 권한 요청이나 갤러리 저장을 활성화하지 않습니다.
 
 ## 빌드 번호와 검증
 

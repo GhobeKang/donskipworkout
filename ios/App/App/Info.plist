@@ -4,6 +4,10 @@
 <dict>
 	<key>NSCameraUsageDescription</key>
 	<string>오늘의 운동 인증 사진을 촬영하기 위해 카메라를 사용합니다.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>운동 인증용 사진을 불러올 때 사진 보관함을 사용합니다.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>사용자가 요청한 운동 인증 사진을 사진 보관함에 저장하기 위해 사용합니다.</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>

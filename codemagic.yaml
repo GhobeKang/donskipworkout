@@ -108,6 +108,15 @@ workflows:
               raise SystemExit('Expected the system-HTTPS-only encryption declaration.')
           if any(key.startswith('NSLocation') for key in app_info):
               raise SystemExit('Retired location permission unexpectedly exists in the IPA.')
+          required_usage_descriptions = (
+              'NSCameraUsageDescription',
+              'NSPhotoLibraryUsageDescription',
+              'NSPhotoLibraryAddUsageDescription',
+          )
+          for usage_description_key in required_usage_descriptions:
+              purpose_string = app_info.get(usage_description_key)
+              if not isinstance(purpose_string, str) or not purpose_string.strip():
+                  raise SystemExit(f'Missing Capacitor Camera purpose string: {usage_description_key}.')
           print(f"Verified IPA: version {app_info['CFBundleShortVersionString']}, build {app_info['CFBundleVersion']}.")
           PY
     artifacts:
