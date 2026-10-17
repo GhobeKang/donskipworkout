@@ -10,6 +10,9 @@
 | Bundle ID | `com.donskip.attendancecheck` |
 | App Store Apple ID | `6823856877` |
 | Codemagic Apple 연동 이름 | `dontskip-appstore-key` |
+| Apple Team ID | `HXFCFUL9YY` |
+| Codemagic 배포 인증서 참조 이름 | `donskip_ios_distribution` |
+| App Store 배포 프로파일 참조 이름 | `donskip_appstore_codemagic` |
 | 워크스페이스 / 공유 스킴 | `ios/App/App.xcworkspace` / `App` |
 | API origin | `https://kuuki-jp.com:8000` |
 | 빌드 머신 / Xcode / Node | Mac mini M2 / Xcode 26.6 / Node 22 |
@@ -29,6 +32,8 @@ Codemagic Personal account settings → Code signing identities에서 다음을 
 
 새 인증서·프로파일 생성이나 서명 파일의 Codemagic 제공은 Apple 계정에 대한 접근 설정이므로 계정 소유자가 확인한 후 진행합니다.
 
+2026-10-17 계정 소유자의 승인으로 위 배포 인증서와 앱 전용 프로파일을 생성해 Codemagic에 등록했습니다. 프로파일 만료일은 2027-10-17입니다. 서명 자료가 만료되거나 인증서를 교체하면 프로파일도 갱신해야 합니다.
+
 ## 실행
 
 1. 이 설정이 포함된 브랜치를 원격 저장소에 올립니다.
@@ -37,6 +42,13 @@ Codemagic Personal account settings → Code signing identities에서 다음을 
 4. 성공하면 Codemagic에서 IPA를 내려받을 수 있고, App Store Connect → 이 앱 → TestFlight에서 Apple 처리 상태를 확인할 수 있습니다.
 
 업로드는 자동이지만 **외부 베타 심사, 테스터 그룹 배정, App Store 정식 심사 제출은 자동으로 하지 않습니다.** `submit_to_testflight: false`는 업로드를 끄는 옵션이 아니라 외부 TestFlight 베타 심사 자동 제출을 끄는 옵션입니다. 내부 테스트 그룹에 빌드를 선택해 테스트하거나, 외부 테스트 정보 작성과 베타 심사 후 배포합니다.
+
+## 첫 업로드 기록
+
+- 2026-10-17 `codex/codemagic-ios-testflight` 브랜치의 `0ed1d18`로 iOS `1.0 (1)`을 빌드했습니다.
+- [Codemagic 빌드와 IPA](https://codemagic.io/app/6ad2fb6fb2c924ab2bedd215/build/6ad2ffe47550aed8108f7c2c): Xcode 아카이브·IPA 내보내기·앱 ID와 위치 권한 검증을 통과했고 Apple 업로드 도구가 `UPLOAD SUCCEEDED`를 반환했습니다.
+- [TestFlight 빌드 확인](https://appstoreconnect.apple.com/teams/29261b7d-3b33-41cc-864f-f9b608e445f2/apps/6823856877/testflight): 업로드 후 Apple의 처리가 끝나야 테스터에게 배정할 수 있습니다.
+- Apple 경고 `90068`: 현재 최소 지원 버전은 iOS 14.0이며, 2027년 4월부터 업로드하려면 iOS 15.0 이상을 대상으로 해야 합니다. 이번 업로드는 수락됐습니다. 이후 지원 버전을 올릴 때 Xcode 프로젝트와 Podfile을 함께 변경합니다.
 
 ## 빌드 번호와 검증
 
