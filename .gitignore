@@ -5,6 +5,8 @@ android/build/
 android/app/build/
 ios/App/Pods/
 ios/App/DerivedData/
+/ios/signing/
+/ios/signing/
 *.log
 .env
 .env.*

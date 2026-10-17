@@ -16,6 +16,8 @@
 
 Apple 키 자체의 이름은 `donskip-appstore-key`이고, Codemagic에 등록된 연동 이름은 **`dontskip-appstore-key`**입니다. YAML에는 Codemagic의 연동 이름을 사용합니다. API 키·배포 개인키·인증서 암호는 저장소에 넣지 않습니다. 서버의 APNs 키는 이 빌드 설정에 사용하지 않습니다.
 
+내려받은 서명 자료를 프로젝트에 보관할 경우 Git에서 제외한 `ios/signing/`을 사용합니다. 인증서 개인키와 암호는 별도로 안전하게 백업해야 합니다.
+
 ## 최초 실행 전 서명 준비
 
 Codemagic Personal account settings → Code signing identities에서 다음을 준비합니다.
