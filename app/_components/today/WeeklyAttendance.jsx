@@ -53,7 +53,7 @@ export default function WeeklyAttendance({ workout_date, attendance, session_sta
         const day_status = is_today && session_status ? session_status : week_loaded ? week_resource.statuses[day.workout_date] : null;
         const state_label = day_status === 'completed' ? t('운동 완료') : day_status === 'rest' ? t('휴식') : day_status === 'missed' ? t('미실행') : day_status === 'started' ? t('출발') : !week_loaded ? t('출석 정보 확인 중') : t('완료 기록 없음');
         return <div className="weekDay" key={day.workout_date} aria-label={`${format_workout_date(day.workout_date, language)} · ${state_label}`} aria-current={is_today ? 'date' : undefined}>
-          <span className="weekDayLabel">{t(weekday_labels[day.weekday])}</span>
+          <span className="weekDayLabel">{language === 'en' ? ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][day.weekday] : weekday_labels[day.weekday]}</span>
           <span className={`weekDayMark${is_today ? ' isToday' : ''}${day_status ? ` is${day_status}` : ''}`} aria-hidden="true">{day_status === 'completed' ? '✓' : day_status === 'rest' ? '−' : day_status === 'missed' ? '×' : day.day_number}</span>
         </div>;
       })}

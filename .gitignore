@@ -32,3 +32,8 @@ supabase/migrations/*
 .gradle/
 etc/
 out/
+*.jks
+*.keystore
+*.p12
+/android/keystore/
+/android/keystore.properties

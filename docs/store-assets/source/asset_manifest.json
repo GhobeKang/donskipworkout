@@ -1,0 +1,82 @@
+[
+  {
+    "file": "en/feature_graphic.png",
+    "width": 1024,
+    "height": 500,
+    "channels": 3,
+    "format": "png",
+    "bytes": 692044
+  },
+  {
+    "file": "en/phone_01_today.png",
+    "width": 1080,
+    "height": 1920,
+    "channels": 3,
+    "format": "png",
+    "bytes": 248542
+  },
+  {
+    "file": "en/phone_02_workout.png",
+    "width": 1080,
+    "height": 1920,
+    "channels": 3,
+    "format": "png",
+    "bytes": 225331
+  },
+  {
+    "file": "en/phone_03_records.png",
+    "width": 1080,
+    "height": 1920,
+    "channels": 3,
+    "format": "png",
+    "bytes": 232111
+  },
+  {
+    "file": "en/phone_04_challenges.png",
+    "width": 1080,
+    "height": 1920,
+    "channels": 3,
+    "format": "png",
+    "bytes": 227981
+  },
+  {
+    "file": "ko/feature_graphic.png",
+    "width": 1024,
+    "height": 500,
+    "channels": 3,
+    "format": "png",
+    "bytes": 690998
+  },
+  {
+    "file": "ko/phone_01_today.png",
+    "width": 1080,
+    "height": 1920,
+    "channels": 3,
+    "format": "png",
+    "bytes": 212202
+  },
+  {
+    "file": "ko/phone_02_workout.png",
+    "width": 1080,
+    "height": 1920,
+    "channels": 3,
+    "format": "png",
+    "bytes": 204815
+  },
+  {
+    "file": "ko/phone_03_records.png",
+    "width": 1080,
+    "height": 1920,
+    "channels": 3,
+    "format": "png",
+    "bytes": 200457
+  },
+  {
+    "file": "ko/phone_04_challenges.png",
+    "width": 1080,
+    "height": 1920,
+    "channels": 3,
+    "format": "png",
+    "bytes": 188017
+  }
+]

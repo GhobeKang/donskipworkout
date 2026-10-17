@@ -11,8 +11,12 @@ export default function SafetyDialog({ title, pending = false, on_close, childre
   const title_id = useId();
   useEffect(() => {
     const dialog_element = dialog_ref.current;
+    const previously_focused = document.activeElement;
     dialog_element.showModal();
-    return () => dialog_element.close();
+    return () => {
+      dialog_element.close();
+      if (previously_focused?.isConnected) previously_focused.focus({ preventScroll: true });
+    };
   }, []);
   return <dialog ref={dialog_ref} className={safety_styles.dialog} aria-labelledby={title_id}
     onCancel={(event) => { event.preventDefault(); if (!pending) on_close(); }}>

@@ -1,5 +1,17 @@
 apply plugin: 'com.android.application'
 
+def keystore_properties = new Properties()
+def keystore_properties_file = rootProject.file('keystore/keystore.properties')
+if (keystore_properties_file.isFile()) {
+    keystore_properties_file.withInputStream { keystore_properties.load(it) }
+}
+def signing_values = [
+    storeFile: System.getenv('DONSKIP_KEYSTORE_FILE') ?: keystore_properties.getProperty('storeFile'),
+    storePassword: System.getenv('DONSKIP_KEYSTORE_PASSWORD') ?: keystore_properties.getProperty('storePassword'),
+    keyAlias: System.getenv('DONSKIP_KEY_ALIAS') ?: keystore_properties.getProperty('keyAlias'),
+    keyPassword: System.getenv('DONSKIP_KEY_PASSWORD') ?: keystore_properties.getProperty('keyPassword')
+]
+
 android {
     namespace "com.donskip.attendancecheck"
     compileSdk rootProject.ext.compileSdkVersion
@@ -7,7 +19,7 @@ android {
         applicationId "com.donskip.attendancecheck"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
+        versionCode 3
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
@@ -16,10 +28,32 @@ android {
             ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        release {
+            if (signing_values.storeFile) {
+                storeFile rootProject.file(signing_values.storeFile)
+            }
+            storePassword signing_values.storePassword
+            keyAlias signing_values.keyAlias
+            keyPassword signing_values.keyPassword
+        }
+    }
     buildTypes {
         release {
+            signingConfig signingConfigs.release
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+tasks.configureEach { build_task ->
+    if (build_task.name in ['preReleaseBuild', 'validateSigningRelease', 'signReleaseBundle']) {
+        build_task.doFirst {
+            def missing_fields = signing_values.findAll { property_name, property_value -> !property_value }.keySet()
+            if (missing_fields) {
+                throw new GradleException("Release signing is not configured. Set ${missing_fields.join(', ')} in android/keystore/keystore.properties or DONSKIP signing environment variables.")
+            }
         }
     }
 }

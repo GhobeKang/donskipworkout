@@ -90,7 +90,7 @@ export default function RecordsScreen({ revision, on_unauthorized, initial_tab, 
     </>}
     {selected_tab === 'calendar' && calendar_data && <div className="calendarCard">
       <div className="sectionHeading"><h2>{t('출석의 흔적')}</h2><span className="infoText">{t('{0}일 출석', [calendar_data.completed_days.length])}</span></div>
-      <div className="calendarWeekdays">{day_names.map((day) => <span key={day}>{t(day)}</span>)}</div>
+      <div className="calendarWeekdays">{day_names.map((day, day_index) => <span key={day}>{language === 'en' ? ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][day_index] : day}</span>)}</div>
       <div className="calendarGrid">
         {Array.from({ length: calendar_data.first_day_of_week }, (_, index) => <div key={'blank-' + index} aria-hidden="true" />)}
         {calendar_data.days.map((day) => {

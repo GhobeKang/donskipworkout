@@ -5,7 +5,26 @@ import { Capacitor } from '@capacitor/core';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { useLanguage } from '../../_hooks/useLanguage';
 import { WorkoutLocation } from '../../_lib/workoutLocation';
+import SafetyDialog from '../safety/SafetyDialog';
 import MaterialIcon from '../ui/MaterialIcon';
+
+const location_disclosure_message = 'DONTSKIP은 앱이 닫혀 있거나 사용 중이 아닐 때에도 정확한 위치 정보를 사용하여 등록한 운동 장소의 도착 알림을 제공하고, 반경 150m 밖으로의 이탈을 감지해 진행 중인 운동을 자동으로 종료합니다.';
+const permission_disclosure_content = {
+  foreground: {
+    eyebrow: '운동 장소 알림과 자동 종료',
+    title: '위치 정보 사용 안내',
+    message: location_disclosure_message,
+    detail: '먼저 앱 사용 중 정확한 위치 권한을 요청합니다. 백그라운드 위치 권한은 다음 단계에서 별도로 설정합니다. 거부해도 수동 운동 기록은 이용할 수 있습니다.',
+    confirm_label: '위치 권한 요청',
+  },
+  background: {
+    eyebrow: '운동 장소 알림과 자동 종료',
+    title: '위치 정보 사용 안내',
+    message: location_disclosure_message,
+    detail: '다음 화면에서 위치 접근을 항상 허용으로 설정해 주세요. 권한은 기기 설정에서 언제든 변경할 수 있으며, 거부해도 수동 운동 기록은 이용할 수 있습니다.',
+    confirm_label: '항상 허용 설정',
+  },
+};
 
 export default function WorkoutLocationSettings({ user_uuid, on_notify }) {
   const { t, language } = useLanguage();
@@ -16,6 +35,8 @@ export default function WorkoutLocationSettings({ user_uuid, on_notify }) {
   const [busy, set_busy] = useState(false);
   const [error_message, set_error_message] = useState('');
   const [success_message, set_success_message] = useState('');
+  const [permission_action, set_permission_action] = useState(null);
+  const disclosure_content = permission_disclosure_content[permission_action];
 
   const refresh_status = useCallback(async () => {
     if (!Capacitor.isNativePlatform()) return;
@@ -66,6 +87,15 @@ export default function WorkoutLocationSettings({ user_uuid, on_notify }) {
     set_success_message(t('현재 위치를 확인했습니다. 장소 이름을 입력하고 등록하세요.'));
   });
 
+  const confirm_location_permission = () => {
+    if (busy || !permission_action) return;
+    const request_permission = permission_action === 'foreground'
+      ? () => WorkoutLocation.requestForegroundPermission()
+      : () => WorkoutLocation.openBackgroundSettings();
+    set_permission_action(null);
+    run_action(request_permission);
+  };
+
   const save_place = () => run_action(async () => {
     const permission = await LocalNotifications.checkPermissions();
     const notification_permission = permission.display === 'granted'
@@ -114,8 +144,8 @@ export default function WorkoutLocationSettings({ user_uuid, on_notify }) {
         <label>{t('장소 이름')}<input value={place_name} maxLength={40} onChange={(event) => set_place_name(event.target.value)} placeholder={t('예: 자주 가는 헬스장')} /></label>
       </div>
       <div className="secondaryActions">
-        {!status?.precise && <button className="quietButton" type="button" disabled={busy} onClick={() => run_action(() => WorkoutLocation.requestForegroundPermission())}>{t('정확한 위치 허용')}</button>}
-        {status?.precise && !status?.background && <button className="quietButton" type="button" disabled={busy} onClick={() => run_action(() => WorkoutLocation.openBackgroundSettings())}>{t('항상 위치 허용')}</button>}
+        {!status?.precise && <button className="quietButton" type="button" disabled={busy} aria-haspopup="dialog" onClick={() => set_permission_action('foreground')}>{t('정확한 위치 허용')}</button>}
+        {status?.precise && !status?.background && <button className="quietButton" type="button" disabled={busy} aria-haspopup="dialog" onClick={() => set_permission_action('background')}>{t('항상 위치 허용')}</button>}
         {status?.precise && <button className="quietButton" type="button" disabled={busy} onClick={capture_position}>{t('현재 위치 확인')}</button>}
         <button className="quietButton" type="button" disabled={busy} onClick={refresh_status}>{t('권한 상태 다시 확인')}</button>
       </div>
@@ -127,6 +157,15 @@ export default function WorkoutLocationSettings({ user_uuid, on_notify }) {
       </div>
       {error_message && <p className="timerError" role="alert">{error_message}</p>}
       {success_message && <p className="infoText" role="status">{success_message}</p>}
+      {disclosure_content && <SafetyDialog title={t(disclosure_content.title)} pending={busy} on_close={() => set_permission_action(null)}>
+        <p className="modalEyebrow">{t(disclosure_content.eyebrow)}</p>
+        <p className="infoText">{t(disclosure_content.message)}</p>
+        <p className="infoText">{t(disclosure_content.detail)}</p>
+        <div className="modalActions">
+          <button className="textButton" type="button" disabled={busy} onClick={() => set_permission_action(null)}>{t('다음에 결정')}</button>
+          <button className="wideButton primary" type="button" disabled={busy} onClick={confirm_location_permission}>{t(disclosure_content.confirm_label)}</button>
+        </div>
+      </SafetyDialog>}
     </>}
   </article>;
 }

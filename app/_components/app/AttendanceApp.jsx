@@ -142,7 +142,7 @@ function AttendanceContent() {
     <StatusBar />
     <main className="appContent"><RequestState error={session_restore_error} on_retry={() => set_session_restore_revision((value) => value + 1)} /></main>
   </div>;
-  return <div className="phoneShell">
+  return <div className="phoneShell authShell">
     <StatusBar />
     <main className="appContent"><AuthScreen on_authenticate={authenticate} pending={auth_pending} error={auth_error} on_clear_error={() => set_auth_error('')} /></main>
     <Toast message={toast_message} />

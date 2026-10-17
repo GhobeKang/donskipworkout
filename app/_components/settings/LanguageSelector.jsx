@@ -3,10 +3,10 @@
 import { useState } from 'react';
 import { useLanguage } from '../../_hooks/useLanguage';
 
-export default function LanguageSelector() {
+export default function LanguageSelector({ compact = false }) {
   const { language, set_language, t } = useLanguage();
   const [storage_failed, set_storage_failed] = useState(false);
-  return <div className="languageSetting">
+  return <div className={'languageSetting' + (compact ? ' isCompact' : '')}>
     <label className="fieldLabel" htmlFor="app-language">{language === 'en' ? 'Language' : '언어 / Language'}</label>
     <select className="timeInput" id="app-language" value={language} onChange={(event) => set_storage_failed(!set_language(event.target.value))}>
       <option value="ko" lang="ko">한국어</option>

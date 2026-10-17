@@ -5,6 +5,7 @@ import { useLanguage } from '../../_hooks/useLanguage';
 import useApiResource from '../../_hooks/useApiResource';
 import { api_request } from '../../_lib/api';
 import RequestState from '../ui/RequestState';
+import SafetyDialog from '../safety/SafetyDialog';
 import safety_styles from '../safety/Safety.module.css';
 
 const ignore_unauthorized = () => {};
@@ -65,14 +66,24 @@ export function CommunityGate({ on_unauthorized, children }) {
   </article>;
 }
 
-export function LegalDocuments() {
+export function LegalDocuments({ compact = false }) {
   const { t } = useLanguage();
-  return <article className={safety_styles.card}>
-    <h2>{t('약관·개인정보·문의')}</h2>
+  const [documents_open, set_documents_open] = useState(false);
+  const legal_content = <>
     <CommunityPolicy />
     <details className={safety_styles.document}><summary>{t('개인정보처리방침')}</summary>
       <iframe className={safety_styles.policyFrame} src="/legal/privacy.html" title={t('개인정보처리방침')} loading="lazy" />
     </details>
     <p><a href="mailto:sayudogu@gmail.com">sayudogu@gmail.com</a></p>
+  </>;
+  if (compact) return <>
+    <button className={safety_styles.legalLink} type="button" aria-haspopup="dialog" onClick={() => set_documents_open(true)}>{t('약관·개인정보·문의')}</button>
+    {documents_open && <SafetyDialog title={t('약관·개인정보·문의')} on_close={() => set_documents_open(false)}>
+      <div className={safety_styles.document}>{legal_content}</div>
+    </SafetyDialog>}
+  </>;
+  return <article className={safety_styles.card}>
+    <h2>{t('약관·개인정보·문의')}</h2>
+    {legal_content}
   </article>;
 }

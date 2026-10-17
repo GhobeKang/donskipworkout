@@ -50,7 +50,9 @@ export default function AuthScreen({ on_authenticate, pending, error, on_clear_e
         }}>{is_register ? t("로그인") : t("회원가입")}</button>
       </fieldset>
     </form>
-    <LanguageSelector />
-    <LegalDocuments />
+    <footer className="authFooter">
+      <LegalDocuments compact />
+      <LanguageSelector compact />
+    </footer>
   </section>;
 }
