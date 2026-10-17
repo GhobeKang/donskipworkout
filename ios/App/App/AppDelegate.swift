@@ -1,5 +1,7 @@
 import UIKit
 import Capacitor
+import CoreLocation
+import UserNotifications
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -7,8 +9,28 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        _ = WorkoutLocationManager.shared
+        clear_retired_workout_location()
         return true
+    }
+
+    private func clear_retired_workout_location() {
+        let defaults = UserDefaults.standard
+        guard !defaults.bool(forKey: "workout_location_retired") else { return }
+        let location_manager = CLLocationManager()
+        for region in location_manager.monitoredRegions where region.identifier == "workout_place" {
+            location_manager.stopMonitoring(for: region)
+        }
+        let notification_center = UNUserNotificationCenter.current()
+        notification_center.removePendingNotificationRequests(withIdentifiers: ["workout_arrival"])
+        notification_center.removeDeliveredNotifications(withIdentifiers: ["workout_arrival"])
+        notification_center.getNotificationCategories { categories in
+            notification_center.setNotificationCategories(Set(categories.filter { $0.identifier != "workout_arrival_action" }))
+        }
+        for storage_key in defaults.dictionaryRepresentation().keys where storage_key.hasPrefix("workout_place_")
+            || ["workout_location_requested_always", "workout_active_timer", "workout_pending_exit"].contains(storage_key) {
+            defaults.removeObject(forKey: storage_key)
+        }
+        defaults.set(true, forKey: "workout_location_retired")
     }
 
     func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {

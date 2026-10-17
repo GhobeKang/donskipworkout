@@ -580,12 +580,6 @@ class workoutTimerReconcile(requestModel):
     client_action_at: datetime
 
 
-class workoutTimerLocationExit(requestModel):
-    request_id: UUID
-    expected_revision: int = Field(strict=True, ge=1)
-    client_action_at: datetime
-
-
 class workoutTimerCorrection(requestModel):
     measured_seconds: int = Field(strict=True, ge=0, le=86400)
     reason: str = Field(min_length=1, max_length=500)

@@ -1,0 +1,6 @@
+class workoutTimerLocationExit(requestModel):
+    request_id: UUID
+    expected_revision: int = Field(strict=True, ge=1)
+    client_action_at: datetime
+
+

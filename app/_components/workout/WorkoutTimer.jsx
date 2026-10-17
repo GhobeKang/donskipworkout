@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { api_request } from '../../_lib/api';
-import { apply_pending_departure, pending_departure_key } from '../../_lib/workoutLocation';
 import { useLanguage } from '../../_hooks/useLanguage';
 import MaterialIcon from '../ui/MaterialIcon';
 
@@ -34,38 +33,21 @@ export default function WorkoutTimer({ user_uuid, is_active, on_unauthorized }) 
   const latest_timer = useRef(null);
   const storage_key = useMemo(() => `workout_timer_snapshot_${user_uuid}`, [user_uuid]);
   const pending_key = useMemo(() => `workout_timer_pending_${user_uuid}`, [user_uuid]);
-  const departure_key = useMemo(() => pending_departure_key(user_uuid), [user_uuid]);
 
   const update_timer = useCallback((received_timer, announce = true) => {
     if (received_timer && latest_timer.current?.timer_uuid === received_timer.timer_uuid
       && latest_timer.current.revision > received_timer.revision) return;
-    let departure = null;
-    try { departure = JSON.parse(localStorage.getItem(departure_key) || 'null'); }
-    catch { console.error('[WORKOUT_DEPARTURE_STORAGE_ERROR]'); }
-    const timer_snapshot = !received_timer && latest_timer.current?.location_finish_pending
-      && departure?.timer_uuid === latest_timer.current.timer_uuid ? latest_timer.current : received_timer;
-    const next_timer = apply_pending_departure(timer_snapshot, departure);
+    const next_timer = received_timer;
     latest_timer.current = next_timer;
     timer_state_revision.current += 1;
     set_timer(next_timer);
     if (announce) window.dispatchEvent(new CustomEvent('workout-timer-updated', { detail: next_timer }));
-    if (!next_timer || (['finished', 'discarded'].includes(next_timer.status) && !next_timer.location_finish_pending)) {
+    if (!next_timer || ['finished', 'discarded'].includes(next_timer.status)) {
       localStorage.removeItem(storage_key);
       return;
     }
     localStorage.setItem(storage_key, JSON.stringify(next_timer));
-  }, [departure_key, storage_key]);
-
-  useEffect(() => {
-    const handle_timer_sync = ({ detail }) => {
-      if (detail?.server_now && !detail.location_finish_pending) {
-        set_server_clock_offset(Date.parse(detail.server_now) - Date.now());
-      }
-      update_timer(detail, false);
-    };
-    window.addEventListener('workout-timer-synced', handle_timer_sync);
-    return () => window.removeEventListener('workout-timer-synced', handle_timer_sync);
-  }, [update_timer]);
+  }, [storage_key]);
 
   const sync_pending_action = useCallback(async () => {
     if (!navigator.onLine) return;
@@ -103,10 +85,17 @@ export default function WorkoutTimer({ user_uuid, is_active, on_unauthorized }) 
   }, [localize_message, on_unauthorized, pending_key, t, update_timer]);
 
   useEffect(() => {
-    const refresh_timer = () => set_refresh_token((value) => value + 1);
-    window.addEventListener('workout-timer-changed', refresh_timer);
-    return () => window.removeEventListener('workout-timer-changed', refresh_timer);
-  }, []);
+    if (!is_active) return undefined;
+    const refresh_on_return = () => {
+      if (document.visibilityState === 'visible') set_refresh_token((value) => value + 1);
+    };
+    document.addEventListener('visibilitychange', refresh_on_return);
+    window.addEventListener('online', refresh_on_return);
+    return () => {
+      document.removeEventListener('visibilitychange', refresh_on_return);
+      window.removeEventListener('online', refresh_on_return);
+    };
+  }, [is_active]);
 
   useEffect(() => {
     if (!is_active) return undefined;
@@ -115,8 +104,12 @@ export default function WorkoutTimer({ user_uuid, is_active, on_unauthorized }) 
       const saved_timer = localStorage.getItem(storage_key);
       if (saved_timer) {
         const cached_timer = JSON.parse(saved_timer);
-        update_timer(cached_timer, false);
-        if (cached_timer.server_now) set_server_clock_offset(Date.parse(cached_timer.server_now) - Date.now());
+        // A retired location exit is not a saved manual workout; reload the server state.
+        if (cached_timer.location_finish_pending) localStorage.removeItem(storage_key);
+        else {
+          update_timer(cached_timer, false);
+          if (cached_timer.server_now) set_server_clock_offset(Date.parse(cached_timer.server_now) - Date.now());
+        }
       }
     } catch {
       localStorage.removeItem(storage_key);
@@ -175,7 +168,7 @@ export default function WorkoutTimer({ user_uuid, is_active, on_unauthorized }) 
   }, [current_time, server_clock_offset, timer]);
 
   const start_timer = async () => {
-    if (pending || timer?.location_finish_pending) return;
+    if (pending) return;
     set_pending(true);
     set_error_message('');
     try {
@@ -214,7 +207,7 @@ export default function WorkoutTimer({ user_uuid, is_active, on_unauthorized }) 
   };
 
   const act_timer = async (action) => {
-    if (!timer || pending || timer.location_finish_pending) return;
+    if (!timer || pending) return;
     const request_id = create_request_id();
     if (!navigator.onLine && ['pause', 'finish'].includes(action)) {
       store_offline_intent(action, request_id);
@@ -271,16 +264,13 @@ export default function WorkoutTimer({ user_uuid, is_active, on_unauthorized }) 
       : timer?.status === 'needs_review'
         ? t('시간 확인이 필요합니다. 확인 전에는 기록에 반영되지 않습니다.')
         : timer?.status === 'finished'
-          ? timer.location_finish_pending
-            ? t('장소 이탈로 운동을 종료했습니다. 연결이 복구되면 기록을 저장합니다.')
-            : t('운동 시간 기록을 저장했습니다.')
+          ? t('운동 시간 기록을 저장했습니다.')
           : t('운동 시작과 종료 시각으로 시간을 측정합니다.');
 
   return <article className="workoutTimerCard">
     <div className="sectionHeading"><h2>{t('운동 시간')}</h2>{timer?.record_source === 'self_reported' && <span className="challengeStatus">{t('사용자 확인 기록')}</span>}</div>
     <div className="workoutTimerReadout" aria-live="off">{format_duration(shown_seconds)}</div>
     <p className="infoText">{status_message}</p>
-    {timer?.location_finish_pending && <button className="textButton" type="button" disabled={!is_online} onClick={() => window.dispatchEvent(new Event('workout-location-retry'))}>{t('동기화 다시 시도')}</button>}
     {error_message && <p className="timerError" role="alert">{error_message}</p>}
     {timer?.status === 'needs_review' && <div className="challengeForm workoutTimerCorrection">
       <label>{t('확인한 운동 시간 (초)')}<input type="number" min="0" max="86400" step="1" inputMode="numeric" value={correction_seconds} onChange={(event) => set_correction_seconds(event.target.value)} /></label>
@@ -288,7 +278,7 @@ export default function WorkoutTimer({ user_uuid, is_active, on_unauthorized }) 
       <button className="wideButton primary" type="button" disabled={pending || !is_online || has_pending_intent || !correction_reason.trim()} onClick={confirm_correction}>{t('확인한 시간으로 저장')}</button>
       <button className="textButton" type="button" disabled={pending || has_pending_intent} onClick={discard_timer}>{t('이 측정 제외')}</button>
     </div>}
-    {!timer || ['finished', 'discarded'].includes(timer.status) ? <button className="wideButton primary" type="button" disabled={pending || !is_online || timer?.location_finish_pending} onClick={start_timer}><MaterialIcon>play_arrow</MaterialIcon>{pending ? t('시작 중…') : t('운동 시작')}</button> : timer.status !== 'needs_review' && <div className="workoutTimerActions">
+    {!timer || ['finished', 'discarded'].includes(timer.status) ? <button className="wideButton primary" type="button" disabled={pending || !is_online} onClick={start_timer}><MaterialIcon>play_arrow</MaterialIcon>{pending ? t('시작 중…') : t('운동 시작')}</button> : timer.status !== 'needs_review' && <div className="workoutTimerActions">
       {timer.status === 'running' && <button className="textButton" type="button" disabled={pending} onClick={() => act_timer('pause')}><MaterialIcon>pause</MaterialIcon>{t('일시정지')}</button>}
       {timer.status === 'paused' && <button className="textButton" type="button" disabled={pending || !is_online} onClick={() => act_timer('resume')}><MaterialIcon>play_arrow</MaterialIcon>{t('재개')}</button>}
       <button className="wideButton primary" type="button" disabled={pending} onClick={() => act_timer('finish')}><MaterialIcon>stop</MaterialIcon>{t('운동 종료')}</button>

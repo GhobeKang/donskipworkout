@@ -19,7 +19,7 @@ android {
         applicationId "com.donskip.attendancecheck"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 3
+        versionCode 4
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
@@ -76,7 +76,6 @@ dependencies {
     implementation project(':capacitor-cordova-android-plugins')
     implementation platform('com.google.firebase:firebase-bom:34.19.0')
     implementation 'com.google.firebase:firebase-analytics'
-    implementation 'com.google.android.gms:play-services-location:21.4.0'
 }
 
 apply from: 'capacitor.build.gradle'

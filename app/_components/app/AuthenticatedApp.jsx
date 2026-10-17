@@ -1,13 +1,10 @@
 import { useLanguage } from '../../_hooks/useLanguage';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { PushNotifications } from '@capacitor/push-notifications';
 import useApiResource from '../../_hooks/useApiResource';
 import { api_request } from '../../_lib/api';
 import { enable_push_notifications, refresh_push_registration } from '../../_lib/pushNotifications';
-import { WorkoutLocation } from '../../_lib/workoutLocation';
-import useWorkoutArrival from '../../_hooks/useWorkoutArrival';
-import useWorkoutDeparture from '../../_hooks/useWorkoutDeparture';
 import BottomNavigation from '../layout/BottomNavigation';
 import StatusBar from '../layout/StatusBar';
 import CheckinScreen from '../screens/CheckinScreen';
@@ -44,28 +41,26 @@ export default function AuthenticatedApp({ user, on_unauthorized, on_logout, on_
   const refresh_data = () => set_revision((value) => value + 1);
   const refresh_today = () => set_today_revision((value) => value + 1);
   const refresh_exercise_catalog = () => set_exercise_catalog_revision((value) => value + 1);
-  const handle_arrival_started = useCallback(() => {
-    set_current_view('today');
-    set_today_revision((value) => value + 1);
-    window.dispatchEvent(new Event('workout-timer-changed'));
-    set_toast_message(t('운동 타이머를 시작했습니다.'));
-  }, [t]);
-  const handle_arrival_error = useCallback((message) => set_toast_message(message), []);
-  useWorkoutArrival(user.user_uuid, on_unauthorized, handle_arrival_started, handle_arrival_error);
-  useWorkoutDeparture(user.user_uuid, on_unauthorized, handle_arrival_error);
+  useEffect(() => {
+    // Drop retired location requests without changing manual timer actions or records.
+    try {
+      localStorage.removeItem(`workout_arrival_pending_${user.user_uuid}`);
+      localStorage.removeItem(`workout_departure_pending_${user.user_uuid}`);
+    } catch (error) {
+      console.error('[RETIRED_LOCATION_REQUEST_CLEANUP_ERROR]', error.name);
+    }
+  }, [user.user_uuid]);
   useEffect(() => {
     const refresh_saved_time = ({ detail }) => {
-      if (detail?.status !== 'finished' || detail.location_finish_pending) return;
+      if (detail?.status !== 'finished') return;
       const saved_timer_revision = `${detail.timer_uuid}:${detail.revision}`;
       if (last_saved_timer_revision.current === saved_timer_revision) return;
       last_saved_timer_revision.current = saved_timer_revision;
       set_revision((value) => value + 1);
     };
     window.addEventListener('workout-timer-updated', refresh_saved_time);
-    window.addEventListener('workout-timer-synced', refresh_saved_time);
     return () => {
       window.removeEventListener('workout-timer-updated', refresh_saved_time);
-      window.removeEventListener('workout-timer-synced', refresh_saved_time);
     };
   }, []);
   useEffect(() => {
@@ -172,7 +167,6 @@ export default function AuthenticatedApp({ user, on_unauthorized, on_logout, on_
       if (controller.signal.aborted) return;
       if (error.status !== 401) logout_message = t("이 화면에서 로그아웃했습니다. 서버 연결 실패로 다른 기기의 로그인은 남아 있을 수 있습니다.");
     } finally {
-      if (Capacitor.isNativePlatform()) WorkoutLocation.clearPlace().catch((error) => console.error('[WORKOUT_LOCATION_CLEAR_ERROR]', error));
       mutation_controller.current = null;
       if (!controller.signal.aborted) on_logout(logout_message);
     }

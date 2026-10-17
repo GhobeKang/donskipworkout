@@ -2,7 +2,6 @@ import { Capacitor } from '@capacitor/core';
 import { PushNotifications } from '@capacitor/push-notifications';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { Filesystem, Directory } from '@capacitor/filesystem';
-import { WorkoutLocation } from './workoutLocation';
 
 export async function clear_deleted_account_data(user_uuid, { is_current_account = true } = {}) {
   if (!user_uuid) return;
@@ -29,7 +28,7 @@ export async function clear_deleted_account_data(user_uuid, { is_current_account
   try {
     const cleanup_results = await Promise.race([
       Promise.allSettled([
-        WorkoutLocation.clearPlace(), PushNotifications.unregister(),
+        PushNotifications.unregister(),
         LocalNotifications.getPending().then(({ notifications }) => notifications.length
           ? LocalNotifications.cancel({ notifications: notifications.map(({ id }) => ({ id })) }) : null),
         Filesystem.readdir({ path: '', directory: Directory.Cache }).then(async ({ files }) => {

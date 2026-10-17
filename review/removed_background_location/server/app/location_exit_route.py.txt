@@ -1,0 +1,56 @@
+@router.post('/workout-timers/{timer_uuid}/location-exit')
+def finish_timer_on_location_exit(
+    timer_uuid: str,
+    payload: workoutTimerLocationExit,
+    user: userDependency,
+    database: databaseDependency,
+):
+    request_id = str(payload.request_id)
+    lock_user(database, user.user_id)
+    timer = find_owned_timer(database, timer_uuid, user.user_id, lock=True)
+    now = utc_now()
+    if previous_request(database, timer.timer_id, request_id):
+        database.commit()
+        return timer_output(database, timer, now)
+    # A delayed exit must never finish a newer resumed segment or change a finished timer.
+    expired_timer = (
+        timer.status == 'needs_review'
+        and timer.needs_review_reason == '종료 시각을 확인해 주세요.'
+        and timer.revision == payload.expected_revision + 1
+    )
+    if expired_timer:
+        active_timer = database.scalar(
+            select(workoutTimer).where(
+                workoutTimer.user_id == user.user_id,
+                workoutTimer.timer_id != timer.timer_id,
+                workoutTimer.status.in_(['running', 'paused']),
+            ).with_for_update()
+        )
+        if active_timer:
+            database.commit()
+            return timer_output(database, active_timer, now)
+    if not expired_timer and (
+        timer.status not in {'running', 'paused'} or timer.revision != payload.expected_revision
+    ):
+        database.commit()
+        return timer_output(database, timer, now)
+    if payload.client_action_at.tzinfo is None:
+        raise HTTPException(422, '기기 시각에는 시간대 정보가 필요합니다.')
+    client_action_at = payload.client_action_at.astimezone(timezone.utc).replace(tzinfo=None)
+    if client_action_at > now + timedelta(seconds=30) or client_action_at < timer.started_at:
+        raise HTTPException(409, '기기 시각을 확인할 수 없어 측정 시간을 복구하지 못했습니다.')
+    ended_at = min(client_action_at, now)
+    if timer.status != 'paused':
+        close_open_segment(database, timer, ended_at, 'timer_recorded')
+    timer.measured_seconds = segment_seconds(database, timer.timer_id)
+    timer.status = 'finished'
+    timer.finished_at = ended_at
+    timer.needs_review_reason = None
+    timer.revision += 1
+    add_timer_event(
+        database, timer, request_id, 'finish', payload.expected_revision, now, client_action_at
+    )
+    database.commit()
+    return timer_output(database, timer, now)
+
+

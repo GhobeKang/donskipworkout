@@ -2,10 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>운동 장소를 등록할 때 현재 위치를 확인합니다.</string>
-	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>등록한 운동 장소에 도착했을 때 운동 시작 알림을 보내기 위해 위치를 확인합니다.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>오늘의 운동 인증 사진을 촬영하기 위해 카메라를 사용합니다.</string>
 	<key>CFBundleDevelopmentRegion</key>

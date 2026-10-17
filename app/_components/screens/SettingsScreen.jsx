@@ -5,7 +5,6 @@ import MaterialIcon from '../ui/MaterialIcon';
 import ToggleButton from '../ui/ToggleButton';
 import LanguageSelector from '../settings/LanguageSelector';
 import CountryTimezoneFields from '../settings/CountryTimezoneFields';
-import WorkoutLocationSettings from '../settings/WorkoutLocationSettings';
 
 const notification_fields = [
   { field_name: 'notification_workout_enabled', label: '운동 30분 전 알림' },
@@ -54,7 +53,6 @@ export default function SettingsScreen({ user_uuid, data, options, pending, on_s
             </select>
           </div> : <input className="timeInput" id="workout-time" type="time" required value={draft.workout_time} onChange={(event) => change_field('workout_time', event.target.value)} />}
         </article>
-        <WorkoutLocationSettings user_uuid={user_uuid} on_notify={on_notify} />
         <article className="settingsCard">
           <h2><MaterialIcon>notifications</MaterialIcon>{t(" 알림 설정")}</h2>
           <p className="infoText">{t("정기 운동 알림과 자유운동 날 권유 알림을 각각 설정할 수 있습니다. 앱 알림 권한이 필요합니다.")}</p>
