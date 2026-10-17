@@ -1,0 +1,122 @@
+workflows:
+  ios-testflight:
+    name: DON'T SKIP - iOS TestFlight
+    instance_type: mac_mini_m2
+    max_build_duration: 45
+    integrations:
+      app_store_connect: dontskip-appstore-key
+    environment:
+      node: "22"
+      xcode: "26.6"
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.donskip.attendancecheck
+      vars:
+        APP_STORE_APPLE_ID: "6823856877"
+        XCODE_WORKSPACE: ios/App/App.xcworkspace
+        XCODE_SCHEME: App
+        NEXT_PUBLIC_API_BASE_URL: https://kuuki-jp.com:8000
+        NEXT_TELEMETRY_DISABLED: "1"
+        APP_STORE_CONNECT_API_UNAUTHORIZED_RETRIES: "2"
+        APP_STORE_CONNECT_API_SERVER_ERROR_RETRIES: "2"
+    cache:
+      cache_paths:
+        - ~/.npm
+        - ~/Library/Caches/CocoaPods
+    scripts:
+      - name: Validate release configuration
+        script: |
+          set -euo pipefail
+          node <<'NODE'
+          const fs = require('node:fs');
+          const api_origin = new URL(process.env.NEXT_PUBLIC_API_BASE_URL || '');
+          if (api_origin.protocol !== 'https:' || api_origin.username || api_origin.password
+              || api_origin.search || api_origin.hash || api_origin.pathname !== '/'
+              || /^(localhost|127\.|0\.0\.0\.0$|\[::1\]$)/i.test(api_origin.hostname)) {
+            throw new Error('NEXT_PUBLIC_API_BASE_URL must be a reachable HTTPS origin without /api/v1.');
+          }
+          if (!/^[0-9]+$/.test(process.env.APP_STORE_APPLE_ID || '')) {
+            throw new Error('APP_STORE_APPLE_ID must be the numeric App Store Connect app ID.');
+          }
+          const capacitor_config = JSON.parse(fs.readFileSync('capacitor.config.json', 'utf8'));
+          if (capacitor_config.appId !== 'com.donskip.attendancecheck' || capacitor_config.webDir !== 'out') {
+            throw new Error('Capacitor bundle ID or static export directory does not match this workflow.');
+          }
+          fs.accessSync('ios/App/App.xcodeproj/xcshareddata/xcschemes/App.xcscheme');
+          console.log('Release configuration verified for com.donskip.attendancecheck.');
+          NODE
+      - name: Install locked npm dependencies
+        script: |
+          set -euo pipefail
+          npm ci --no-audit --no-fund
+      - name: Build production web assets
+        script: |
+          set -euo pipefail
+          npm run build
+          test -f out/index.html
+      - name: Sync iOS assets and install CocoaPods
+        script: |
+          set -euo pipefail
+          npx cap sync ios
+          test -f "$XCODE_WORKSPACE/contents.xcworkspacedata"
+      - name: Set a new App Store build number
+        script: |
+          set -euo pipefail
+          latest_build_number="$(app-store-connect get-latest-build-number "$APP_STORE_APPLE_ID" --all-versions)"
+          latest_build_number="${latest_build_number:-0}"
+          if [[ ! "$latest_build_number" =~ ^[0-9]+$ ]]; then
+            echo "Apple returned an unsupported build number: expected an integer." >&2
+            exit 1
+          fi
+          next_build_number=$((10#$latest_build_number + 1))
+          if [[ "${PROJECT_BUILD_NUMBER:-}" =~ ^[0-9]+$ ]] && ((10#$PROJECT_BUILD_NUMBER > next_build_number)); then
+            next_build_number=$((10#$PROJECT_BUILD_NUMBER))
+          fi
+          cd ios/App
+          agvtool new-version -all "$next_build_number"
+          echo "IOS_BUILD_NUMBER=$next_build_number" >> "$CM_ENV"
+          echo "Archive build number: $next_build_number"
+      - name: Apply App Store signing profiles
+        script: |
+          set -euo pipefail
+          xcode-project use-profiles
+      - name: Archive and export signed IPA
+        script: |
+          set -euo pipefail
+          xcode-project build-ipa --workspace "$XCODE_WORKSPACE" --scheme "$XCODE_SCHEME"
+      - name: Verify exported app identity and permissions
+        script: |
+          set -euo pipefail
+          python3 <<'PY'
+          from pathlib import Path
+          import plistlib
+          import zipfile
+
+          ipa_files = list(Path('build/ios/ipa').glob('*.ipa'))
+          if len(ipa_files) != 1:
+              raise SystemExit('Expected exactly one signed IPA.')
+          with zipfile.ZipFile(ipa_files[0]) as ipa_archive:
+              info_paths = [name for name in ipa_archive.namelist()
+                            if name.startswith('Payload/') and name.endswith('.app/Info.plist')
+                            and name.count('/') == 2]
+              if len(info_paths) != 1:
+                  raise SystemExit('Expected exactly one app Info.plist in the IPA.')
+              app_info = plistlib.loads(ipa_archive.read(info_paths[0]))
+          if app_info.get('CFBundleIdentifier') != 'com.donskip.attendancecheck':
+              raise SystemExit('IPA bundle identifier does not match the registered app.')
+          if app_info.get('ITSAppUsesNonExemptEncryption') is not False:
+              raise SystemExit('Expected the system-HTTPS-only encryption declaration.')
+          if any(key.startswith('NSLocation') for key in app_info):
+              raise SystemExit('Retired location permission unexpectedly exists in the IPA.')
+          print(f"Verified IPA: version {app_info['CFBundleShortVersionString']}, build {app_info['CFBundleVersion']}.")
+          PY
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - build/ios/xcarchive/*.xcarchive/dSYMs/**/*.dSYM
+      - /tmp/xcodebuild_logs/*.log
+    publishing:
+      app_store_connect:
+        auth: integration
+        # Uploads to App Store Connect/TestFlight; beta review and tester assignment stay manual.
+        submit_to_testflight: false
+        submit_to_app_store: false
