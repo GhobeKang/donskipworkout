@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="How DON'T SKIP handles account details, workout records, check-in photos and notifications, with app support and account deletion instructions.">
+  <meta name="referrer" content="no-referrer">
+  <meta name="color-scheme" content="light">
+  <title>DON'T SKIP Privacy Policy &amp; Support | sayudogu</title>
+  <style>
+    :root {
+      --page_background: #f5f6f2;
+      --card_background: #ffffff;
+      --text_primary: #19251d;
+      --text_secondary: #4e5e53;
+      --line_color: #d9e1d9;
+      --accent_color: #24583b;
+      --accent_background: #e9f2e7;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-padding-top: 24px; }
+    body { margin: 0; background: var(--page_background); color: var(--text_primary); font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Malgun Gothic", sans-serif; font-size: 16px; line-height: 1.8; overflow-wrap: anywhere; }
+    a { color: var(--accent_color); text-underline-offset: 4px; }
+    a:hover { text-decoration-thickness: 2px; }
+    a:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--accent_color); outline-offset: 5px; border-radius: 3px; }
+    .skipLink { position: absolute; left: 16px; top: -100px; padding: 10px 16px; background: white; z-index: 2; }
+    .skipLink:focus { top: 12px; }
+    .pageShell { width: min(100% - 40px, 1020px); margin: 0 auto; }
+    .siteHeader { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 26px 0; border-bottom: 1px solid var(--line_color); }
+    .brandName { font-size: 20px; font-weight: 900; letter-spacing: -0.8px; }
+    .headerLabel { color: var(--text_secondary); font-size: 13px; }
+    .languageNav { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 14px; }
+    .languageNav [aria-current="page"] { font-weight: 750; }
+    .supportQuestions details { margin: 12px 0; }
+    .supportQuestions summary { cursor: pointer; font-weight: 700; }
+    .supportQuestions summary:focus-visible { outline: 3px solid var(--accent_color); outline-offset: 4px; }
+    .heroBlock { padding: 48px 0 26px; }
+    .eyebrow { margin: 0 0 12px; font-size: 12px; font-weight: 800; letter-spacing: 2px; color: var(--accent_color); }
+    h1 { margin: 0 0 14px; font-size: clamp(30px, 5vw, 46px); line-height: 1.25; letter-spacing: -1.7px; }
+    .heroDescription { max-width: 740px; margin: 0; color: var(--text_secondary); }
+    .documentMeta { display: flex; flex-wrap: wrap; gap: 8px 24px; margin-top: 22px; font-size: 13px; color: var(--text_secondary); }
+    .requestButton { display: inline-block; padding: 10px 18px; border-radius: 8px; color: white; background: var(--accent_color); font-weight: 700; text-decoration: none; }
+    .policySection:target { outline: 3px solid var(--accent_color); outline-offset: 4px; }
+    .summaryGrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin: 24px 0; }
+    .summaryCard { padding: 20px; border: 1px solid var(--line_color); border-radius: 14px; background: var(--card_background); }
+    .summaryCard h2 { margin: 0 0 7px; font-size: 15px; }
+    .summaryCard p { margin: 0; color: var(--text_secondary); font-size: 14px; }
+    .documentLayout { display: grid; grid-template-columns: 205px minmax(0, 1fr); gap: 30px; align-items: start; margin: 34px 0 60px; }
+    .contentsNav { position: sticky; top: 24px; font-size: 13px; }
+    .contentsNav h2 { margin: 0 0 12px; font-size: 14px; }
+    .contentsNav ol { margin: 0; padding-left: 22px; }
+    .contentsNav li { margin: 7px 0; padding-left: 2px; }
+    .contentsNav a { color: var(--text_secondary); text-decoration: none; }
+    .contentsNav a:hover { color: var(--accent_color); text-decoration: underline; }
+    .policyContent { min-width: 0; }
+    .policySection { padding: 25px 28px; margin-bottom: 18px; border: 1px solid var(--line_color); border-radius: 16px; background: var(--card_background); }
+    .policySection h2 { margin: 0 0 16px; font-size: 21px; line-height: 1.5; letter-spacing: -0.6px; }
+    .policySection h3 { margin: 22px 0 8px; font-size: 16px; }
+    .policySection p { margin: 10px 0; }
+    .policySection ul { margin: 10px 0; padding-left: 22px; }
+    .policySection li { margin: 7px 0; }
+    .tableScroll { overflow-x: auto; margin: 16px 0; border: 1px solid var(--line_color); border-radius: 10px; }
+    table { border-collapse: collapse; width: 100%; min-width: 540px; font-size: 14px; line-height: 1.75; }
+    caption { text-align: left; font-weight: 750; padding: 13px 15px; background: var(--card_background); }
+    th, td { text-align: left; vertical-align: top; padding: 13px 15px; border-top: 1px solid var(--line_color); }
+    thead th { background: #f1f5ef; font-weight: 750; }
+    tbody th { width: 22%; font-weight: 700; }
+    .infoNote { padding: 14px 18px; border-left: 3px solid var(--accent_color); background: var(--accent_background); border-radius: 0 8px 8px 0; }
+    .contactDetails { margin: 0; }
+    .contactDetails div { display: grid; grid-template-columns: 108px minmax(0, 1fr); gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line_color); }
+    .contactDetails dt { font-weight: 700; }
+    .contactDetails dd { margin: 0; }
+    .siteFooter { padding: 0 0 32px; color: var(--text_secondary); font-size: 13px; }
+    @media (max-width: 760px) {
+      .documentLayout { grid-template-columns: minmax(0, 1fr); gap: 20px; margin-top: 24px; }
+      .contentsNav { position: static; padding: 20px 22px; border: 1px solid var(--line_color); border-radius: 14px; }
+      .contentsNav ol { columns: 2; column-gap: 28px; }
+      .contentsNav li { break-inside: avoid; }
+      .summaryGrid { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+      .summaryCard { padding: 16px 20px; }
+      .heroBlock { padding-top: 32px; }
+      .policySection { padding: 22px 20px; }
+    }
+    @media (max-width: 400px) {
+      .pageShell { width: calc(100% - 28px); }
+      .siteHeader { align-items: flex-start; flex-direction: column; gap: 0; padding: 20px 0; }
+      .contentsNav ol { columns: 1; }
+      .contactDetails div { grid-template-columns: minmax(0, 1fr); gap: 0; }
+    }
+    @media print {
+      body { background: white; color: black; font-size: 11pt; }
+      .pageShell { width: 100%; }
+      .skipLink, .contentsNav, .summaryGrid { display: none; }
+      .documentLayout { display: block; margin: 20px 0; }
+      .heroBlock { padding: 20px 0; }
+      .policySection { padding: 12px 0; border: 0; border-radius: 0; }
+      .policySection h2, .policySection h3 { break-after: avoid; }
+      .tableScroll { overflow: visible; }
+      table { min-width: 0; }
+      tr { break-inside: avoid; }
+      a { color: black; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skipLink" href="#policy-content">Skip to the privacy policy</a>
+  <div class="pageShell">
+    <header class="siteHeader">
+      <span class="brandName">DON'T SKIP</span>
+      <span class="headerLabel">sayudogu · Privacy Policy</span>
+      <nav class="languageNav" aria-label="Choose language">
+        <a href="https://ghobekang.github.io/donskipworkout-privacy/" lang="ko" hreflang="ko">한국어</a>
+        <span lang="en" aria-current="page">English</span>
+      </nav>
+    </header>
+
+    <div class="heroBlock">
+      <p class="eyebrow">YOUR DATA, EXPLAINED</p>
+      <h1>Privacy Policy</h1>
+      <p class="heroDescription">Learn what information DON'T SKIP processes, where it is stored and who it is shared with. This policy applies to the Android and iOS apps and their connected services.</p>
+      <div class="documentMeta">
+        <span>Last updated: <time datetime="2026-10-19">October 19, 2026</time></span>
+        <span>Document version: 1.3</span>
+        <span>Effective date: October 19, 2026</span>
+      </div>
+      <p><a href="#contact">App support and frequently asked questions</a> · <a href="#deletion">Request account deletion</a></p>
+    </div>
+
+    <div class="summaryGrid" aria-label="Overview of data processing">
+      <section class="summaryCard"><h2>Accounts and workout records</h2><p>Email accounts, workout schedules and records, and submitted check-in photos are processed on the server.</p></section>
+      <section class="summaryCard"><h2>Workout duration</h2><p>You start and finish workouts manually. Saved workout durations are processed on the server.</p></section>
+      <section class="summaryCard"><h2>Optional features and permissions</h2><p>Photo check-ins and notifications use the relevant device permissions. You can choose whether to use these features.</p></section>
+    </div>
+
+    <div class="documentLayout">
+      <nav class="contentsNav" aria-label="Privacy policy contents">
+        <h2>Contents</h2>
+        <ol>
+          <li><a href="#operator">Operator and scope</a></li>
+          <li><a href="#data">Information and purposes</a></li>
+          <li><a href="#location">Location and permissions</a></li>
+          <li><a href="#photos">Photo processing</a></li>
+          <li><a href="#sharing">Sharing with other users</a></li>
+          <li><a href="#providers">Providers and international transfers</a></li>
+          <li><a href="#retention">Retention and deletion</a></li>
+          <li><a href="#deletion">Your rights and account deletion</a></li>
+          <li><a href="#security">Security measures</a></li>
+          <li><a href="#children">Children's information</a></li>
+          <li><a href="#changes">Policy changes</a></li>
+          <li><a href="#contact">App support and privacy inquiries</a></li>
+        </ol>
+      </nav>
+
+      <main class="policyContent" id="policy-content">
+        <section class="policySection" id="operator" aria-labelledby="operator-title">
+          <h2 id="operator-title">1. Operator and scope</h2>
+          <p>sayudogu (the “operator”) provides DON'T SKIP, a workout attendance and training log service (the “service”). This policy covers account, workout, photo, location, notification and inquiry information processed when you use the service.</p>
+          <p>Send privacy inquiries to <a href="mailto:sayudogu@gmail.com">sayudogu@gmail.com</a>.</p>
+        </section>
+
+        <section class="policySection" id="data" aria-labelledby="data-title">
+          <h2 id="data-title">2. Information we process and why</h2>
+          <p>We process information you provide when signing up, entering records, submitting photos or joining challenges, together with information needed to operate the service.</p>
+          <div class="tableScroll" role="region" aria-label="Information and purposes table, scroll horizontally" tabindex="0">
+            <table>
+              <caption>Information processed by the app server</caption>
+              <thead><tr><th scope="col">Category</th><th scope="col">Information</th><th scope="col">Purpose and collection timing</th></tr></thead>
+              <tbody>
+                <tr><th scope="row">Account</th><td>Email address, display name, password, account identifier, country code, time zone, and creation/update timestamps</td><td>Registration, sign-in, identifying users, and workout records and reminders based on local dates. Passwords are transmitted for authentication and stored on the server as hashes.</td></tr>
+                <tr><th scope="row">Sign-in sessions</th><td>Session identifier, its server-stored hash, associated account, and session creation/expiry timestamps</td><td>Keeping you signed in and handling authenticated requests. A cookie on your device maintains the sign-in session.</td></tr>
+                <tr><th scope="row">Workout settings</th><td>Workout days and times, weekly goals and change history, notification types, intensity and delivery settings, and record reuse settings</td><td>Providing schedules, reminders, weekly goals and reports when you save settings.</td></tr>
+                <tr><th scope="row">Workout records</th><td>Workout date and status, departure/start/completion times, postponement count, check-in method, exercise names and target areas, sets, weights, repetitions and optional notes</td><td>Attendance, saving and reusing workout records, and generating statistics, progress and activity reports.</td></tr>
+                <tr><th scope="row">Workout duration</th><td>Timer start/pause/resume/finish timestamps, interval durations, synchronization request identifiers, and values before/after duration edits with reasons</td><td>Measuring workout duration, synchronizing after reconnection, correcting records and maintaining edit history.</td></tr>
+                <tr><th scope="row">Check-in photos</th><td>Submitted and processed images, image hashes, capture time and time zone, submission identifiers, photo effects/reuse settings and optional notes</td><td>Photo check-ins, duplicate detection, and creating and displaying check-in images when you submit a photo.</td></tr>
+                <tr><th scope="row">Challenges</th><td>Room, round and participant identifiers, room names, descriptions and rules, invitation information, join/leave status, rule consent version/time, attendance assessments, scores and reports</td><td>Invitations, participation confirmation, shared goal progress and assessment, and host reports when you create or join a room.</td></tr>
+                <tr><th scope="row">Coaching conversations</th><td>Question categories and content, replies, author and recipient host, creation/update timestamps and pending reply status</td><td>Conversations between participants and hosts when you use questions and replies.</td></tr>
+                <tr><th scope="row">Push notifications</th><td>App installation identifier, account association, Android/iOS platform, notification token and hash, language and active status, notification titles/bodies and related identifiers, delivery/read/error history</td><td>Registering a device after notification permission is granted, delivering workout/challenge notifications, avoiding duplicates and checking delivery/error status.</td></tr>
+                <tr><th scope="row">Security and operations</th><td>Connection IP address; hashed IP, account and time of invitation attempts; request identifiers, timestamps, route types, result codes, transfer sizes, processing times and error types</td><td>Rate limiting, preventing invitation code abuse, diagnostics and service operations. Raw IP addresses are processed in memory for rate limiting; invitation attempt records store hashes.</td></tr>
+                <tr><th scope="row">Community safety</th><td>Terms consent version/time, reported targets, reasons, descriptions and content copies, and review/action reasons and history</td><td>Checking consent, receiving reports, and operator actions to hide content or restrict accounts.</td></tr>
+                <tr><th scope="row">Inquiries</th><td>Sender email address, inquiry content, attachments you provide and response history</td><td>Responding to email inquiries and requests to exercise your rights.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <h3>Information stored or processed on your device</h3>
+          <ul>
+            <li>Language preference, installation identifier for notifications, active timers and unsent operations, and temporary workout drafts by user and date</li>
+            <li>Images being captured or edited, and temporary image files for sharing</li>
+          </ul>
+          <p>Drafts and timer operations on your device may be included in server requests when you save them or reconnect. Your language is also sent when registering a device for notifications.</p>
+          <h3>Android analytics</h3>
+          <p>The Android app includes Google Analytics for Firebase. Google may process automatically collected information for app usage analysis and service improvement, including app instance identifiers, app launch/usage events, device, operating system and app information, and approximate location derived from IP addresses. Advertising identifiers may be included depending on SDK and device settings. The app does not request device location permission or send GPS coordinates as analytics events.</p>
+          <p>The app currently has no individual setting to turn analytics collection on or off. Declining notification permission does not stop analytics collection. Contact <a href="mailto:sayudogu@gmail.com">sayudogu@gmail.com</a> about suspending processing or deleting analytics information. Google's retention and deletion procedures are governed by the <a href="https://firebase.google.com/support/privacy">Firebase privacy information</a> and the relevant service settings. Deleting your app server account does not immediately delete all analytics information.</p>
+          <p class="infoNote">Workout records may reveal your physical activity. Photos, notes and coaching conversations may contain additional personal information you enter. Please include only what is needed for your records.</p>
+        </section>
+
+        <section class="policySection" id="location" aria-labelledby="location-title">
+          <h2 id="location-title">3. Location information and device permissions</h2>
+          <h3>Use of location information</h3>
+          <p>The current version does not provide workout-location arrival reminders or automatically finish workouts when you leave a location. It does not request precise or background location permission. You start, pause, resume and finish workouts manually.</p>
+          <p>Workout-location information and related state/notifications stored by earlier versions are cleaned up when the app runs after an update. Workout records already stored on the server are retained. Copies in operating system or cloud backups may depend on your device settings.</p>
+          <p>See Android analytics above for approximate location derived from IP addresses.</p>
+          <h3>Camera, notifications and files</h3>
+          <ul>
+            <li><strong>Camera:</strong> Used when you choose photo check-in. Manual check-in without a photo is also available. Photo check-in is not currently configured to save captured images to your gallery.</li>
+            <li><strong>Notifications:</strong> Display workout schedules, challenge updates and host notifications. You can restrict delivery in the app or operating system settings.</li>
+            <li><strong>Shared files:</strong> When you choose to share, an image is created in temporary app storage and passed to the operating system's share sheet.</li>
+          </ul>
+          <p>Declining a permission affects its related feature. Notification permission is separate from consent for Android analytics collection.</p>
+        </section>
+
+        <section class="policySection" id="photos" aria-labelledby="photos-title">
+          <h2 id="photos-title">4. Processing check-in photos</h2>
+          <p>When you capture and submit a photo, an image resized and cropped on your device is sent to the server. The server removes metadata such as EXIF and GPS, then <strong>stores both the image before overlays and the image after overlays</strong>.</p>
+          <p>Processed images may include your display name, local capture date/time, a summary of that day's exercises and sets, and decorative elements. Capture time and time zone are sent separately from image EXIF and used to generate the image. Previous check-in photos may be shown to you again according to your reuse settings.</p>
+          <p>Photo access is restricted to the signed-in account that owns the photo. Current challenge views do not provide participants' check-in photo files or original private notes to other participants. Image hashes are used to detect duplicates. The app does not currently provide facial recognition or biometric identification.</p>
+        </section>
+
+        <section class="policySection" id="sharing" aria-labelledby="sharing-title">
+          <h2 id="sharing-title">5. Sharing with other users</h2>
+          <ul>
+            <li><strong>Challenge participants:</strong> Other participants in the same challenge can see display names, participation and consent status, goals, check-in dates, progress and assessment results.</li>
+            <li><strong>Challenge hosts:</strong> After a challenge period ends, the host can view individual participant progress reports. These may include comparisons of workout performance, duration, exercises, weights and repetitions, scores/assessments, and summaries of changes using past records.</li>
+            <li><strong>Coaching questions and replies:</strong> The question author and recipient host can view the conversation. Reported content copies and report descriptions are provided to authorized reviewers.</li>
+            <li><strong>External sharing:</strong> When you choose to share or download a report, the selected image is passed to your device or the chosen app/recipient. The recipient's or service's practices govern shared copies.</li>
+          </ul>
+          <p>The app does not currently show account email addresses, passwords, personal photo files or original private notes to other participants. Deleting your app account does not recall copies you have already shared externally.</p>
+        </section>
+
+        <section class="policySection" id="providers" aria-labelledby="providers-title">
+          <h2 id="providers-title">6. External providers and international transfers</h2>
+          <p>sayudogu operates the API and check-in photo server in the Republic of Korea. The database uses Supabase's Seoul region in the Republic of Korea. The following external services are used for notification delivery, analytics, fonts and inquiry handling.</p>
+          <div class="tableScroll" role="region" aria-label="External providers table, scroll horizontally" tabindex="0">
+            <table>
+              <caption>Connected external services</caption>
+              <thead><tr><th scope="col">Service</th><th scope="col">Purpose and information processed</th><th scope="col">More information</th></tr></thead>
+              <tbody>
+                <tr><th scope="row">Supabase</th><td>Database hosting in the Seoul region, Republic of Korea. Stores account, settings, workout, challenge, coaching, notification and photo metadata. Check-in photo files are stored on the operator's API server.</td><td><a href="https://supabase.com/privacy">Supabase privacy information</a></td></tr>
+                <tr><th scope="row">Google / Firebase Cloud Messaging</th><td>Android push delivery. Processes installation/registration identifiers, push tokens, notification titles/bodies, and related event, room and round identifiers.</td><td><a href="https://firebase.google.com/support/privacy">Firebase privacy information</a></td></tr>
+                <tr><th scope="row">Apple / APNs</th><td>iOS push delivery. Processes device notification tokens, notification titles/bodies and related event identifiers.</td><td><a href="https://www.apple.com/legal/privacy/">Apple privacy information</a></td></tr>
+                <tr><th scope="row">Google / Analytics for Firebase</th><td>Android app usage analysis and service improvement. Processes app/device identifiers, app usage events, device information and approximate location.</td><td><a href="https://support.google.com/analytics/answer/11582702?hl=en">Automatically collected information</a></td></tr>
+                <tr><th scope="row">Google Fonts</th><td>Fonts and icons in the app. Requests for external fonts may transmit communication information such as IP addresses and request headers to Google.</td><td><a href="https://policies.google.com/privacy?hl=en">Google privacy information</a></td></tr>
+                <tr><th scope="row">Google / Gmail</th><td>Receiving and replying to privacy emails. Processes sender addresses, inquiry/attachment content and response history.</td><td><a href="https://policies.google.com/privacy?hl=en">Google privacy information</a></td></tr>
+                <tr><th scope="row">sayudogu / Republic of Korea</th><td>API request processing, check-in photo files and operational logs. Operator-managed backups are retained for up to 90 days.</td><td><a href="mailto:sayudogu@gmail.com">Contact the operator</a></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>Notification providers receive information needed to deliver notifications. The app does not attach your complete workout history or check-in photo files to push notification bodies. Notification content may appear on the lock screen; you can adjust its visibility in device settings.</p>
+          <p>Features using overseas providers such as Google, Apple and GitHub may transmit and process relevant information over the network in the United States or other countries where those providers operate. The categories and purposes are listed above. See each linked privacy notice for provider contact details and retention/deletion practices. You can stop using notification or external sharing features in app or device settings, which limits those features. Contact the operator to exercise rights or ask about external service processing, including analytics.</p>
+          <h3>Hosting this policy page</h3>
+          <p>This page is hosted on GitHub Pages. GitHub may process access information such as IP addresses to serve and secure the page. See the <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement">GitHub privacy statement</a>. This HTML document itself contains no analytics scripts, external fonts, tracking images or input forms.</p>
+        </section>
+
+        <section class="policySection" id="retention" aria-labelledby="retention-title">
+          <h2 id="retention-title">7. Retention and deletion</h2>
+          <p>Account, workout, check-in photo, challenge and coaching data are retained to provide features while your account exists. User blocking has been discontinued and no new blocking information is collected. Existing blocking records are not used to restrict conversations, notifications or content and are cleaned up when the account is deleted. After a successful account deletion request, linked server records, conversations, notifications, reports of content/users and blocking information are deleted. Original and processed photo files are cleaned up through a separate file deletion task. Operator-managed backups are retained for up to 90 days.</p>
+          <div class="tableScroll" role="region" aria-label="Retention and deletion table, scroll horizontally" tabindex="0">
+            <table>
+              <caption>Retention and deletion by data category</caption>
+              <thead><tr><th scope="col">Category</th><th scope="col">Retention and deletion</th><th scope="col">Additional information</th></tr></thead>
+              <tbody>
+                <tr><th scope="row">Account, usage records and photos</th><td>Retained while your account exists. Linked server data are deleted with the account, including copies of that user's challenge assessments and progress reports. Photo files use a separate deletion task; the operator checks failures.</td><td>Other participants' personal records remain. Signing out or uninstalling does not delete server data. If a separate legal retention obligation is identified, its categories, grounds and duration will be explained to the requester.</td></tr>
+                <tr><th scope="row">Sign-in sessions</th><td>The current configuration permits up to 400 days from the last authenticated activity, with expiry refreshed by authenticated requests. Successful server sign-out or account deletion deletes all sign-in sessions for that account.</td><td>Expired sessions are cleaned up during lookups and new sign-ins.</td></tr>
+                <tr><th scope="row">Drafts and temporary files</th><td>Unsaved records and unsent operations are stored on the device without a separate automatic expiry period in days. Completed operations are cleaned up. Account deletion requests cleanup of account-specific temporary records and the sharing cache on the current device.</td><td>You can clear app data through device settings. Copies on other offline devices may require separate cleanup.</td></tr>
+                <tr><th scope="row">Security, notification and inquiry history</th><td>Used for rate limits, incident handling, notifications and inquiry responses. Account-linked notifications, content/user reports, blocking records and invitation attempts are cleaned up on account deletion. Operational logs rotate according to file size.</td><td>Separately request deletion of logs or email inquiry history not linked to account deletion by contacting the operator.</td></tr>
+                <tr><th scope="row">Backups and provider information</th><td>Operator-managed backups are destroyed after a maximum of 90 days. Copies remaining after account deletion expire progressively within that period.</td><td>Analytics, delivery and access information separately managed by external providers follows their retention and deletion procedures. Contact the operator about related deletion requests.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>Turning off photo reuse or push notifications does not delete all previously stored server data.</p>
+        </section>
+
+        <section class="policySection" id="deletion" aria-labelledby="deletion-title">
+          <h2 id="deletion-title">8. Your rights and DON'T SKIP account deletion</h2>
+          <p class="infoNote"><strong>You can request deletion of your account and related data by email without installing the app or signing in.</strong> sayudogu receives the request, verifies account ownership and emails you the outcome.</p>
+          <p><a class="requestButton" href="mailto:sayudogu@gmail.com?subject=DON%27T%20SKIP%20account%20deletion%20request">Request account deletion by email</a></p>
+          <ol>
+            <li>Where possible, email <a href="mailto:sayudogu@gmail.com">sayudogu@gmail.com</a> from the address used to register. Use the subject <strong>DON'T SKIP account deletion request</strong>.</li>
+            <li>Include your <strong>registered email address</strong> and a <strong>request to delete your account and all related data</strong>. If you cannot access the registered address, provide an address for replies and explain why.</li>
+            <li>The operator verifies account ownership. If verification is difficult, only the minimum additional information needed will be requested. Do not send passwords or copies of identity documents.</li>
+            <li>After verification, the operator deletes the account and linked server data and informs you of the result. If further verification or a delay is needed, the reason and expected processing schedule will be explained.</li>
+          </ol>
+          <p><strong>Deletion scope:</strong> Account/authentication information and all sign-in sessions; workout schedules, records, notes and timers; check-in photos; related coaching conversations, notifications, content/user reports, blocking records and challenge participation; and copies of that user's assessments and progress reports. Other participants' accounts and workout records are not deleted.</p>
+          <p><strong>Retention exceptions:</strong> Operator-managed backups are destroyed after a maximum of 90 days. Photo files are handled by a separate deletion task. Externally shared copies and provider-managed information may not be recalled immediately by this request alone. Any identified separate legal retention obligation will be explained with its categories, grounds and duration.</p>
+          <p>You can also use the same email address to request access, correction, deletion of specific data, suspension of processing or withdrawal of consent.</p>
+          <p>You can change workout schedules and notifications in app settings and withdraw camera/notification permission in device settings.</p>
+          <p>In the app, open <strong>Settings → Delete account</strong> at the bottom, then enter your current password and the confirmation text DELETE. Email deletion requests do not require reinstalling the app, signing in or accepting new terms.</p>
+          <p>After successful account deletion, the app displays the result and deletes all sign-in sessions. It also requests cleanup of account-specific temporary records and notifications on the current device. Local copies on other offline devices, backups and provider data may be affected by separate processing procedures. Uninstalling or signing out alone does not delete your account. You may need to contact recipients separately about copies already shared externally.</p>
+        </section>
+
+        <section class="policySection" id="security" aria-labelledby="security-title">
+          <h2 id="security-title">9. Security measures</h2>
+          <p>The current service uses password hashing, restrictions on script access to sign-in cookies, account-specific access checks, photo ownership checks, request rate limits, removal of photo metadata, TLS for database connections, and practices that avoid directly logging passwords or request bodies.</p>
+          <p>Personal information and deletion requests are handled only by the operator and authorized personnel who need access. The operator checks deletion or transmission failures. We do not request passwords, unnecessary identity documents or health information by email.</p>
+        </section>
+
+        <section class="policySection" id="children" aria-labelledby="children-title">
+          <h2 id="children-title">10. Children's information</h2>
+          <p>The service is intended for all ages, and this policy applies to all users, including children. The current registration screen does not verify dates of birth or obtain consent from legal guardians.</p>
+          <p>Where consent is required to process the personal information of a child under 14, a legal guardian's consent and verification are necessary. Guardians may request access, correction, deletion or suspension of processing by emailing <a href="mailto:sayudogu@gmail.com">sayudogu@gmail.com</a>. If children's information processed without appropriate consent is identified, the operator will take necessary steps, including stopping processing and deleting the information.</p>
+        </section>
+
+        <section class="policySection" id="changes" aria-labelledby="changes-title">
+          <h2 id="changes-title">11. Changes to this policy</h2>
+          <p>Changes to data categories, purposes, providers or retention periods will be reflected in this policy, with an updated document version and effective date.</p>
+          <p>Changes are published on this page. Changes materially affecting users' rights will also be communicated through the app, account email or similar channels. Separate consent will be requested where required by applicable law.</p>
+        </section>
+
+        <section class="policySection" id="contact" aria-labelledby="contact-title">
+          <h2 id="contact-title">12. App support and privacy inquiries</h2>
+          <p>For help using the app, bug reports or privacy questions, email the address below. You can write in Korean or English.</p>
+          <dl class="contactDetails">
+            <div><dt>Service</dt><dd>DON'T SKIP</dd></div>
+            <div><dt>Operator</dt><dd>sayudogu</dd></div>
+            <div><dt>Contact</dt><dd><a href="mailto:sayudogu@gmail.com">sayudogu@gmail.com</a></dd></div>
+          </dl>
+          <p>Include your account email, your request and an address where you can receive a reply. Do not send passwords or unnecessary identity documents or health information.</p>
+          <p>For bugs, include Android or iOS, app version, device/operating system version and steps to reproduce the problem. If attaching a screenshot, hide other people's information and unnecessary personal information.</p>
+          <div class="supportQuestions">
+            <h3>Frequently asked questions</h3>
+            <details><summary>Why am I not receiving reminders?</summary><p>Check workout days, times and notification preferences in app settings, and make sure device settings allow notifications for DON'T SKIP. Focus, Do Not Disturb and other device settings may limit notification display.</p></details>
+            <details><summary>How do I record exercises and sets?</summary><p>In Workout, choose a built-in exercise or create your own. Specify the name, main target area and optional detailed area, then enter weights, repetitions and sets. Set records save automatically as you enter them. An account and an internet connection are required.</p></details>
+            <details><summary>Why does a report say there are insufficient comparison records?</summary><p>Reports need workout dates, exercises and set records. Performance changes use comparable conditions, such as the same weight or repetitions. The activity score uses recorded exercises and sets; it does not measure actual muscle stimulation.</p></details>
+            <details><summary>How do I start a challenge with friends?</summary><p>In My Challenges, create a room or join using an invite code. Community participation requires acceptance of the in-app terms.</p></details>
+            <details><summary>How do I delete my account and data?</summary><p>Use Delete account at the bottom of Settings, or request deletion by email without installing the app or signing in. <a href="#deletion">Read the deletion scope and request steps</a>.</p></details>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <footer class="siteFooter">
+      <p>DON'T SKIP · sayudogu · Privacy Policy · 2026.10.19</p>
+      <a href="#operator">Back to operator information</a>
+    </footer>
+  </div>
+</body>
+</html>

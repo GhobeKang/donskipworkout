@@ -1,6 +1,5 @@
 import { useLanguage } from '../../_hooks/useLanguage';
 import { useState } from 'react';
-import ServerNotificationSettings from '../settings/ServerNotificationSettings';
 import MaterialIcon from '../ui/MaterialIcon';
 import ToggleButton from '../ui/ToggleButton';
 import LanguageSelector from '../settings/LanguageSelector';
@@ -21,7 +20,7 @@ const notification_fields = [
   },
 ];
 
-export default function SettingsScreen({ user_uuid, data, options, pending, on_save, on_notify, on_unauthorized }) {
+export default function SettingsScreen({ data, options, pending, on_save }) {
   const { t, language } = useLanguage();
   const [draft, set_draft] = useState(data);
   const change_field = (field_name, value) => set_draft((current) => ({ ...current, [field_name]: value }));
@@ -59,7 +58,6 @@ export default function SettingsScreen({ user_uuid, data, options, pending, on_s
           <p className="infoText">{t('지금 출발을 누르면 당일 일반 운동 알림은 중단됩니다. 3시간 안에 인증하면 재촉 알림도 보내지 않습니다.')}</p>
           {notification_fields.map(({ field_name, label, description }) => <div className="toggleRow" key={field_name}><span>{t(label)}{description && <small>{t(description)}</small>}</span><ToggleButton active={draft[field_name]} label={t(label)} onClick={() => change_field(field_name, !draft[field_name])} /></div>)}
         </article>
-        <ServerNotificationSettings user_uuid={user_uuid} on_notify={on_notify} on_unauthorized={on_unauthorized} />
         <article className="settingsCard"><h2>{t("기록 재사용")}</h2><div className="toggleRow"><span>{t("과거 기록 다시 보기")}<small>{t("동의한 과거 기록을 오늘 화면에서 보여줘요.")}</small></span><ToggleButton active={draft.reuse_enabled} label={t("과거 기록 다시 보기")} onClick={() => change_field('reuse_enabled', !draft.reuse_enabled)} /></div></article>
         <article className="settingsCard roastCard">
           <h2><MaterialIcon>local_fire_department</MaterialIcon>{t(" 자극 강도 설정")}</h2>

@@ -211,10 +211,10 @@ export default function AuthenticatedApp({ user, on_unauthorized, on_logout, on_
         <div className="accountBar"><span>{user.display_name || t("운동 사용자")}{t("님")}</span><button className="quietButton" type="button" disabled={pending} onClick={logout}>{t("전체 기기 로그아웃")}</button></div>
         {(!settings.data || !options.data) && <article className="settingsCard"><LanguageSelector /></article>}
         <RequestState loading={settings.loading || options.loading} error={settings.error || options.error} on_retry={refresh_data} />
-        {settings.data && options.data && <SettingsScreen user_uuid={user.user_uuid} data={settings.data} options={options.data} pending={pending || settings.loading || options.loading} on_save={(body) => mutate('/settings', 'PUT', body, t("설정을 저장했습니다."))} on_notify={set_toast_message} on_unauthorized={on_unauthorized} />}
+        {settings.data && options.data && <SettingsScreen data={settings.data} options={options.data} pending={pending || settings.loading || options.loading} on_save={(body) => mutate('/settings', 'PUT', body, t("설정을 저장했습니다."))} />}
         <SafetySettings on_unauthorized={on_unauthorized} />
-        <LegalDocuments />
         <AccountDeletionForm user_uuid={user.user_uuid} on_deleted={on_account_deleted} />
+        <footer><LegalDocuments compact /></footer>
       </>}
     </main>
     <BottomNavigation current_view={current_view === 'record-detail' ? 'record' : current_view} on_navigate={navigate_to} disabled={pending} />

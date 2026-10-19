@@ -29,6 +29,11 @@
     .siteHeader { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 26px 0; border-bottom: 1px solid var(--line_color); }
     .brandName { font-size: 20px; font-weight: 900; letter-spacing: -0.8px; }
     .headerLabel { color: var(--text_secondary); font-size: 13px; }
+    .languageNav { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 14px; }
+    .languageNav [aria-current="page"] { font-weight: 750; }
+    .supportQuestions details { margin: 12px 0; }
+    .supportQuestions summary { cursor: pointer; font-weight: 700; }
+    .supportQuestions summary:focus-visible { outline: 3px solid var(--accent_color); outline-offset: 4px; }
     .heroBlock { padding: 48px 0 26px; }
     .eyebrow { margin: 0 0 12px; font-size: 12px; font-weight: 800; letter-spacing: 2px; color: var(--accent_color); }
     h1 { margin: 0 0 14px; font-size: clamp(30px, 5vw, 46px); line-height: 1.25; letter-spacing: -1.7px; }
@@ -103,6 +108,10 @@
     <header class="siteHeader">
       <span class="brandName" lang="en">DON'T SKIP</span>
       <span class="headerLabel">sayudogu · Privacy Policy</span>
+      <nav class="languageNav" aria-label="언어 선택">
+        <span lang="ko" aria-current="page">한국어</span>
+        <a href="https://ghobekang.github.io/donskipworkout-privacy/en.html" lang="en" hreflang="en">English</a>
+      </nav>
     </header>
 
     <div class="heroBlock">
@@ -110,9 +119,9 @@
       <h1>개인정보처리방침</h1>
       <p class="heroDescription">DON'T SKIP에서 어떤 정보를 처리하고, 어디에 저장하며, 누구와 공유하는지 안내합니다. Android·iOS 앱과 앱에 연결된 서비스에 적용됩니다.</p>
       <div class="documentMeta">
-        <span>최종 수정일: <time datetime="2026-10-17">2026년 10월 17일</time></span>
-        <span>문서 버전: 1.1</span>
-        <span>시행일: 2026년 10월 17일</span>
+        <span>최종 수정일: <time datetime="2026-10-19">2026년 10월 19일</time></span>
+        <span>문서 버전: 1.3</span>
+        <span>시행일: 2026년 10월 19일</span>
       </div>
     </div>
 
@@ -137,7 +146,7 @@
           <li><a href="#security">안전한 처리</a></li>
           <li><a href="#children">아동 개인정보</a></li>
           <li><a href="#changes">방침 변경</a></li>
-          <li><a href="#contact">개인정보 문의</a></li>
+          <li><a href="#contact">앱 지원·개인정보 문의</a></li>
         </ol>
       </nav>
 
@@ -166,7 +175,7 @@
                 <tr><th scope="row">코칭 대화</th><td>질문 분류·내용, 답변 내용, 작성자·수신 방장, 작성·수정 시각, 답변 대기 상태</td><td>이용자가 질문·답변 기능을 사용할 때 참가자와 방장 사이 대화 제공</td></tr>
                 <tr><th scope="row">푸시 알림</th><td>앱 설치 식별자, 계정 연결, Android·iOS 구분, 알림 토큰·토큰 해시, 언어·활성 상태, 알림 제목·본문·관련 식별자, 발송·읽음·오류 이력</td><td>알림 권한 허용 후 기기 등록, 운동·챌린지 알림 전송, 중복 발송 방지와 수신·오류 상태 확인</td></tr>
                 <tr><th scope="row">보안·운영</th><td>접속 IP 주소, 초대 시도 시 IP 주소의 해시·계정·시각, 요청 식별자·시각·경로 유형·결과 코드·전송량·처리 시간, 오류 유형</td><td>요청 횟수 제한, 초대 코드 남용 방지, 오류 진단과 서비스 운영. IP 원문은 요청 제한을 위해 메모리에서 처리하며, 초대 시도 기록에는 해시를 저장합니다.</td></tr>
-                <tr><th scope="row">커뮤니티 안전</th><td>이용약관 동의 버전·시각, 차단한 이용자·시각, 신고 대상·사유·설명·내용 사본, 검토·조치 사유와 이력</td><td>약관 동의 확인, 대화·알림 차단, 신고 접수 및 운영자의 콘텐츠 숨김·계정 이용 제한 처리</td></tr>
+                <tr><th scope="row">커뮤니티 안전</th><td>이용약관 동의 버전·시각, 신고 대상·사유·설명·내용 사본, 검토·조치 사유와 이력</td><td>약관 동의 확인, 신고 접수 및 운영자의 콘텐츠 숨김·계정 이용 제한 처리</td></tr>
                 <tr><th scope="row">문의</th><td>발신 이메일 주소, 문의 내용, 이용자가 첨부한 자료와 답변 이력</td><td>이용자가 이메일로 문의할 때 문의·권리 행사 대응</td></tr>
               </tbody>
             </table>
@@ -242,7 +251,7 @@
 
         <section class="policySection" id="retention" aria-labelledby="retention-title">
           <h2 id="retention-title">7. 보관기간과 파기</h2>
-          <p>계정·운동 기록·인증 사진·챌린지·코칭 데이터는 계정 유지 중 기능 제공을 위해 보관합니다. 계정 삭제 요청이 정상 처리되면 계정과 연결된 서버 기록·대화·알림·신고·차단 정보를 삭제하고 인증 사진 원본·가공본은 별도 파일 삭제 작업으로 정리합니다. 운영자가 관리하는 백업의 보관기간은 최대 90일입니다.</p>
+          <p>계정·운동 기록·인증 사진·챌린지·코칭 데이터는 계정 유지 중 기능 제공을 위해 보관합니다. 이용자 차단 기능은 종료되어 새로운 차단 정보를 수집하지 않습니다. 기존 차단 기록은 대화·알림·콘텐츠 제한에 사용하지 않으며 계정 삭제 시 함께 정리합니다. 계정 삭제 요청이 정상 처리되면 계정과 연결된 서버 기록·대화·알림·신고·차단 정보를 삭제하고 인증 사진 원본·가공본은 별도 파일 삭제 작업으로 정리합니다. 운영자가 관리하는 백업의 보관기간은 최대 90일입니다.</p>
           <div class="tableScroll" role="region" aria-label="보관과 삭제 표, 가로로 스크롤 가능" tabindex="0">
             <table>
               <caption>데이터별 보관·삭제 기준</caption>
@@ -296,19 +305,29 @@
         </section>
 
         <section class="policySection" id="contact" aria-labelledby="contact-title">
-          <h2 id="contact-title">12. 개인정보 관련 문의</h2>
+          <h2 id="contact-title">12. 앱 지원 및 개인정보 문의</h2>
+          <p>앱 사용 중 문제, 오류 신고, 개인정보 관련 문의는 아래 이메일로 보내주세요. 한국어 또는 영어로 문의할 수 있습니다.</p>
           <dl class="contactDetails">
             <div><dt>서비스</dt><dd>DON'T SKIP</dd></div>
             <div><dt>운영자</dt><dd>sayudogu</dd></div>
             <div><dt>개인정보 문의</dt><dd><a href="mailto:sayudogu@gmail.com">sayudogu@gmail.com</a></dd></div>
           </dl>
           <p>문의에 계정 이메일, 요청 내용과 연락 가능한 주소를 적어주세요. 비밀번호나 불필요한 신분증·건강정보를 보내지 마세요.</p>
+          <p>오류 문의에는 Android 또는 iOS 구분, 앱 버전, 기기·운영체제 버전과 문제를 재현하는 순서를 함께 적어주세요. 화면을 첨부한다면 다른 사람의 정보와 불필요한 개인정보를 가려주세요.</p>
+          <div class="supportQuestions">
+            <h3>자주 묻는 질문</h3>
+            <details><summary>알람이 오지 않아요.</summary><p>앱 설정에서 운동 요일·시간과 알림 수신 설정을 확인하고, 기기 설정에서 DON'T SKIP의 알림 권한이 허용되어 있는지 확인하세요. 집중 모드·방해 금지 모드 등 기기 설정에 따라 알림 표시가 제한될 수 있습니다.</p></details>
+            <details><summary>운동 종목과 세트는 어떻게 기록하나요?</summary><p>운동 화면에서 기본 종목을 선택하거나 직접 등록할 수 있습니다. 종목 이름·운동 부위·선택 세부분류를 지정하고 중량·반복 수·세트를 입력하세요. 세트 기록은 입력 시 자동 저장됩니다. 서비스 이용에는 계정과 인터넷 연결이 필요합니다.</p></details>
+            <details><summary>리포트에 비교 자료가 부족하다고 나와요.</summary><p>운동일·종목·세트 기록이 필요하며, 기록의 변화는 같은 중량 또는 같은 반복 수 등 비교 가능한 조건에서 계산합니다. 활동지수는 기록한 종목과 세트 수를 사용하며 실제 근육 자극을 측정하지 않습니다.</p></details>
+            <details><summary>친구와 챌린지를 시작하려면 어떻게 하나요?</summary><p>내 챌린지에서 방을 만들거나 초대 코드로 참여하세요. 커뮤니티 참여에는 앱의 이용약관 동의가 필요합니다.</p></details>
+            <details><summary>계정과 데이터를 삭제하고 싶어요.</summary><p>설정 하단의 계정 삭제를 이용하거나, 앱 설치·로그인 없이 이메일로 요청할 수 있습니다. <a href="#deletion">삭제 범위와 요청 절차 보기</a>.</p></details>
+          </div>
         </section>
       </main>
     </div>
 
     <footer class="siteFooter">
-      <p>DON'T SKIP · sayudogu · 개인정보처리방침 · 2026.10.16</p>
+      <p>DON'T SKIP · sayudogu · 개인정보처리방침 · 2026.10.19</p>
       <a href="#operator">운영자 안내로 돌아가기</a>
     </footer>
   </div>

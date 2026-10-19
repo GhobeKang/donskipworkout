@@ -81,32 +81,9 @@ function ModerationQueue({ on_unauthorized }) {
 }
 
 export default function SafetySettings({ on_unauthorized }) {
-  const { t, localize_message } = useLanguage();
   const [revision, set_revision] = useState(0);
-  const [pending_uuid, set_pending_uuid] = useState(null);
-  const [error_message, set_error_message] = useState('');
-  const blocks = useApiResource('/safety/blocks', revision, on_unauthorized);
   const status = useApiResource('/safety/status', revision, on_unauthorized);
-  const unblock_user = async (user_uuid) => {
-    if (pending_uuid) return;
-    set_pending_uuid(user_uuid); set_error_message('');
-    try {
-      await api_request(`/safety/blocks/${user_uuid}`, { method: 'DELETE' });
-      set_revision((value) => value + 1);
-    } catch (error) {
-      if (error.status === 401) on_unauthorized();
-      else set_error_message(localize_message(error.message));
-    } finally { set_pending_uuid(null); }
-  };
   return <>
-    <article className={safety_styles.card}>
-      <h2>{t('차단한 사용자')}</h2>
-      <RequestState loading={blocks.loading} error={blocks.error || error_message} on_retry={() => set_revision((value) => value + 1)} />
-      {blocks.data && !blocks.error && (!blocks.data.users.length ? <p>{t('차단한 사용자가 없습니다.')}</p> : <ul className={safety_styles.list}>{blocks.data.users.map((user) => <li key={user.user_uuid}>
-        <strong>{user.display_name || t('사용자')}</strong>
-        <button className="quietButton" type="button" disabled={Boolean(pending_uuid)} onClick={() => unblock_user(user.user_uuid)}>{t(pending_uuid === user.user_uuid ? '처리 중…' : '차단 해제')}</button>
-      </li>)}</ul>)}
-    </article>
     {status.error && <RequestState error={status.error} on_retry={() => set_revision((value) => value + 1)} />}
     {status.data?.is_moderator && <ModerationQueue on_unauthorized={on_unauthorized} />}
   </>;

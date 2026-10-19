@@ -29,7 +29,7 @@ export default function CommunityPolicy({ accepted_version, on_change, disabled 
         <input type="checkbox" required disabled={disabled || policy.loading}
           checked={accepted_version === policy.data.version}
           onChange={(event) => on_change(event.target.checked ? policy.data.version : '')} />
-        <span>{t('이용약관과 금지 콘텐츠·신고·차단 정책에 동의합니다.')}</span>
+        <span>{t('이용약관과 금지 콘텐츠·신고 정책에 동의합니다.')}</span>
       </label>}
     </>}
   </div>;
@@ -67,12 +67,12 @@ export function CommunityGate({ on_unauthorized, children }) {
 }
 
 export function LegalDocuments({ compact = false }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [documents_open, set_documents_open] = useState(false);
   const legal_content = <>
     <CommunityPolicy />
     <details className={safety_styles.document}><summary>{t('개인정보처리방침')}</summary>
-      <iframe className={safety_styles.policyFrame} src="/legal/privacy.html" title={t('개인정보처리방침')} loading="lazy" />
+      <iframe className={safety_styles.policyFrame} src={language === 'en' ? '/legal/privacy-en.html' : '/legal/privacy.html'} title={t('개인정보처리방침')} loading="lazy" />
     </details>
     <p><a href="mailto:sayudogu@gmail.com">sayudogu@gmail.com</a></p>
   </>;
