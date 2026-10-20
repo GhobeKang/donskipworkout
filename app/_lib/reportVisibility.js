@@ -57,6 +57,7 @@ export function personal_report_changes(report) {
   journey.comparisons = journey.comparisons.filter((item) => item.target_area !== '타겟 부위 미설정');
   return {
     ...insights, recent, journey, preferences,
+    personal_records: (insights.personal_records || []).filter((record) => in_period(record.current_best.workout_date)),
     consistency: { ...insights.consistency, weeks },
     recovery: { ...insights.recovery, events: recovery_events },
     challenges: { ...insights.challenges, new_areas, personal_record_areas },

@@ -20,6 +20,16 @@ export default function PhotoComposer({ catalog, workout_date, disabled, on_chan
   }, []);
 
   useEffect(() => {
+    const refresh_workout_summary = ({ detail }) => {
+      if (detail?.workout_date !== workout_date) return;
+      set_error_message('');
+      set_preview_revision((value) => value + 1);
+    };
+    window.addEventListener('workout-log-saved', refresh_workout_summary);
+    return () => window.removeEventListener('workout-log-saved', refresh_workout_summary);
+  }, [workout_date]);
+
+  useEffect(() => {
     on_change(null);
     set_preview_ready(false);
     if (!captured_photo || busy) return;

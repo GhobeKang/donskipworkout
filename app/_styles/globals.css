@@ -569,12 +569,45 @@ img { max-width: 100%; }
 .workoutGroupToggle > .material-symbols-rounded { color: var(--muted); }
 .workoutGroupRemove, .workoutSetRow button, .exerciseItemActions button { display: grid; place-items: center; width: 44px; height: 44px; flex-shrink: 0; padding: 0; border: 0; border-radius: 10px; background: transparent; color: var(--muted); }
 .previousSets { margin: 4px 0 20px; color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
+.exercisePersonalBest { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin: 4px 0 12px; color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
+.exercisePersonalBest strong { color: var(--white); font-size: 13px; }
+.personalRecordBadge { padding: 2px 7px; border: 1px solid var(--line); border-radius: 6px; color: var(--accent-text); font-size: 10px; }
+.personalRecords { min-width: 0; border: 1px solid var(--line); border-radius: 16px; background: var(--card); }
+.personalRecords > summary { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; min-height: 48px; padding: 14px 16px; cursor: pointer; font-size: 13px; }
+.personalRecords > summary > span { color: var(--muted); }
+.personalRecords > summary strong { margin-left: auto; color: var(--white); font-size: 13px; }
+.personalRecords > summary .material-symbols-rounded { color: var(--muted); font-size: 18px; }
+.personalRecords[open] > summary .material-symbols-rounded { transform: rotate(180deg); }
+.personalRecords > summary:focus-visible { outline: 2px solid var(--accent-text); outline-offset: -3px; border-radius: 16px; }
+.personalRecordsBody { display: grid; gap: 12px; padding: 0 16px 16px; }
+.personalRecordsBody > p { margin: 0; }
+.personalRecordList { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
+.personalRecordList li { min-width: 0; padding-top: 12px; border-top: 1px solid var(--line); overflow-wrap: anywhere; }
+.personalRecordList li > div { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; font-size: 13px; }
+.personalRecordList small, .personalRecordList p { color: var(--muted); font-size: 12px; }
+.personalRecordList p { margin: 4px 0 0; }
 .workoutSetLabels, .workoutSetRow { display: grid; grid-template-columns: 24px minmax(0, 1fr) minmax(0, 1fr) 44px; gap: 8px; align-items: center; text-align: center; }
 .workoutSetLabels { margin-bottom: 8px; color: var(--muted); font-size: 11px; }
 .workoutSetRow { margin-bottom: 10px; }
 .workoutSetRow > span { color: var(--muted); font-size: 13px; }
 .workoutSetRow input { width: 100%; min-width: 0; height: 48px; padding: 5px; border: 1px solid var(--line); border-radius: 10px; color: var(--white); background: var(--bg); font-size: 16px; text-align: center; font-variant-numeric: tabular-nums; }
 .workoutAddSet { width: 100%; margin-top: 8px; background: transparent; }
+.workoutWeightOptions { margin-top: 8px; }
+.workoutWeightOptions > summary { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 8px 4px; border-radius: 8px; color: var(--muted); font-size: 12px; list-style: none; cursor: pointer; }
+.workoutWeightOptions > summary::-webkit-details-marker { display: none; }
+.workoutWeightOptions > summary:hover { background: var(--bg); color: var(--white); }
+.workoutWeightOptions > summary:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 2px; }
+.workoutWeightOptions > summary small { color: var(--accent-text); font-size: 11px; }
+.workoutWeightOptions > summary .material-symbols-rounded { margin-left: auto; font-size: 18px; }
+.workoutWeightOptions[open] > summary .material-symbols-rounded { transform: rotate(180deg); }
+.workoutWeightOptions fieldset { margin-top: 8px; }
+.workoutWeightOptions legend { margin-bottom: 8px; color: var(--muted); font-size: 12px; }
+.workoutAssistedSets { display: flex; flex-wrap: wrap; gap: 8px; }
+.workoutAssistedSet { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 10px; color: var(--muted); font-size: 13px; cursor: pointer; }
+.workoutAssistedSet:has(input:checked) { border-color: var(--accent-text); color: var(--accent-text); background: var(--bg); }
+.workoutAssistedSet:has(input:disabled) { cursor: not-allowed; opacity: .5; }
+.workoutAssistedSet input { width: 16px; height: 16px; margin: 0; accent-color: var(--accent-text); cursor: inherit; }
+.workoutWeightOptions .infoText { margin: 12px 0 0; font-size: 12px; }
 .workoutFooter { display: grid; gap: 8px; }
 .workoutLogPanel { padding-bottom: 72px; }
 .workoutFloatingActions { width: min(calc(100% - 32px), 398px); display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: 8px; position: fixed; left: 50%; bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom) + 12px); z-index: 30; transform: translateX(-50%); margin: 0; }

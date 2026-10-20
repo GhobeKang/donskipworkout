@@ -2,7 +2,7 @@
 
 import { useLanguage } from '../../_hooks/useLanguage';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useImperativeHandle, useRef, useState } from 'react';
 import useApiResource from '../../_hooks/useApiResource';
 import { api_request } from '../../_lib/api';
 import WorkoutSetBuilder from '../workout/WorkoutSetBuilder';
@@ -43,7 +43,7 @@ function normalize_groups(exercise_groups) {
       if (workout_set.weight_kg === '' || workout_set.reps === '') return null;
       const weight_kg = Number(workout_set.weight_kg);
       const reps = Number(workout_set.reps);
-      if (!Number.isFinite(weight_kg) || weight_kg < 0 || weight_kg > 999.99
+      if (!Number.isFinite(weight_kg) || weight_kg < -999.99 || weight_kg > 999.99
         || String(weight_kg).split('.')[1]?.length > 2
         || !Number.isInteger(reps) || reps < 1 || reps > 1000) return null;
       sets.push({ weight_kg, reps });
@@ -77,7 +77,7 @@ function read_saved_draft(storage_key) {
   }
 }
 
-export default function WorkoutLogScreen({ user_uuid, initial_workout_date, is_active, catalog_revision, on_unauthorized, on_open_library, on_open_checkin, on_saved, timezone = 'Asia/Seoul' }) {
+export default function WorkoutLogScreen({ ref, user_uuid, initial_workout_date, is_active, catalog_revision, on_unauthorized, on_open_library, on_open_checkin, on_saved, timezone = 'Asia/Seoul' }) {
   const { t, localize_message } = useLanguage();
   const [selected_date, set_selected_date] = useState(initial_workout_date || current_workout_date(timezone));
   const initial_date_applied_ref = useRef(Boolean(initial_workout_date));
@@ -101,7 +101,7 @@ export default function WorkoutLogScreen({ user_uuid, initial_workout_date, is_a
   selected_date_ref.current = selected_date;
   const pending_save_ref = useRef(null);
   const save_timer_ref = useRef(null);
-  const save_active_ref = useRef(false);
+  const save_active_ref = useRef(null);
   const draft_revision_ref = useRef(0);
   const refreshed_today_dates_ref = useRef(new Set());
   const retry_counts_by_date_ref = useRef(new Map());
@@ -117,11 +117,17 @@ export default function WorkoutLogScreen({ user_uuid, initial_workout_date, is_a
     set_import_message('');
   }, [selected_date, is_active]);
 
-  const flush_save = async () => {
-    if (save_active_ref.current || !pending_save_ref.current) return;
+  const flush_save = () => {
+    if (save_active_ref.current) return save_active_ref.current;
+    if (!pending_save_ref.current) return Promise.resolve(true);
+    const save_operation = save_pending();
+    save_active_ref.current = save_operation;
+    return save_operation;
+  };
+
+  const save_pending = async () => {
     const save_snapshot = pending_save_ref.current;
     pending_save_ref.current = null;
-    save_active_ref.current = true;
     if (selected_date_ref.current === save_snapshot.workout_date) {
       set_save_status(t("저장 중…"));
       set_save_error(save_snapshot.draft_is_stored ? '' : t("기기에 임시 보관할 수 없어 서버 저장을 기다리는 중입니다."));
@@ -133,6 +139,9 @@ export default function WorkoutLogScreen({ user_uuid, initial_workout_date, is_a
         body: { exercise_groups: save_snapshot.normalized_groups },
       });
       did_save = true;
+      window.dispatchEvent(new CustomEvent('workout-log-saved', {
+        detail: { workout_date: save_snapshot.workout_date },
+      }));
       if (save_snapshot.revision === draft_revision_ref.current
         && selected_date_ref.current === save_snapshot.workout_date) {
         const saved_groups = saved_log.exercise_groups || [];
@@ -186,15 +195,16 @@ export default function WorkoutLogScreen({ user_uuid, initial_workout_date, is_a
         }
       }
     } finally {
-      save_active_ref.current = false;
+      save_active_ref.current = null;
     }
     if (pending_save_ref.current) {
-      void flush_save();
+      return flush_save();
     } else if (did_save && save_snapshot.revision === draft_revision_ref.current
       && selected_date_ref.current === save_snapshot.workout_date) {
       set_save_status(t("저장 완료"));
       set_save_error('');
     }
+    return did_save;
   };
 
   const queue_save = (workout_date, next_groups, delay_ms = 350, is_retry = false) => {
@@ -225,6 +235,27 @@ export default function WorkoutLogScreen({ user_uuid, initial_workout_date, is_a
       save_timer_ref.current = setTimeout(() => { void flush_save(); }, delay_ms);
     }
   };
+
+  useImperativeHandle(ref, () => ({
+    async prepare_checkin(workout_date) {
+      if (selected_date_ref.current === workout_date) {
+        if (hydrated_date_ref.current !== workout_date) {
+          throw new Error(t('오늘 운동 기록을 불러오는 중입니다. 잠시 후 다시 시도해 주세요.'));
+        }
+        if (!normalize_groups(exercise_groups_ref.current)) {
+          throw new Error(t('중량과 반복 횟수를 모두 입력한 뒤 다시 저장해 주세요.'));
+        }
+      }
+      if (save_timer_ref.current) clearTimeout(save_timer_ref.current);
+      const did_save = await flush_save();
+      if (selected_date_ref.current === workout_date && !normalize_groups(exercise_groups_ref.current)) {
+        throw new Error(t('중량과 반복 횟수를 모두 입력한 뒤 다시 저장해 주세요.'));
+      }
+      if (!did_save || read_saved_draft(storage_key_for(user_uuid, workout_date))) {
+        throw new Error(t('오늘 운동 기록의 저장이 완료되지 않았습니다. 운동 세트 기록에서 저장 상태를 확인해 주세요.'));
+      }
+    },
+  }));
 
   useEffect(() => {
     if (log_resource.loading || exercises.loading

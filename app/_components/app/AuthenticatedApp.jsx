@@ -35,6 +35,8 @@ export default function AuthenticatedApp({ user, on_unauthorized, on_logout, on_
   const [toast_message, set_toast_message] = useState('');
   const [mutation_error, set_mutation_error] = useState('');
   const mutation_controller = useRef(null);
+  const workout_log_ref = useRef(null);
+  const checkin_preparing_ref = useRef(false);
   const today = useApiResource('/today', `${revision}:${today_revision}`, on_unauthorized);
   const settings = useApiResource('/settings', revision, on_unauthorized);
   const options = useApiResource('/settings/options', revision, on_unauthorized);
@@ -171,9 +173,25 @@ export default function AuthenticatedApp({ user, on_unauthorized, on_logout, on_
       if (!controller.signal.aborted) on_logout(logout_message);
     }
   };
-  const navigate_to = (view) => {
-    if (pending) return;
+  const navigate_to = async (view) => {
+    if (pending || checkin_preparing_ref.current) return;
     set_mutation_error('');
+    if (view === 'checkin') {
+      checkin_preparing_ref.current = true;
+      set_pending(true);
+      try {
+        if (!workout_log_ref.current || !today.data?.workout_date) {
+          throw new Error(t('오늘 운동 기록을 불러오는 중입니다. 잠시 후 다시 시도해 주세요.'));
+        }
+        await workout_log_ref.current.prepare_checkin(today.data.workout_date);
+      } catch (error) {
+        set_mutation_error(error.message);
+        return;
+      } finally {
+        checkin_preparing_ref.current = false;
+        set_pending(false);
+      }
+    }
     set_record_navigation(null);
     set_selected_workout_record(null);
     set_current_view(view);
@@ -204,7 +222,7 @@ export default function AuthenticatedApp({ user, on_unauthorized, on_logout, on_
       </>}
       {current_view === 'record' && <RecordsScreen revision={revision} on_unauthorized={on_unauthorized} initial_tab={record_navigation ? 'list' : 'calendar'} initial_workout_date={record_navigation?.workout_date} focus_record_uuid={record_navigation?.session_uuid} on_open_record={open_workout_record} timezone={settings.data?.timezone || today.data?.timezone} />}
       {current_view === 'record-detail' && selected_workout_record && <WorkoutRecordScreen record={selected_workout_record} revision={revision} on_unauthorized={on_unauthorized} on_back={() => set_current_view('record')} />}
-      <WorkoutLogScreen user_uuid={user.user_uuid} initial_workout_date={today.data?.workout_date} is_active={current_view === 'workout'} catalog_revision={exercise_catalog_revision} on_unauthorized={on_unauthorized} on_open_library={() => navigate_to('workout-library')} on_open_checkin={() => navigate_to('checkin')} on_saved={refresh_today} timezone={settings.data?.timezone || today.data?.timezone} />
+      <WorkoutLogScreen ref={workout_log_ref} user_uuid={user.user_uuid} initial_workout_date={today.data?.workout_date} is_active={current_view === 'workout'} catalog_revision={exercise_catalog_revision} on_unauthorized={on_unauthorized} on_open_library={() => navigate_to('workout-library')} on_open_checkin={() => navigate_to('checkin')} on_saved={refresh_today} timezone={settings.data?.timezone || today.data?.timezone} />
       {current_view === 'workout-library' && <WorkoutScreen on_unauthorized={on_unauthorized} on_back={() => navigate_to('workout')} on_catalog_change={refresh_exercise_catalog} />}
       {current_view === 'challenge' && <CommunityGate on_unauthorized={on_unauthorized}><ChallengeScreen user_uuid={user.user_uuid} is_active={current_view === 'challenge'} on_unauthorized={on_unauthorized} on_back={() => navigate_to('today')} /></CommunityGate>}
       {current_view === 'settings' && <>

@@ -1,9 +1,10 @@
-import { format_workout_date, translate } from './i18n';
+import { exercise_label, format_workout_date, translate } from './i18n';
 import { report_area_label } from './exerciseClassification';
 import { personal_report_changes } from './reportVisibility';
 import { evidence_copy, performance_text, performance_value } from './reportEvidence';
 import { workout_time_method, workout_time_report_lines, workout_time_value } from './workoutTime';
 import { muscle_activity_method, muscle_activity_value } from './anatomy/muscleActivity';
+import { personal_record_method, personal_record_text } from './personalRecords';
 
 const comparison_messages = {
   session_count: '운동일 {0} → {1}일',
@@ -30,7 +31,6 @@ export function personal_report_copy(report, language) {
   const evidence = evidence_copy(insights, language, insights.coverage.completed_count);
   const challenge_parts = [
     challenges.new_areas.length && t('첫 부위 {0}', [challenges.new_areas.length]),
-    challenges.personal_record_areas.length && t('기록 경신 {0}부위', [challenges.personal_record_areas.length]),
   ].filter(Boolean);
   const metrics = [
     performance && (performance.exercise_count > 0 || insights.coverage.completed_count > 0) && { key: 'performance', label: t('동일 조건의 수행 변화'), value: performance_value(performance, language) },
@@ -88,13 +88,17 @@ export function create_report_document(report, language) {
       for (const event of insights.recovery.events) lines.push(`${event.missed_week} → ${event.return_week} | ${t(event.status === 'recovered' ? '복귀 달성' : '운동 재개 · 목표 달성 확인 중')} | ${t('첫 복귀일: {0}', [event.first_return_date])}`);
     } else if (metric.key === 'challenges') {
       for (const area of insights.challenges.new_areas) lines.push(`${t('첫 도전')} | ${report_area_label(area.target_area, language)} | ${area.first_date}`);
-      for (const area of insights.challenges.personal_record_areas) lines.push(`${report_area_label(area.target_area, language)} | ${t('개인 기록을 경신한 종목 {0}개', [area.record_count])}`);
     } else if (metric.key === 'consistency') {
       for (const week of insights.consistency.weeks) lines.push(`${week.week_start} | ${t('운동 {0}/{1}회 · {2}', [week.completed_count, week.target_count, t(week.status === 'kept' ? '목표 달성' : '목표 미달')])}`);
     } else if (metric.key === 'preferences') {
       for (const item of insights.preferences) lines.push(`${report_area_label(item.target_area, language)} | ${preference_text(item, language)}`);
     }
   }
+  lines.push('', t('개인 업적'), t('PR 갱신 {0}종목', [insights.personal_records.length]));
+  for (const record of insights.personal_records) {
+    lines.push(`${exercise_label(record, language)} | ${personal_record_text(record, language)} | ${record.current_best.workout_date}`);
+  }
+  lines.push(t(personal_record_method));
   if (copy.metrics.length) lines.push('', ...copy.method_messages.map((message) => t(message)));
   const text = lines.join('\n');
   const bytes = new TextEncoder().encode(text);
@@ -118,7 +122,7 @@ const method_messages = {
   recent: '부위별 운동일·세트·반복 수와 총중량(중량 × 반복 수)을 비교하고, 두 기간에 기록이 있는 수치 중 달라진 값만 표시합니다.',
   journey: '첫 운동이 기록된 주 또는 월과 선택한 기간을 비교합니다. 첫 기간은 기록을 시작한 시점에 따라 불완전할 수 있습니다.',
   recovery: '목표 미달 후 다음 목표 주에 운동을 재개하면 복귀 진행 중, 완료된 주의 목표를 채우면 복귀 달성입니다. 휴식 목표 주는 건너뜁니다.',
-  challenges: '개인 기록은 선택 기간 이전의 같은 종목·중량 또는 반복 수 조건에서 최고 기록을 넘긴 경우만 부위별로 집계합니다.',
+  challenges: '첫 도전은 선택 기간에 처음으로 세트를 기록한 부위입니다.',
   consistency: '선택 기간에 끝난 목표 주는 출석 수가 같아도 표시합니다. 연속 달성은 비교 이력 기준이며 진행 중인 주와 휴식 주는 추가하지 않습니다.',
   preferences: '운동 취향은 세트를 기록한 운동일 중 해당 부위를 운동한 날의 비중입니다. 여러 부위를 운동하면 합계가 100%를 넘을 수 있습니다.',
 };

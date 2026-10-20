@@ -7,6 +7,7 @@ import { useState } from 'react';
 import useApiResource from '../../_hooks/useApiResource';
 import RequestState from '../ui/RequestState';
 import { format_workout_duration } from '../../_lib/workoutTime';
+import ExercisePersonalBest from '../workout/ExercisePersonalBest';
 
 export default function WorkoutRecordScreen({ record: initial_record, revision, on_unauthorized, on_back }) {
   const { t, language } = useLanguage();
@@ -35,6 +36,7 @@ export default function WorkoutRecordScreen({ record: initial_record, revision, 
       {record.exercise_groups?.length ? <div className="recordDetailGroups">
         {record.exercise_groups.map((group, group_index) => <section className="recordDetailGroup" key={`${exercise_label(group, language)}:${group_index}`}>
           <h3>{exercise_label(group, language)}</h3>
+          <ExercisePersonalBest previous_best={group.previous_best} sets={group.sets} />
           <ul>{group.sets.map((workout_set, set_index) => <li key={`${exercise_label(group, language)}:${set_index}`}>{t("{0}kg × {1}회", [workout_set.weight_kg, workout_set.reps])}</li>)}</ul>
         </section>)}
       </div> : <p className="emptyState">{t("이 기록에 저장된 운동 세트가 없습니다.")}</p>}

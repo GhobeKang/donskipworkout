@@ -6,6 +6,7 @@ import PerformanceEvidence from '../reports/PerformanceEvidence';
 import PersonalGrowthOverview from '../reports/PersonalGrowthOverview';
 import WorkoutTimeEvidence from '../reports/WorkoutTimeEvidence';
 import MuscleActivityReport from '../reports/MuscleActivityReport';
+import PersonalRecords from '../reports/PersonalRecords';
 
 function ComparisonRows({ items }) {
   const { t, language } = useLanguage();
@@ -30,6 +31,7 @@ export default function PersonalReport({ report }) {
       <PersonalGrowthOverview report={report} copy={copy} />
     </header>
     {insights.muscle_activity && <MuscleActivityReport activity={insights.muscle_activity} />}
+    <PersonalRecords records={insights.personal_records} />
     <details className="personalReportDetails">
       <summary>{t('상세 기록과 측정 근거')}</summary>
       <div className="personalReportDetailBody">
@@ -53,7 +55,6 @@ export default function PersonalReport({ report }) {
         </li>)}</ul>}
         {metric.key === 'challenges' && <>
           {challenges.new_areas.length > 0 && <><h4>{t('첫 도전')}</h4><ul className="reportComparisons">{challenges.new_areas.map((area) => <li key={area.target_area}><strong>{report_area_label(area.target_area, language)}</strong><small>{area.first_date}</small></li>)}</ul></>}
-          {challenges.personal_record_areas.length > 0 && <><h4>{t('개인 기록 경신')}</h4><ul className="reportComparisons">{challenges.personal_record_areas.map((area) => <li key={area.target_area}><strong>{report_area_label(area.target_area, language)}</strong><p>{t('개인 기록을 경신한 종목 {0}개', [area.record_count])}</p></li>)}</ul></>}
         </>}
         {metric.key === 'consistency' && <ul className="reportComparisons">{[...consistency.weeks].reverse().map((week) => <li key={week.week_start}>
           <strong>{week.week_start}</strong>

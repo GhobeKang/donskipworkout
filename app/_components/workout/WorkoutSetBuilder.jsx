@@ -1,6 +1,7 @@
 import { exercise_label } from '../../_lib/i18n';
 import { useLanguage } from '../../_hooks/useLanguage';
 import MaterialIcon from '../ui/MaterialIcon';
+import ExercisePersonalBest from './ExercisePersonalBest';
 
 export default function WorkoutSetBuilder({
   exercises,
@@ -31,6 +32,8 @@ export default function WorkoutSetBuilder({
       const group_content_id = `workout-group-content-${group.exercise_source}-${group.exercise_id}`;
       const is_expanded = expanded_exercise_key === exercise_key;
       const previous_sets = group.import_record?.sets || exercise?.last_sets;
+      const weight_hint_id = `workout-weight-hint-${group.exercise_source}-${group.exercise_id}`;
+      const assisted_set_count = group.sets.filter((workout_set) => String(workout_set.weight_kg).startsWith('-')).length;
       return <article className="workoutGroup" id={`workout-group-${group.exercise_source}-${group.exercise_id}`} key={`${group.exercise_source}:${group.exercise_id}`}>
         <div className="workoutGroupHeading">
           <h3>
@@ -42,17 +45,32 @@ export default function WorkoutSetBuilder({
           </h3>
           <button className="workoutGroupRemove" type="button" aria-label={t("{0} 제거", [exercise_name])} disabled={disabled} onClick={() => on_change(exercise_groups.filter((_, index) => index !== group_index))}><MaterialIcon>close</MaterialIcon></button>
         </div>
+        <ExercisePersonalBest previous_best={exercise?.previous_best} sets={group.sets} />
         {group.import_record && <p className="workoutImportSource">{t('{0} 기록 · 최근 같은 부위 운동에서 {1}회 기록', [group.import_record.workout_date, group.import_record.session_count])}</p>}
         <div id={group_content_id} hidden={!is_expanded}>
           <p className="previousSets">{previous_sets?.length ? t('지난 기록 · {0}', [previous_sets.map((workout_set) => t('{0}kg × {1}회', [workout_set.weight_kg, workout_set.reps])).join(' / ')]) : t('첫 세트가 기준이 된다.')}</p>
           <div className="workoutSetLabels"><span>{t("세트")}</span><span>{t("중량 kg")}</span><span>{t("반복 횟수")}</span><span /></div>
           {group.sets.map((workout_set, set_index) => <div className="workoutSetRow" key={set_index}>
             <span>{set_index + 1}</span>
-            <input type="number" inputMode="decimal" min="0" max="999.99" step="0.01" aria-label={t("{0} {1}세트 중량 kg", [exercise_name, set_index + 1])} value={workout_set.weight_kg} disabled={disabled} required onChange={(event) => change_set(group_index, set_index, 'weight_kg', event.target.value)} />
+            <input type="number" inputMode="decimal" min="-999.99" max="999.99" step="0.01" aria-label={t("{0} {1}세트 중량 kg", [exercise_name, set_index + 1])} aria-describedby={Number(workout_set.weight_kg) < 0 ? weight_hint_id : undefined} value={workout_set.weight_kg} disabled={disabled} required onChange={(event) => change_set(group_index, set_index, 'weight_kg', event.target.value)} />
             <input type="number" inputMode="numeric" min="1" max="1000" step="1" aria-label={t("{0} {1}세트 반복 횟수", [exercise_name, set_index + 1])} value={workout_set.reps} disabled={disabled} required onChange={(event) => change_set(group_index, set_index, 'reps', event.target.value)} />
             <button type="button" aria-label={t("{0} {1}세트 삭제", [exercise_name, set_index + 1])} disabled={disabled || group.sets.length === 1} onClick={() => on_change(exercise_groups.map((item, index) => index === group_index ? { ...item, sets: item.sets.filter((_, item_index) => item_index !== set_index) } : item))}><MaterialIcon>remove_circle</MaterialIcon></button>
           </div>)}
           <button className="textButton workoutAddSet" type="button" disabled={disabled || group.sets.length >= 20} onClick={() => on_change(exercise_groups.map((item, index) => index === group_index ? { ...item, sets: [...item.sets, { ...item.sets.at(-1) }] } : item))}>{t("+ 세트 추가")}</button>
+          <details className="workoutWeightOptions">
+            <summary><span>{t('보조 중량 설정')}</span>{assisted_set_count > 0 && <small>{t('{0}세트 적용', [assisted_set_count])}</small>}<MaterialIcon>expand_more</MaterialIcon></summary>
+            <fieldset disabled={disabled}>
+              <legend>{t('보조 중량으로 기록할 세트')}</legend>
+              <div className="workoutAssistedSets">
+                {group.sets.map((workout_set, set_index) => <label className="workoutAssistedSet" key={set_index}>
+                  <input type="checkbox" aria-label={t('{0} {1}세트 보조 중량', [exercise_name, set_index + 1])} aria-describedby={weight_hint_id} checked={String(workout_set.weight_kg).startsWith('-')} disabled={disabled || workout_set.weight_kg === '' || !Number.isFinite(Number(workout_set.weight_kg))} onChange={(event) => change_set(group_index, set_index, 'weight_kg', `${event.target.checked ? '-' : ''}${String(workout_set.weight_kg).replace(/^-/, '')}`)} />
+                  <span>{t('{0}세트', [set_index + 1])}</span>
+                </label>)}
+              </div>
+            </fieldset>
+            <p className="infoText" id={weight_hint_id}>{t('딥스·풀업에서 머신이 덜어 주는 중량입니다. 선택한 세트는 음수로 기록됩니다. 예: 20kg 보조 → -20kg.')}</p>
+            <p className="infoText">{t('맨몸 운동의 실제 부하는 체중 + 입력 중량입니다. 체중을 저장하지 않아 음수 세트는 총 운동량에서 제외하며, 세트와 반복 수에는 포함합니다.')}</p>
+          </details>
         </div>
       </article>;
     })}
