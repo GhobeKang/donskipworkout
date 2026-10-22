@@ -40,7 +40,7 @@ export default function WorkoutRecordScreen({ record: initial_record, revision, 
           <ul>{group.sets.map((workout_set, set_index) => <li key={`${exercise_label(group, language)}:${set_index}`}>{t("{0}kg × {1}회", [workout_set.weight_kg, workout_set.reps])}</li>)}</ul>
         </section>)}
       </div> : <p className="emptyState">{t("이 기록에 저장된 운동 세트가 없습니다.")}</p>}
-      {record.photo_path && <div className="recordDetailPhoto"><SavedPhoto photo_path={record.photo_path} alt={t("{0} 운동 인증 사진", [record.date])} /></div>}
+      {record.photo_path && <div className="recordDetailPhoto"><SavedPhoto photo_path={record.photo_path} workout_date={record.workout_date} alt={t("{0} 운동 인증 사진", [record.date])} /></div>}
     </article>
   </section>;
 }

@@ -35,7 +35,7 @@ export default function CheckinScreen({ session, workout_date, pending, on_back,
 
   return <section className="viewPanel isVisible">
     <header className="pageHeader checkinHeader"><button className="backButton" type="button" onClick={on_back} disabled={pending} aria-label={t("오늘 화면으로 돌아가기")}><MaterialIcon>arrow_back</MaterialIcon></button><div><p className="eyebrow">{t('왔다면, 흔적을 남겨.')}</p><h1>{t('출석 도장, 쾅.')}</h1></div></header>
-    {session?.photo_path && <SavedPhoto photo_path={session.photo_path} />}
+    {session?.photo_path && <SavedPhoto photo_path={session.photo_path} workout_date={session.workout_date || workout_date} />}
     {!is_finished && <>
       <RequestState loading={catalog.loading} error={catalog.error} on_retry={() => set_catalog_revision((value) => value + 1)} />
       {catalog.data && !catalog.error && <PhotoComposer key={`${workout_date}:${catalog_revision}`} catalog={catalog.data} workout_date={workout_date} disabled={pending} on_change={set_photo_selection} />}

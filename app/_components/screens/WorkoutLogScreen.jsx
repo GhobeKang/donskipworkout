@@ -8,6 +8,7 @@ import { api_request } from '../../_lib/api';
 import WorkoutSetBuilder from '../workout/WorkoutSetBuilder';
 import WorkoutFloatingActions from '../workout/WorkoutFloatingActions';
 import AreaWorkoutImportModal from '../workout/AreaWorkoutImportModal';
+import ExerciseResearchModal from '../workout/ExerciseResearchModal';
 import MaterialIcon from '../ui/MaterialIcon';
 import RequestState from '../ui/RequestState';
 
@@ -77,7 +78,7 @@ function read_saved_draft(storage_key) {
   }
 }
 
-export default function WorkoutLogScreen({ ref, user_uuid, initial_workout_date, is_active, catalog_revision, on_unauthorized, on_open_library, on_open_checkin, on_saved, timezone = 'Asia/Seoul' }) {
+export default function WorkoutLogScreen({ ref, user_uuid, initial_workout_date, is_active, catalog_revision, research_revision, on_research_change, on_unauthorized, on_open_library, on_open_checkin, on_saved, timezone = 'Asia/Seoul' }) {
   const { t, localize_message } = useLanguage();
   const [selected_date, set_selected_date] = useState(initial_workout_date || current_workout_date(timezone));
   const initial_date_applied_ref = useRef(Boolean(initial_workout_date));
@@ -86,6 +87,7 @@ export default function WorkoutLogScreen({ ref, user_uuid, initial_workout_date,
   const exercise_groups_ref = useRef(exercise_groups);
   exercise_groups_ref.current = exercise_groups;
   const [area_import_is_open, set_area_import_is_open] = useState(false);
+  const [research_exercise, set_research_exercise] = useState(null);
   const [import_message, set_import_message] = useState('');
   const [expanded_exercise_key, set_expanded_exercise_key] = useState('');
   const [archived_groups, set_archived_groups] = useState([]);
@@ -93,8 +95,9 @@ export default function WorkoutLogScreen({ ref, user_uuid, initial_workout_date,
   const [save_status, set_save_status] = useState('');
   const [save_error, set_save_error] = useState('');
   const api_revision = `${resource_revision}:${catalog_revision}`;
+  const exercise_api_revision = `${api_revision}:${research_revision}`;
   const log_resource = useApiResource(`/sessions/by-date/${selected_date}/sets`, api_revision, on_unauthorized);
-  const exercises = useApiResource(`/exercises?before_date=${selected_date}`, api_revision, on_unauthorized);
+  const exercises = useApiResource(`/exercises?before_date=${selected_date}`, exercise_api_revision, on_unauthorized);
   const hydrated_date_ref = useRef('');
   const hydrated_catalog_revision_ref = useRef(catalog_revision);
   const selected_date_ref = useRef(selected_date);
@@ -114,6 +117,7 @@ export default function WorkoutLogScreen({ ref, user_uuid, initial_workout_date,
 
   useEffect(() => {
     set_area_import_is_open(false);
+    set_research_exercise(null);
     set_import_message('');
   }, [selected_date, is_active]);
 
@@ -260,7 +264,7 @@ export default function WorkoutLogScreen({ ref, user_uuid, initial_workout_date,
   useEffect(() => {
     if (log_resource.loading || exercises.loading
       || log_resource.loaded_revision !== api_revision
-      || exercises.loaded_revision !== api_revision
+      || exercises.loaded_revision !== exercise_api_revision
       || log_resource.data?.workout_date !== selected_date) return;
     const date_needs_hydration = hydrated_date_ref.current !== selected_date;
     const catalog_changed = hydrated_catalog_revision_ref.current !== catalog_revision;
@@ -414,6 +418,7 @@ export default function WorkoutLogScreen({ ref, user_uuid, initial_workout_date,
         expanded_exercise_key={expanded_exercise_key}
         on_change={change_groups}
         on_open_area_import={() => set_area_import_is_open(true)}
+        on_open_research={set_research_exercise}
         on_toggle_exercise={(exercise_key) => set_expanded_exercise_key(
           (current_exercise_key) => current_exercise_key === exercise_key ? '' : exercise_key,
         )}
@@ -422,6 +427,7 @@ export default function WorkoutLogScreen({ ref, user_uuid, initial_workout_date,
       <WorkoutFloatingActions exercises={exercises.data} exercise_groups={exercise_groups} on_add_exercise={add_exercise} on_open_library={on_open_library} />
       {is_active && <AreaWorkoutImportModal is_open={area_import_is_open} workout_date={selected_date} on_import={import_area_exercises} on_close={() => set_area_import_is_open(false)} on_unauthorized={on_unauthorized} />}
     </>}
+    {is_active && research_exercise && <ExerciseResearchModal key={exercise_key_for(research_exercise)} exercise={research_exercise} on_change={on_research_change} on_close={() => set_research_exercise(null)} on_unauthorized={on_unauthorized} />}
     {archived_groups.length > 0 && <section className="workoutBuilder" aria-labelledby="archived-workout-heading">
       <div><h2 id="archived-workout-heading">{t("삭제한 종목의 기록")}</h2><p className="infoText">{t("종목을 삭제해도 저장된 세트 기록은 남습니다.")}</p></div>
       {archived_groups.map((group, group_index) => <article className="workoutGroup" key={`${group.exercise_name}:${group_index}`}>

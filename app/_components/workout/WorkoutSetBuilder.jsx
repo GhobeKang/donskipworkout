@@ -2,6 +2,7 @@ import { exercise_label } from '../../_lib/i18n';
 import { useLanguage } from '../../_hooks/useLanguage';
 import MaterialIcon from '../ui/MaterialIcon';
 import ExercisePersonalBest from './ExercisePersonalBest';
+import ExerciseResearchSummary from './ExerciseResearchSummary';
 
 export default function WorkoutSetBuilder({
   exercises,
@@ -10,6 +11,7 @@ export default function WorkoutSetBuilder({
   on_change,
   on_toggle_exercise,
   on_open_area_import,
+  on_open_research,
   disabled,
 }) {
   const { t, language } = useLanguage();
@@ -46,6 +48,7 @@ export default function WorkoutSetBuilder({
           <button className="workoutGroupRemove" type="button" aria-label={t("{0} 제거", [exercise_name])} disabled={disabled} onClick={() => on_change(exercise_groups.filter((_, index) => index !== group_index))}><MaterialIcon>close</MaterialIcon></button>
         </div>
         <ExercisePersonalBest previous_best={exercise?.previous_best} sets={group.sets} />
+        {exercise && <ExerciseResearchSummary latest_record={exercise.latest_research_record} on_open={() => on_open_research(exercise)} disabled={disabled} />}
         {group.import_record && <p className="workoutImportSource">{t('{0} 기록 · 최근 같은 부위 운동에서 {1}회 기록', [group.import_record.workout_date, group.import_record.session_count])}</p>}
         <div id={group_content_id} hidden={!is_expanded}>
           <p className="previousSets">{previous_sets?.length ? t('지난 기록 · {0}', [previous_sets.map((workout_set) => t('{0}kg × {1}회', [workout_set.weight_kg, workout_set.reps])).join(' / ')]) : t('첫 세트가 기준이 된다.')}</p>

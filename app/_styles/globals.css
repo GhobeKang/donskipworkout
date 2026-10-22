@@ -819,3 +819,26 @@ html[lang="en"] .authScreen h1 { font-size: clamp(28px, 8.2vw, 34px); }
 .challengeWorkoutLogs ol { display: flex; flex-wrap: wrap; gap: 4px 10px; margin: 3px 0; padding: 0; list-style: none; }
 .challengeGrowthMethod { margin-top: 18px; padding-top: 8px; border-top: 1px solid var(--line); font-size: 11px; }
 .challengeGrowthMethod p { margin: 8px 0; color: var(--muted); overflow-wrap: anywhere; }
+
+.exerciseLibraryText { flex: 1; }
+.exerciseResearchSummary { min-width: 0; margin: 8px 0 14px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--bg); }
+.exerciseResearchOpen { display: flex; align-items: center; gap: 6px; min-height: 44px; width: 100%; text-align: left; }
+.exerciseResearchOpen .material-symbols-rounded:last-child { margin-left: auto; }
+.exerciseResearchContent { margin: 8px 0 0; color: var(--white); font-size: 13px; line-height: 1.7; white-space: pre-wrap; overflow-wrap: anywhere; }
+.exerciseResearchLatest { display: inline-block; margin-right: 8px; color: var(--accent-text); font-size: 11px; font-weight: 700; }
+.exerciseResearchHint { margin: 4px 0 0; color: var(--muted); font-size: 12px; }
+.exerciseResearchForm { margin: 20px 0; }
+.exerciseResearchFormActions { display: flex; align-items: center; gap: 12px; margin-top: 12px; }
+.exerciseResearchFormActions > small { margin-right: auto; color: var(--muted); font-size: 12px; }
+.exerciseResearchFormActions .wideButton { width: auto; min-width: 92px; }
+.exerciseResearchListTitle { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 15px; }
+.exerciseResearchListTitle small { color: var(--muted); font-size: 11px; font-weight: 400; }
+.exerciseResearchList { display: grid; gap: 12px; list-style: none; padding: 0; }
+.exerciseResearchList > li { min-width: 0; padding: 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--bg); }
+.exerciseResearchRecordHeading { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.exerciseResearchRecordHeading time { color: var(--muted); font-size: 11px; }
+.exerciseResearchRecordActions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 8px; }
+.exerciseResearchRecordActions button { min-width: 44px; min-height: 44px; }
+.savedPhotoContainer .savedPhoto { margin-bottom: 16px; }
+.savedPhotoExport { gap: 8px; }
+.savedPhotoContainer > p { margin-bottom: 0; overflow-wrap: anywhere; }
