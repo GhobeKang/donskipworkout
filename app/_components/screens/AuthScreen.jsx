@@ -10,7 +10,7 @@ export default function AuthScreen({ on_authenticate, pending, error, on_clear_e
   const [email, set_email] = useState('');
   const [password, set_password] = useState('');
   const [display_name, set_display_name] = useState('');
-  const [country_code, set_country_code] = useState('');
+  const [country_code, set_country_code] = useState(null);
   const [timezone, set_timezone] = useState('Asia/Seoul');
   const [accepted_policy_version, set_accepted_policy_version] = useState('');
   const is_register = auth_mode === 'register';

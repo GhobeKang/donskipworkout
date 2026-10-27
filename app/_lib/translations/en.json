@@ -214,6 +214,8 @@
   "회원가입": "Sign up",
   "국가": "Country",
   "국가 선택": "Select country",
+  "국가 (선택)": "Country (optional)",
+  "선택 안 함": "Not specified",
   "시간대": "Time zone",
   "scheduled_at은 UTC, scheduled_local은 선택한 시간대의 시각입니다.": "scheduled_at is UTC; scheduled_local uses your selected time zone.",
   "운동 요일과 시간은 선택한 시간대 기준입니다. 시간대를 바꾸면 앞으로의 알림에 적용되고 기존 운동 날짜는 유지됩니다.": "Workout days and times use the selected time zone. Changing it updates future reminders while keeping past workout dates.",

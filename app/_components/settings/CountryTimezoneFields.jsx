@@ -28,9 +28,9 @@ export default function CountryTimezoneFields({ country_code, timezone, on_chang
   }, [language, timezone]);
 
   return <div className="localeFields">
-    <label>{t('국가')}
-      <select name="country_code" required value={country_code || ''} onChange={(event) => on_change('country_code', event.target.value)}>
-        <option value="">{t('국가 선택')}</option>
+    <label>{t('국가 (선택)')}
+      <select name="country_code" value={country_code || ''} onChange={(event) => on_change('country_code', event.target.value || null)}>
+        <option value="">{t('선택 안 함')}</option>
         {country_options.map(({ code, name }) => <option key={code} value={code}>{name}</option>)}
       </select>
     </label>
