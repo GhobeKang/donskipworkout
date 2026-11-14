@@ -1,10 +1,11 @@
 import logging
 from datetime import datetime, time, timedelta
+from typing import Literal
 from uuid import UUID, uuid4
 from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, HTTPException, Query, Request
-from sqlalchemy import func, or_, select
+from sqlalchemy import func, select
 
 from .community_policy import community_policy_version
 from .community_safety import require_room_visible
@@ -21,7 +22,7 @@ from .database import (
     pushDevice,
     userAccount,
 )
-from .mentorship_notifications import coaching_notification_categories
+from .notification_inbox import notification_inbox_output
 from .notification_service import device_token_hash, next_allowed_send_at
 from .schemas import (
     challengeNudgeRequest,
@@ -68,34 +69,11 @@ def read_notification_inbox(
     user: userDependency,
     database: databaseDependency,
     limit: int = Query(default=30, ge=1, le=100),
+    before_id: int | None = Query(default=None, gt=0, le=9223372036854775807),
+    scope: Literal['challenge', 'all'] = 'challenge',
 ):
-    rows = database.execute(
-        select(notificationEvent, notificationInbox)
-        .join(notificationInbox, notificationInbox.event_id == notificationEvent.event_id)
-        .outerjoin(challengeRound, challengeRound.round_id == notificationEvent.round_id)
-        .outerjoin(challengeRoom, challengeRoom.room_id == challengeRound.room_id)
-        .where(
-            notificationInbox.user_id == user.user_id,
-            notificationEvent.category.not_in(coaching_notification_categories),
-            or_(notificationEvent.round_id.is_(None), challengeRoom.status != 'cancelled'),
-        )
-        .order_by(notificationEvent.created_at.desc(), notificationEvent.event_id.desc())
-        .limit(limit)
-    ).all()
-    return {
-        'notifications': [
-            {
-                'notification_uuid': event.event_uuid,
-                'category': event.category,
-                'title': event.title,
-                'body': event.body,
-                'created_at': event.created_at.isoformat() + 'Z',
-                'read_at': inbox.read_at.isoformat() + 'Z' if inbox.read_at else None,
-                **event.payload,
-            }
-            for event, inbox in rows
-        ]
-    }
+    # Keep the legacy challenge inbox scoped for already-installed clients.
+    return notification_inbox_output(database, user.user_id, limit, before_id, scope)
 
 
 @router.put('/notifications/inbox/{notification_uuid}/read', status_code=204)
@@ -110,6 +88,7 @@ def mark_notification_read(
         .where(
             notificationEvent.event_uuid == str(notification_uuid),
             notificationInbox.user_id == user.user_id,
+            notificationEvent.recipient_user_id == user.user_id,
         )
         .with_for_update()
     ).first()

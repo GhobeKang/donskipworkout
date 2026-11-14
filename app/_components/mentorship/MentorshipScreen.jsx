@@ -8,7 +8,6 @@ import { useLanguage } from '../../_hooks/useLanguage';
 import MaterialIcon from '../ui/MaterialIcon';
 import RequestState from '../ui/RequestState';
 import MentorWorkspace from './MentorWorkspace';
-import CoachingNotificationSettings from './CoachingNotificationSettings';
 import styles from './Mentorship.module.css';
 
 function MentorRegistration({ on_registered, on_unauthorized }) {
@@ -57,7 +56,7 @@ function RelationshipList({ role, status, on_select, on_unauthorized }) {
   </div>;
 }
 
-export default function MentorshipScreen({ on_unauthorized, on_research_change, initial_relationship_uuid = '', initial_tab = 'messages', notification_status }) {
+export default function MentorshipScreen({ on_unauthorized, on_research_change, initial_relationship_uuid = '', initial_tab = 'messages' }) {
   const { t } = useLanguage();
   const [revision, set_revision] = useState(0);
   const [active_role, set_active_role] = useState('apprentice');
@@ -92,7 +91,6 @@ export default function MentorshipScreen({ on_unauthorized, on_research_change, 
         {copy_notice && <p role="status">{copy_notice}</p>}
       </article>
       <RequestState loading={dashboard.loading} error={dashboard.error} on_retry={retry_count < 2 ? () => { set_retry_count((value) => value + 1); set_revision((value) => value + 1); } : undefined} />
-      <CoachingNotificationSettings status={notification_status} />
       {dashboard.data && !dashboard.error && <>
         <div className={styles.tabs} aria-label={t('코칭 역할')}>
           {[['apprentice', '내 코치'], ['mentor', '코칭 회원']].map(([role, label]) => <button key={role} type="button" aria-pressed={active_role === role} onClick={() => { set_active_role(role); set_show_history(false); }}>{t(label)}{role === 'mentor' ? ` (${dashboard.data.apprentice_count})` : ''}</button>)}

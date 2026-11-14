@@ -56,6 +56,10 @@ img { max-width: 100%; }
 .brandDot { color: var(--accent-text); }
 .settingsButton { display: grid; place-items: center; width: 44px; height: 44px; border: 0; border-radius: 14px; background: transparent; color: var(--muted); }
 .settingsButton[aria-current] { color: var(--accent-text); background: var(--card); }
+.statusActions { display: flex; align-items: center; gap: 8px; flex: none; }
+.notificationButton { position: relative; }
+.notificationBadge { position: absolute; top: 0; right: -2px; display: grid; place-items: center; min-width: 18px; height: 18px; padding: 0 4px; border: 2px solid var(--bg); border-radius: 999px; background: var(--orange); color: var(--on-orange); font-size: 10px; font-weight: 800; line-height: 1; }
+@media (max-width: 350px) { .statusLogoText { font-size: 12px; letter-spacing: 0; } .statusBrand { gap: 6px; } }
 .appContent { padding: 10px var(--layout-side-gap) calc(var(--bottom-nav-height) + env(safe-area-inset-bottom) + 28px); }
 .viewPanel { display: none; }
 .viewPanel.isVisible { display: block; }

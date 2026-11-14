@@ -62,7 +62,7 @@ function RoomDeleteButton({ room, user_is_host, pending, on_delete }) {
   </button>;
 }
 
-export default function ChallengeScreen({ user_uuid, is_active, on_unauthorized, on_back, on_open_mentorship }) {
+export default function ChallengeScreen({ user_uuid, is_active, on_unauthorized, on_back, on_open_mentorship, on_open_notifications, initial_room_uuid = '' }) {
   const { t, localize_message } = useLanguage();
   const [rooms, set_rooms] = useState([]);
   const [selected_room, set_selected_room] = useState(null);
@@ -183,7 +183,7 @@ export default function ChallengeScreen({ user_uuid, is_active, on_unauthorized,
   useEffect(() => {
     if (!is_active || invite_link_handled.current) return;
     const search_params = new URLSearchParams(window.location.search);
-    const notification_room_uuid = search_params.get('room');
+    const notification_room_uuid = initial_room_uuid || search_params.get('room');
     if (notification_room_uuid) {
       invite_link_handled.current = true;
       load_room(notification_room_uuid).then(() => window.history.replaceState({}, '', window.location.pathname));
@@ -197,7 +197,7 @@ export default function ChallengeScreen({ user_uuid, is_active, on_unauthorized,
         if (result) window.history.replaceState({}, '', window.location.pathname);
         else invite_link_handled.current = false;
       });
-  }, [is_active]);
+  }, [is_active, initial_room_uuid]);
 
   useEffect(() => {
     if (!is_active || !selected_room || !['scheduled', 'active', 'settling', 'completed'].includes(selected_room.status)) {
@@ -532,7 +532,7 @@ export default function ChallengeScreen({ user_uuid, is_active, on_unauthorized,
       </article>
     </section>}
     {active_tab === 'inbox' && <section id="challenge-panel-inbox" className="challengeTabPanel challengeInboxPanel" role="tabpanel" aria-labelledby="challenge-tab-inbox">
-      <ChallengeInbox is_active={is_active} on_unauthorized={on_unauthorized} on_open_room={load_room} />
+      <ChallengeInbox on_open_notifications={on_open_notifications} />
       {notification_round_uuid ? <>
         <article className="challengeCard">
           <div className="sectionHeading"><h2>{t('방해 금지 시간 대상 방')}</h2></div>

@@ -1,14 +1,17 @@
 import { useLanguage } from '../../_hooks/useLanguage';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { PushNotifications } from '@capacitor/push-notifications';
 import useApiResource from '../../_hooks/useApiResource';
 import useCoachingNotifications from '../../_hooks/useCoachingNotifications';
+import useNotificationInbox from '../../_hooks/useNotificationInbox';
+import { notification_destination } from '../../_lib/notificationNavigation';
 import { api_request } from '../../_lib/api';
 import { enable_push_notifications, refresh_push_registration } from '../../_lib/pushNotifications';
 import { take_coaching_notification_open } from '../../_lib/coachingNotifications';
 import BottomNavigation from '../layout/BottomNavigation';
 import StatusBar from '../layout/StatusBar';
+import NotificationInbox from '../notifications/NotificationInbox';
 import CheckinScreen from '../screens/CheckinScreen';
 import RecordsScreen from '../screens/RecordsScreen';
 import SettingsScreen from '../screens/SettingsScreen';
@@ -38,6 +41,9 @@ export default function AuthenticatedApp({ user, on_unauthorized, on_logout, on_
   const [exercise_research_revision, set_exercise_research_revision] = useState(0);
   const [coaching_navigation, set_coaching_navigation] = useState(null);
   const [coaching_research, set_coaching_research] = useState(null);
+  const [notifications_open, set_notifications_open] = useState(false);
+  const [challenge_navigation, set_challenge_navigation] = useState(null);
+  const notification_inbox = useNotificationInbox({ user_uuid: user.user_uuid, is_open: notifications_open, on_unauthorized });
   const coaching_notification_status = useCoachingNotifications({ user_uuid: user.user_uuid, language, on_unauthorized });
   const last_saved_timer_revision = useRef('');
   const [pending, set_pending] = useState(false);
@@ -53,22 +59,29 @@ export default function AuthenticatedApp({ user, on_unauthorized, on_logout, on_
   const refresh_today = () => set_today_revision((value) => value + 1);
   const refresh_exercise_catalog = () => set_exercise_catalog_revision((value) => value + 1);
   const refresh_exercise_research = () => set_exercise_research_revision((value) => value + 1);
+  const open_notification_destination = useCallback((notification, destination) => {
+    if (!destination) return;
+    set_notifications_open(false);
+    set_mutation_error('');
+    set_record_navigation(null);
+    set_selected_workout_record(null);
+    set_coaching_research(destination.research || null);
+    set_coaching_navigation(destination.coaching || null);
+    set_challenge_navigation(destination.room_uuid ? { room_uuid: destination.room_uuid, notification_uuid: notification.notification_uuid } : null);
+    if (destination.research || destination.coaching?.target === 'research') set_exercise_research_revision((value) => value + 1);
+    set_current_view(destination.view);
+  }, []);
   useEffect(() => {
     const research_updated = () => set_exercise_research_revision((value) => value + 1);
     const open_coaching_notification = () => {
       const notification = take_coaching_notification_open(user.user_uuid);
       if (!notification) return;
-      set_mutation_error('');
       research_updated();
-      if (notification.target === 'own_research') {
-        set_current_view('workout');
-        set_coaching_research({ ...notification, name: notification.exercise_name || '연구일지' });
-      } else {
-        set_coaching_research(null);
-        set_coaching_navigation(notification);
-        set_current_view('mentorship');
-      }
-      api_request(`/notifications/inbox/${notification.notification_uuid}/read`, { method: 'PUT', body: {} }).catch((error) => {
+      open_notification_destination(notification, notification_destination({ ...notification,
+        category: notification.target === 'messages' ? 'mentor_message' : 'mentor_research_edit' }));
+      api_request(`/notifications/inbox/${notification.notification_uuid}/read`, { method: 'PUT', body: {} }).then(() => {
+        window.dispatchEvent(new Event('notification-inbox-changed'));
+      }).catch((error) => {
         if (error.status === 401) on_unauthorized();
         else console.error('[COACHING_LOCAL_NOTIFICATION_READ_ERROR]', error.status || error.name);
       });
@@ -80,7 +93,7 @@ export default function AuthenticatedApp({ user, on_unauthorized, on_logout, on_
       window.removeEventListener('coaching-notification-open', open_coaching_notification);
       window.removeEventListener('coaching-research-updated', research_updated);
     };
-  }, [user.user_uuid, on_unauthorized]);
+  }, [user.user_uuid, on_unauthorized, open_notification_destination]);
   useEffect(() => {
     // Drop retired location requests without changing manual timer actions or records.
     try {
@@ -234,6 +247,7 @@ export default function AuthenticatedApp({ user, on_unauthorized, on_logout, on_
     set_record_navigation(null);
     set_coaching_navigation(null);
     set_coaching_research(null);
+    set_challenge_navigation(null);
     set_selected_workout_record(null);
     set_current_view(view);
   };
@@ -252,7 +266,8 @@ export default function AuthenticatedApp({ user, on_unauthorized, on_logout, on_
   };
   const today_pending = pending || today.loading || Boolean(today.error);
   return <div className="phoneShell">
-    <StatusBar on_open_settings={() => navigate_to('settings')} settings_active={current_view === 'settings'} disabled={pending} />
+    <StatusBar on_open_settings={() => navigate_to('settings')} settings_active={current_view === 'settings'} disabled={pending}
+      on_open_notifications={() => set_notifications_open(true)} unread_count={notification_inbox.unread_count} notifications_open={notifications_open} />
     <main className="appContent" aria-busy={pending}>
       {mutation_error && <div className="requestState" role="alert"><p>{localize_message(mutation_error)}</p><button className="textButton" onClick={() => set_mutation_error('')}>{t("닫기")}</button></div>}
       {(current_view === 'today' || current_view === 'checkin') && <>
@@ -265,8 +280,8 @@ export default function AuthenticatedApp({ user, on_unauthorized, on_logout, on_
       {current_view === 'record-detail' && selected_workout_record && <WorkoutRecordScreen record={selected_workout_record} revision={revision} on_unauthorized={on_unauthorized} on_back={() => set_current_view('record')} />}
       <WorkoutLogScreen ref={workout_log_ref} user_uuid={user.user_uuid} initial_workout_date={today.data?.workout_date} is_active={current_view === 'workout'} catalog_revision={exercise_catalog_revision} research_revision={exercise_research_revision} on_research_change={refresh_exercise_research} on_unauthorized={on_unauthorized} on_open_library={() => navigate_to('workout-library')} on_open_checkin={() => navigate_to('checkin')} on_saved={refresh_today} timezone={settings.data?.timezone || today.data?.timezone} />
       {current_view === 'workout-library' && <WorkoutScreen on_unauthorized={on_unauthorized} on_back={() => navigate_to('workout')} on_catalog_change={refresh_exercise_catalog} on_research_change={refresh_exercise_research} />}
-      {current_view === 'challenge' && <CommunityGate on_unauthorized={on_unauthorized}><ChallengeScreen user_uuid={user.user_uuid} is_active={current_view === 'challenge'} on_unauthorized={on_unauthorized} on_back={() => navigate_to('today')} on_open_mentorship={() => navigate_to('mentorship')} /></CommunityGate>}
-      {current_view === 'mentorship' && <CommunityGate on_unauthorized={on_unauthorized}><MentorshipScreen key={coaching_navigation?.notification_uuid || 'coaching-home'} initial_relationship_uuid={coaching_navigation?.relationship_uuid} initial_tab={coaching_navigation?.target} notification_status={coaching_notification_status} on_unauthorized={on_unauthorized} on_research_change={refresh_exercise_research} /></CommunityGate>}
+      {current_view === 'challenge' && <CommunityGate on_unauthorized={on_unauthorized}><ChallengeScreen key={challenge_navigation?.notification_uuid || 'challenge-home'} initial_room_uuid={challenge_navigation?.room_uuid} user_uuid={user.user_uuid} is_active={current_view === 'challenge'} on_unauthorized={on_unauthorized} on_back={() => navigate_to('today')} on_open_mentorship={() => navigate_to('mentorship')} on_open_notifications={() => set_notifications_open(true)} /></CommunityGate>}
+      {current_view === 'mentorship' && <CommunityGate on_unauthorized={on_unauthorized}><MentorshipScreen key={coaching_navigation?.notification_uuid || 'coaching-home'} initial_relationship_uuid={coaching_navigation?.relationship_uuid} initial_tab={coaching_navigation?.target} on_unauthorized={on_unauthorized} on_research_change={refresh_exercise_research} /></CommunityGate>}
       {coaching_research && <ExerciseResearchModal key={coaching_research.notification_uuid} exercise={coaching_research} on_change={refresh_exercise_research} on_close={() => set_coaching_research(null)} on_unauthorized={on_unauthorized} />}
       {current_view === 'settings' && <>
         <div className="accountBar"><span>{user.display_name || t("운동 사용자")}{t("님")}</span><button className="quietButton" type="button" disabled={pending} onClick={logout}>{t("전체 기기 로그아웃")}</button></div>
@@ -281,6 +296,7 @@ export default function AuthenticatedApp({ user, on_unauthorized, on_logout, on_
       </>}
     </main>
     <BottomNavigation current_view={current_view === 'record-detail' ? 'record' : current_view} on_navigate={navigate_to} disabled={pending} />
+    {notifications_open && <NotificationInbox inbox={notification_inbox} on_close={() => set_notifications_open(false)} on_open_notification={open_notification_destination} />}
     <Toast message={toast_message} />
   </div>;
 }

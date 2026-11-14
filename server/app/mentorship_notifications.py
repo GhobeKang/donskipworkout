@@ -101,18 +101,22 @@ def mark_coaching_message_notifications_read(database, relationship, user_id, me
     ).values(read_at=utc_now()))
 
 
-def coaching_notification_feed(database, user_id, after_id):
+def active_coaching_relationship_uuids(user_id):
     counterpart_id = case(
         (mentorRelationship.mentor_user_id == user_id, mentorRelationship.apprentice_user_id),
         else_=mentorRelationship.mentor_user_id,
     )
-    active_uuids = list(database.scalars(select(mentorRelationship.relationship_uuid).join(
+    return select(mentorRelationship.relationship_uuid).join(
         userCredential, userCredential.user_id == counterpart_id,
     ).where(
         or_(mentorRelationship.mentor_user_id == user_id,
             mentorRelationship.apprentice_user_id == user_id),
         mentorRelationship.ended_at.is_(None), userCredential.is_active.is_(True),
-    )))
+    )
+
+
+def coaching_notification_feed(database, user_id, after_id):
+    active_uuids = list(database.scalars(active_coaching_relationship_uuids(user_id)))
     latest_cursor = database.scalar(select(func.max(notificationEvent.event_id)).where(
         notificationEvent.recipient_user_id == user_id,
         notificationEvent.category.in_(coaching_notification_categories),

@@ -25,6 +25,7 @@ export default function MentorConversation({ relationship, on_unauthorized }) {
     end_ref.current?.scrollIntoView({ block: 'nearest' });
     set_read_error('');
     api_request(`${path}/read`, { method: 'POST', body: { message_id: latest_message_id }, signal: controller.signal })
+      .then(() => { if (!controller.signal.aborted) window.dispatchEvent(new Event('notification-inbox-changed')); })
       .catch((error) => {
         if (controller.signal.aborted) return;
         if (error.status === 401) on_unauthorized();
