@@ -1008,9 +1008,48 @@ Android·iOS 앱은 새 메시지와 연구일지 수정을 로컬 알림으로 
 계정 삭제 시 관련 관계와 메시지, 본인 연구일지와 이력을 삭제하고 다른 사람의 일지에 남긴
 수정 이력에서는 수정자 계정 참조를 제거합니다.
 
-배포 전에 `supabase/migrations/20261114135213_mentor_apprentice_system.sql`을 검토하고
+배포 전에 `supabase/migrations/20261114151245_mentor_apprentice_system.sql`을 검토하고
 대상 PostgreSQL에 먼저 적용해야 합니다. 이후 API와 프런트엔드를 함께 배포합니다.
 이 마이그레이션은 비공개 `attendance` 스키마에 관계·메시지·수정 이력 테이블과 연구일지
 버전 컬럼을 추가합니다. RLS를 켜고 `attendance_api` 역할만 허용하며 Data API 역할에는
 권한을 부여하지 않습니다. 코드 작업만으로 운영 DB에 자동 적용되지 않습니다.
 커뮤니티 정책 버전은 `2026-11-14`이며 코칭 진입 시 최신 정책 동의가 필요합니다.
+
+### 코칭 운영 배포 (2026-11-15)
+
+운영 Supabase `deradera`의 비공개 `attendance` 스키마에 다음 마이그레이션을 적용했습니다.
+
+- `20261114151245_mentor_apprentice_system`: 코칭 관계·메시지·연구일지 수정 이력과 버전,
+  코칭 알림·신고를 허용하는 기존 CHECK 제약조건 확장. 기존 알림·신고 유형은 유지합니다.
+- `20261114152233_repair_account_deletion_backend_privileges`: 사용자 승인 후 백엔드 역할에
+  `coaching_questions`, `coaching_replies`, `weekly_promise_changes` DELETE와
+  `coaching_replies` UPDATE를 추가했습니다. 기존 탈퇴·신고 처리의 누락 권한을 보완하며
+  공개 Data API 권한과 RLS 정책은 변경하지 않습니다.
+
+API 이미지 `ghobekang/donskipworkout-api:coaching-20261115-6d503cdb30`을
+2026-11-15 00:25 KST에 `dontskip_attendance_api_1`에 배포했습니다.
+기존 운영 이미지의 고정 의존성을 사용해 서버 소스를 교체한 이미지이며 운영 호스트에
+보관합니다. Docker Hub에는 이번 이미지를 게시하지 않았습니다.
+HTTPS `/health` 200, 인증 없는 코칭·알림·세션 요청 401, 컨테이너 healthy를 확인했습니다.
+전체 서버 소스 해시와 환경설정·TLS 마운트·볼륨 유지, 다른 컨테이너의 실행 상태도 비교했습니다.
+
+실제 `attendance_api` 권한으로 코치 연결·권한 회수·메시지 중복 방지·연구일지 수정 이력과
+버전 충돌·양방향 로컬 알림 피드·신고·주간/월간 리포트·계정 삭제 등 35개 항목을 통과했습니다.
+검증용 계정과 데이터는 외부 트랜잭션 롤백으로 제거했고 기존 회원 3명과 연구일지 19건을
+유지했습니다. 새 테이블은 RLS를 사용하며 `anon`/`authenticated`에 조회 권한이 없습니다.
+모델에도 알림·신고 CHECK를 추가하여 SQLite 검증과 실제 PostgreSQL의 차이를 줄였습니다.
+
+재시작 때 인증서 디렉터리 `/opt/donskipworkout/certs`가 root 그룹의 0750인 문제를 발견했습니다.
+개인키는 이미 API 그룹 10001의 0640이었으므로 디렉터리 그룹만 10001로 맞췄습니다.
+디렉터리 모드·개인키 내용/권한과 인증서 검증은 유지하며 후보 이미지의 TLS 파일 로드도 확인했습니다.
+인증서 갱신 시에도 디렉터리의 그룹 접근 권한을 유지해야 합니다.
+
+복구용 이미지·환경·Compose 설정과 배포 기록은 운영 호스트의
+`/home/dontskip/deployments/coaching-20261115-6d503cdb30`에 보관합니다.
+이전 이미지는 `ghobekang/donskipworkout-api:before-coaching-20261115`입니다.
+API를 복구할 때 환경 백업을 복원하고 대상 API 컨테이너만 재생성하며 볼륨을 삭제하지 않습니다.
+추가된 DB 스키마는 이전 API와 호환되므로 이미지 복구 시 테이블이나 코칭 데이터를 삭제하지 않습니다.
+
+이번 작업은 DB와 API 배포입니다. 확인용 `http://localhost:3000` 웹은 운영 API에 연결하며
+실제 계정으로 로그인합니다. 스토어 앱에 코칭 화면·기기 로컬 알림을 반영하려면 새 앱 번들의
+별도 빌드와 배포가 필요합니다. 이번 서버 배포만으로 설치된 기존 앱 번들이 바뀌지는 않습니다.

@@ -524,6 +524,10 @@ class userBlock(databaseBase):
 
 class contentReport(databaseBase):
     __tablename__ = 'content_reports'
+    __table_args__ = (CheckConstraint(
+        "content_type IN ('user', 'room', 'question', 'reply', 'mentor_message')",
+        name='content_reports_content_type_check',
+    ),)
     report_id: Mapped[int] = mapped_column(id_type, primary_key=True, autoincrement=True)
     report_uuid: Mapped[str] = mapped_column(String(36), unique=True)
     reporter_user_id: Mapped[int] = mapped_column(id_type, ForeignKey('users.user_id'))
@@ -586,6 +590,11 @@ class pushDevice(databaseBase):
 
 class notificationEvent(databaseBase):
     __tablename__ = 'notification_events'
+    __table_args__ = (CheckConstraint(
+        "category IN ('rulebook_published', 'host_nudge', 'round_update', 'round_result', "
+        "'workout_reminder', 'push_test', 'mentor_message', 'mentor_research_edit')",
+        name='notification_events_category_check',
+    ),)
     event_id: Mapped[int] = mapped_column(id_type, primary_key=True, autoincrement=True)
     event_uuid: Mapped[str] = mapped_column(String(36), unique=True)
     event_key: Mapped[str] = mapped_column(String(200), unique=True)
