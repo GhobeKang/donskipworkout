@@ -20,6 +20,7 @@ from sqlalchemy import (
     create_engine,
     event,
     func,
+    text,
 )
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.engine import URL
@@ -142,6 +143,7 @@ class exerciseResearchRecord(databaseBase):
         CheckConstraint('length(trim(content)) > 0', name='exercise_research_records_content_check'),
         Index('exercise_research_records_custom_idx', 'user_id', 'exercise_id', 'created_at', 'record_id'),
         Index('exercise_research_records_shared_idx', 'user_id', 'shared_exercise_id', 'created_at', 'record_id'),
+        Index('exercise_research_records_editor_idx', 'updated_by_user_id'),
     )
     record_id: Mapped[int] = mapped_column(id_type, primary_key=True, autoincrement=True)
     user_id: Mapped[int] = mapped_column(id_type, ForeignKey('users.user_id', ondelete='CASCADE'))
@@ -153,6 +155,74 @@ class exerciseResearchRecord(databaseBase):
     )
     content: Mapped[str] = mapped_column(String(2000))
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())
+    revision: Mapped[int] = mapped_column(Integer, default=1, server_default='1')
+    updated_at: Mapped[datetime | None] = mapped_column(DateTime)
+    updated_by_user_id: Mapped[int | None] = mapped_column(
+        id_type, ForeignKey('users.user_id', ondelete='SET NULL')
+    )
+
+
+class exerciseResearchRevision(databaseBase):
+    __tablename__ = 'exercise_research_revisions'
+    __table_args__ = (
+        UniqueConstraint('record_id', 'revision'),
+        Index('exercise_research_revisions_editor_idx', 'editor_user_id'),
+    )
+    revision_id: Mapped[int] = mapped_column(id_type, primary_key=True, autoincrement=True)
+    record_id: Mapped[int] = mapped_column(
+        id_type, ForeignKey('exercise_research_records.record_id', ondelete='CASCADE')
+    )
+    revision: Mapped[int] = mapped_column(Integer)
+    editor_user_id: Mapped[int | None] = mapped_column(
+        id_type, ForeignKey('users.user_id', ondelete='SET NULL')
+    )
+    previous_content: Mapped[str] = mapped_column(String(2000))
+    content: Mapped[str] = mapped_column(String(2000))
+    created_at: Mapped[datetime] = mapped_column(DateTime)
+
+
+class mentorRelationship(databaseBase):
+    __tablename__ = 'mentor_relationships'
+    __table_args__ = (
+        CheckConstraint('mentor_user_id <> apprentice_user_id', name='mentor_no_self_check'),
+        Index('mentor_one_active_apprentice_idx', 'apprentice_user_id', unique=True,
+              postgresql_where=text('ended_at IS NULL'), sqlite_where=text('ended_at IS NULL')),
+        Index('mentor_relationship_mentor_idx', 'mentor_user_id', 'relationship_id'),
+        Index('mentor_relationship_apprentice_idx', 'apprentice_user_id', 'relationship_id'),
+    )
+    relationship_id: Mapped[int] = mapped_column(id_type, primary_key=True, autoincrement=True)
+    relationship_uuid: Mapped[str] = mapped_column(String(36), unique=True)
+    mentor_user_id: Mapped[int] = mapped_column(
+        id_type, ForeignKey('users.user_id', ondelete='CASCADE')
+    )
+    apprentice_user_id: Mapped[int] = mapped_column(
+        id_type, ForeignKey('users.user_id', ondelete='CASCADE')
+    )
+    mentor_read_message_id: Mapped[int] = mapped_column(BigInteger, default=0)
+    apprentice_read_message_id: Mapped[int] = mapped_column(BigInteger, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime)
+    ended_at: Mapped[datetime | None] = mapped_column(DateTime)
+
+
+class mentorMessage(databaseBase):
+    __tablename__ = 'mentor_messages'
+    __table_args__ = (
+        UniqueConstraint('relationship_id', 'sender_user_id', 'request_id'),
+        Index('mentor_messages_relationship_idx', 'relationship_id', 'message_id'),
+        Index('mentor_messages_sender_idx', 'sender_user_id', 'created_at'),
+        CheckConstraint('length(trim(body)) > 0', name='mentor_message_body_check'),
+    )
+    message_id: Mapped[int] = mapped_column(id_type, primary_key=True, autoincrement=True)
+    relationship_id: Mapped[int] = mapped_column(
+        id_type, ForeignKey('mentor_relationships.relationship_id', ondelete='CASCADE')
+    )
+    sender_user_id: Mapped[int] = mapped_column(
+        id_type, ForeignKey('users.user_id', ondelete='CASCADE')
+    )
+    request_id: Mapped[str] = mapped_column(String(36))
+    body: Mapped[str] = mapped_column(String(2000))
+    is_removed: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime)
 
 
 class userSharedExerciseProgress(databaseBase):

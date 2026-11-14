@@ -5,7 +5,7 @@ from fastapi import Depends, HTTPException
 from .database import userAccount
 from .security import userDependency
 
-community_policy_version = '2026-10-18'
+community_policy_version = '2026-11-14'
 community_policy_sections = [
     {
         'title': '이용약관과 커뮤니티 이용 정책',
@@ -43,13 +43,19 @@ community_policy_sections = [
         'title_en': 'Workout records, sharing and use of the service',
         'body': '챌린지에서는 표시 이름과 출석·평가 결과가 참가자에게, 종료 후 상세 성장 리포트가 '
         '방장에게 표시될 수 있습니다. 코칭 대화는 작성자와 수신 방장 사이에 제공되며 신고하면 '
-        '신고 대상 내용이 운영자에게 전달됩니다. 운동 기록·코칭은 의료 진단이나 치료를 대신하지 않습니다. '
+        '신고 대상 내용이 운영자에게 전달됩니다. 코치를 등록하면 연구일지 전체와 운동 리포트를 '
+        '코치에게 공유하고 연구일지 수정 권한을 부여합니다. 코치의 수정은 이력으로 남습니다. '
+        '양쪽 모두 관계를 해제할 수 있으며 이후 기록 접근과 새 메시지 전송은 중단되고 기존 대화는 '
+        '당사자가 조회할 수 있습니다. 운동 기록·코칭은 의료 진단이나 치료를 대신하지 않습니다. '
         '계정은 설정에서 삭제할 수 있고, 정책이 바뀌면 변경된 내용을 확인하고 동의한 후 커뮤니티에 '
         '참여해야 합니다. 삭제·신고 기능을 악용하거나 타인의 계정을 이용해서는 안 됩니다.',
         'body_en': 'Challenge participants can see your display name, attendance and evaluation results. '
         'Hosts may see detailed growth reports after the challenge ends. Coaching is shared with the '
         'author and receiving host; reported content is disclosed to moderators for review. Workout '
-        'records and coaching do not replace medical diagnosis or treatment. You can delete your '
+        'records and coaching do not replace medical diagnosis or treatment. Registering a coach '
+        'shares all research notes and workout reports with them and grants note editing access. '
+        'Edits are recorded. Either person can end the relationship, revoking record access and new '
+        'messages while keeping the existing conversation readable by both participants. You can delete your '
         'account in Settings. Updated community terms require renewed acceptance before participation. '
         'Do not misuse safety features or use another person’s account.',
     },

@@ -21,6 +21,7 @@ from .database import (
     pushDevice,
     userAccount,
 )
+from .mentorship_notifications import coaching_notification_categories
 from .notification_service import device_token_hash, next_allowed_send_at
 from .schemas import (
     challengeNudgeRequest,
@@ -75,6 +76,7 @@ def read_notification_inbox(
         .outerjoin(challengeRoom, challengeRoom.room_id == challengeRound.room_id)
         .where(
             notificationInbox.user_id == user.user_id,
+            notificationEvent.category.not_in(coaching_notification_categories),
             or_(notificationEvent.round_id.is_(None), challengeRoom.status != 'cancelled'),
         )
         .order_by(notificationEvent.created_at.desc(), notificationEvent.event_id.desc())

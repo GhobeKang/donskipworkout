@@ -21,6 +21,9 @@ from .database import (
     contentReport,
     exerciseItem,
     exerciseResearchRecord,
+    exerciseResearchRevision,
+    mentorMessage,
+    mentorRelationship,
     notificationEvent,
     notificationInbox,
     notificationOutbox,
@@ -65,6 +68,26 @@ def delete_account_data(database, user):
     # Account row locks serialize deletion with operations that insert FK-linked data.
     database.scalar(select(userAccount).where(userAccount.user_id == user_id).with_for_update())
     session_ids = select(workoutSession.session_id).where(workoutSession.user_id == user_id)
+    relationship_ids = select(mentorRelationship.relationship_id).where(or_(
+        mentorRelationship.mentor_user_id == user_id,
+        mentorRelationship.apprentice_user_id == user_id,
+    ))
+    database.execute(delete(mentorMessage).where(mentorMessage.relationship_id.in_(relationship_ids)))
+    database.execute(delete(mentorRelationship).where(
+        mentorRelationship.relationship_id.in_(relationship_ids),
+    ))
+    research_ids = select(exerciseResearchRecord.record_id).where(
+        exerciseResearchRecord.user_id == user_id,
+    )
+    database.execute(delete(exerciseResearchRevision).where(
+        exerciseResearchRevision.record_id.in_(research_ids),
+    ))
+    database.execute(update(exerciseResearchRevision).where(
+        exerciseResearchRevision.editor_user_id == user_id,
+    ).values(editor_user_id=None))
+    database.execute(update(exerciseResearchRecord).where(
+        exerciseResearchRecord.updated_by_user_id == user_id,
+    ).values(updated_by_user_id=None))
     photos = database.scalars(select(workoutPhoto).where(
         workoutPhoto.session_id.in_(session_ids),
     )).all()

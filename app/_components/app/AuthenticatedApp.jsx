@@ -3,8 +3,10 @@ import { useEffect, useRef, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { PushNotifications } from '@capacitor/push-notifications';
 import useApiResource from '../../_hooks/useApiResource';
+import useCoachingNotifications from '../../_hooks/useCoachingNotifications';
 import { api_request } from '../../_lib/api';
 import { enable_push_notifications, refresh_push_registration } from '../../_lib/pushNotifications';
+import { take_coaching_notification_open } from '../../_lib/coachingNotifications';
 import BottomNavigation from '../layout/BottomNavigation';
 import StatusBar from '../layout/StatusBar';
 import CheckinScreen from '../screens/CheckinScreen';
@@ -15,6 +17,9 @@ import WorkoutLogScreen from '../screens/WorkoutLogScreen';
 import WorkoutRecordScreen from '../screens/WorkoutRecordScreen';
 import WorkoutScreen from '../screens/WorkoutScreen';
 import ChallengeScreen from '../challenge/ChallengeScreen';
+import MentorshipScreen from '../mentorship/MentorshipScreen';
+import CoachingNotificationSettings from '../mentorship/CoachingNotificationSettings';
+import ExerciseResearchModal from '../workout/ExerciseResearchModal';
 import RequestState from '../ui/RequestState';
 import Toast from '../ui/Toast';
 import LanguageSelector from '../settings/LanguageSelector';
@@ -31,6 +36,9 @@ export default function AuthenticatedApp({ user, on_unauthorized, on_logout, on_
   const [today_revision, set_today_revision] = useState(0);
   const [exercise_catalog_revision, set_exercise_catalog_revision] = useState(0);
   const [exercise_research_revision, set_exercise_research_revision] = useState(0);
+  const [coaching_navigation, set_coaching_navigation] = useState(null);
+  const [coaching_research, set_coaching_research] = useState(null);
+  const coaching_notification_status = useCoachingNotifications({ user_uuid: user.user_uuid, language, on_unauthorized });
   const last_saved_timer_revision = useRef('');
   const [pending, set_pending] = useState(false);
   const [toast_message, set_toast_message] = useState('');
@@ -45,6 +53,34 @@ export default function AuthenticatedApp({ user, on_unauthorized, on_logout, on_
   const refresh_today = () => set_today_revision((value) => value + 1);
   const refresh_exercise_catalog = () => set_exercise_catalog_revision((value) => value + 1);
   const refresh_exercise_research = () => set_exercise_research_revision((value) => value + 1);
+  useEffect(() => {
+    const research_updated = () => set_exercise_research_revision((value) => value + 1);
+    const open_coaching_notification = () => {
+      const notification = take_coaching_notification_open(user.user_uuid);
+      if (!notification) return;
+      set_mutation_error('');
+      research_updated();
+      if (notification.target === 'own_research') {
+        set_current_view('workout');
+        set_coaching_research({ ...notification, name: notification.exercise_name || '연구일지' });
+      } else {
+        set_coaching_research(null);
+        set_coaching_navigation(notification);
+        set_current_view('mentorship');
+      }
+      api_request(`/notifications/inbox/${notification.notification_uuid}/read`, { method: 'PUT', body: {} }).catch((error) => {
+        if (error.status === 401) on_unauthorized();
+        else console.error('[COACHING_LOCAL_NOTIFICATION_READ_ERROR]', error.status || error.name);
+      });
+    };
+    window.addEventListener('coaching-notification-open', open_coaching_notification);
+    window.addEventListener('coaching-research-updated', research_updated);
+    open_coaching_notification();
+    return () => {
+      window.removeEventListener('coaching-notification-open', open_coaching_notification);
+      window.removeEventListener('coaching-research-updated', research_updated);
+    };
+  }, [user.user_uuid, on_unauthorized]);
   useEffect(() => {
     // Drop retired location requests without changing manual timer actions or records.
     try {
@@ -74,6 +110,7 @@ export default function AuthenticatedApp({ user, on_unauthorized, on_logout, on_
   useEffect(() => {
     let disposed = false;
     enable_push_notifications({user_uuid: user.user_uuid, language}).then((result) => {
+      if (!disposed) window.dispatchEvent(new Event('coaching-notifications-refresh'));
       if (!disposed && result.reason === 'denied') set_toast_message(t('푸시 알림을 받으려면 알림 권한이 필요합니다.'));
     }).catch((error) => {
       if (disposed) return;
@@ -195,6 +232,8 @@ export default function AuthenticatedApp({ user, on_unauthorized, on_logout, on_
       }
     }
     set_record_navigation(null);
+    set_coaching_navigation(null);
+    set_coaching_research(null);
     set_selected_workout_record(null);
     set_current_view(view);
   };
@@ -226,13 +265,17 @@ export default function AuthenticatedApp({ user, on_unauthorized, on_logout, on_
       {current_view === 'record-detail' && selected_workout_record && <WorkoutRecordScreen record={selected_workout_record} revision={revision} on_unauthorized={on_unauthorized} on_back={() => set_current_view('record')} />}
       <WorkoutLogScreen ref={workout_log_ref} user_uuid={user.user_uuid} initial_workout_date={today.data?.workout_date} is_active={current_view === 'workout'} catalog_revision={exercise_catalog_revision} research_revision={exercise_research_revision} on_research_change={refresh_exercise_research} on_unauthorized={on_unauthorized} on_open_library={() => navigate_to('workout-library')} on_open_checkin={() => navigate_to('checkin')} on_saved={refresh_today} timezone={settings.data?.timezone || today.data?.timezone} />
       {current_view === 'workout-library' && <WorkoutScreen on_unauthorized={on_unauthorized} on_back={() => navigate_to('workout')} on_catalog_change={refresh_exercise_catalog} on_research_change={refresh_exercise_research} />}
-      {current_view === 'challenge' && <CommunityGate on_unauthorized={on_unauthorized}><ChallengeScreen user_uuid={user.user_uuid} is_active={current_view === 'challenge'} on_unauthorized={on_unauthorized} on_back={() => navigate_to('today')} /></CommunityGate>}
+      {current_view === 'challenge' && <CommunityGate on_unauthorized={on_unauthorized}><ChallengeScreen user_uuid={user.user_uuid} is_active={current_view === 'challenge'} on_unauthorized={on_unauthorized} on_back={() => navigate_to('today')} on_open_mentorship={() => navigate_to('mentorship')} /></CommunityGate>}
+      {current_view === 'mentorship' && <CommunityGate on_unauthorized={on_unauthorized}><MentorshipScreen key={coaching_navigation?.notification_uuid || 'coaching-home'} initial_relationship_uuid={coaching_navigation?.relationship_uuid} initial_tab={coaching_navigation?.target} notification_status={coaching_notification_status} on_unauthorized={on_unauthorized} on_research_change={refresh_exercise_research} /></CommunityGate>}
+      {coaching_research && <ExerciseResearchModal key={coaching_research.notification_uuid} exercise={coaching_research} on_change={refresh_exercise_research} on_close={() => set_coaching_research(null)} on_unauthorized={on_unauthorized} />}
       {current_view === 'settings' && <>
         <div className="accountBar"><span>{user.display_name || t("운동 사용자")}{t("님")}</span><button className="quietButton" type="button" disabled={pending} onClick={logout}>{t("전체 기기 로그아웃")}</button></div>
         {(!settings.data || !options.data) && <article className="settingsCard"><LanguageSelector /></article>}
         <RequestState loading={settings.loading || options.loading} error={settings.error || options.error} on_retry={refresh_data} />
         {settings.data && options.data && <SettingsScreen data={settings.data} options={options.data} pending={pending || settings.loading || options.loading} on_save={(body) => mutate('/settings', 'PUT', body, t("설정을 저장했습니다."))} />}
         <SafetySettings on_unauthorized={on_unauthorized} />
+        <CoachingNotificationSettings status={coaching_notification_status} />
+        <button type="button" className="wideButton secondary" disabled={pending} onClick={() => navigate_to('mentorship')}>{t('코칭 관리')}</button>
         <AccountDeletionForm user_uuid={user.user_uuid} on_deleted={on_account_deleted} />
         <footer><LegalDocuments compact /></footer>
       </>}

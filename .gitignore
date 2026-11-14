@@ -35,6 +35,7 @@ supabase/migrations/*
 !supabase/migrations/20261020091237_allow_assisted_workout_weights.sql
 !supabase/migrations/20261022143042_add_exercise_research_records.sql
 !supabase/migrations/20261027185744_make_user_country_optional.sql
+!supabase/migrations/20261114135213_mentor_apprentice_system.sql
 .gradle/
 etc/
 out/

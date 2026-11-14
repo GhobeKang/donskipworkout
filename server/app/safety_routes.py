@@ -21,6 +21,8 @@ from .database import (
     coachingQuestion,
     coachingReply,
     contentReport,
+    mentorMessage,
+    mentorRelationship,
     photoDeletionJob,
     pushDevice,
     userAccount,
@@ -54,7 +56,7 @@ class publicAccountDeletion(accountDeletion):
 
 
 class reportSubmission(requestModel):
-    content_type: Literal['user', 'room', 'question', 'reply']
+    content_type: Literal['user', 'room', 'question', 'reply', 'mentor_message']
     content_id: str = Field(min_length=1, max_length=36)
     reason: Literal['harassment', 'sexual', 'hate', 'privacy', 'spam', 'dangerous', 'other']
     details: str = Field(default='', max_length=1000)
@@ -158,6 +160,16 @@ def report_target(database, user_id, content_type, content_id):
     if content_type == 'user':
         target = require_shared_user(database, user_id, content_id)
         return target.user_id, target.display_name or '', target
+    if content_type == 'mentor_message':
+        if not content_id.isdecimal() or not 0 < int(content_id) <= 9223372036854775807:
+            raise missing
+        message = database.get(mentorMessage, int(content_id))
+        relationship = database.get(mentorRelationship, message.relationship_id) if message else None
+        if relationship is None or user_id not in {
+            relationship.mentor_user_id, relationship.apprentice_user_id,
+        } or message.sender_user_id == user_id:
+            raise missing
+        return message.sender_user_id, message.body, message
     if content_type == 'room':
         room = database.scalar(select(challengeRoom).where(challengeRoom.room_uuid == content_id))
         if room is None:
@@ -294,6 +306,11 @@ def resolve_content_report(report_uuid: UUID, payload: reportResolution,
             if question:
                 question.body = '운영 정책에 따라 삭제된 내용입니다.'
                 question.is_removed = True
+        elif report.content_type == 'mentor_message':
+            message = database.get(mentorMessage, int(report.content_id))
+            if message:
+                message.body = '운영 정책에 따라 삭제된 내용입니다.'
+                message.is_removed = True
         else:
             reply = database.get(coachingReply, int(report.content_id))
             if reply:

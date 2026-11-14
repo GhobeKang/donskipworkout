@@ -62,7 +62,7 @@ function RoomDeleteButton({ room, user_is_host, pending, on_delete }) {
   </button>;
 }
 
-export default function ChallengeScreen({ user_uuid, is_active, on_unauthorized, on_back }) {
+export default function ChallengeScreen({ user_uuid, is_active, on_unauthorized, on_back, on_open_mentorship }) {
   const { t, localize_message } = useLanguage();
   const [rooms, set_rooms] = useState([]);
   const [selected_room, set_selected_room] = useState(null);
@@ -372,6 +372,7 @@ export default function ChallengeScreen({ user_uuid, is_active, on_unauthorized,
         <div><p className="eyebrow">{t('운동 모임')} · {selected_room.round_number}{t('회차')}</p><h1>{selected_room.room_name}</h1></div>
         <ChallengeStatus status={selected_room.status} />
       </header>
+      {on_open_mentorship && <button className="wideButton secondary" type="button" onClick={on_open_mentorship}><MaterialIcon>school</MaterialIcon>{t('코칭 관리')}</button>}
       {can_delete_room(selected_room, is_host) && <div className="challengeRoomActions">
         <RoomDeleteButton room={selected_room} user_is_host={is_host} pending={pending} on_delete={request_room_delete} />
       </div>}
@@ -488,6 +489,7 @@ export default function ChallengeScreen({ user_uuid, is_active, on_unauthorized,
 
   return <section className="viewPanel challengeScreen isVisible">
     <header className="pageHeader"><div><p className="eyebrow">{t('같이 지키는 운동 약속')}</p><h1>{t('내 챌린지')}</h1></div><button className="backButton" type="button" onClick={on_back} aria-label={t('오늘 화면으로')}><MaterialIcon>close</MaterialIcon></button></header>
+    {on_open_mentorship && <button className="wideButton secondary" type="button" onClick={on_open_mentorship}><MaterialIcon>school</MaterialIcon>{t('코칭 관리')}</button>}
     {error_message && <div className="requestState" role="alert"><p>{error_message}</p></div>}
     {success_message && <div className="challengeSuccess" role="status">{success_message}</div>}
     <div className="challengeTabs" role="tablist" aria-label={t('내 챌린지 메뉴')}>

@@ -1,11 +1,12 @@
 from datetime import timedelta
 
 from fastapi import HTTPException
-from sqlalchemy import select, update
+from sqlalchemy import or_, select, update
 
 from .database import (
     challengeRound,
     challengeRoundMember,
+    mentorRelationship,
     notificationEvent,
     notificationOutbox,
     userAccount,
@@ -29,7 +30,13 @@ def require_shared_user(database, user_id, target_uuid):
         challengeRoundMember.user_id == target.user_id,
         challengeRoundMember.round_id.in_(user_rounds),
     ).limit(1))
-    if shared_membership is None:
+    shared_mentorship = database.scalar(select(mentorRelationship.relationship_id).where(or_(
+        (mentorRelationship.mentor_user_id == user_id)
+        & (mentorRelationship.apprentice_user_id == target.user_id),
+        (mentorRelationship.apprentice_user_id == user_id)
+        & (mentorRelationship.mentor_user_id == target.user_id),
+    )).limit(1))
+    if shared_membership is None and shared_mentorship is None:
         raise HTTPException(404, '함께 참여한 챌린지의 사용자만 신고할 수 있습니다.')
     return target
 

@@ -12,5 +12,6 @@ export default function BottomNavigation({ current_view, on_navigate, disabled }
     <NavigationButton icon="fitness_center" label={t("운동")} active={current_view === 'workout' || current_view === 'workout-library'} on_click={() => on_navigate('workout')} disabled={disabled} />
     <NavigationButton icon="calendar_month" label={t("기록")} active={current_view === 'record'} on_click={() => on_navigate('record')} disabled={disabled} />
     <NavigationButton icon="groups" label={t("내 챌린지")} active={current_view === 'challenge'} on_click={() => on_navigate('challenge')} disabled={disabled} />
+    <NavigationButton icon="school" label={t('코칭')} active={current_view === 'mentorship'} on_click={() => on_navigate('mentorship')} disabled={disabled} />
   </nav>;
 }

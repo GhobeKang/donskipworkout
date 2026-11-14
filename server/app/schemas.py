@@ -187,6 +187,7 @@ class areaWorkoutImportData(BaseModel):
 
 class exerciseResearchInput(requestModel):
     content: str = Field(min_length=1, max_length=2000)
+    expected_revision: int | None = Field(default=None, ge=1, strict=True)
 
     @field_validator('content')
     @classmethod
@@ -201,6 +202,10 @@ class exerciseResearchData(BaseModel):
     record_id: int
     content: str
     created_at: str
+    revision: int = 1
+    updated_at: str | None = None
+    updated_by_name: str | None = None
+    edited_by_mentor: bool = False
 
 
 class exerciseResearchListData(BaseModel):

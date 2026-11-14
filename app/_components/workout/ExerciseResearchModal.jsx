@@ -5,6 +5,8 @@ import useApiResource from '../../_hooks/useApiResource';
 import { useLanguage } from '../../_hooks/useLanguage';
 import MaterialIcon from '../ui/MaterialIcon';
 import RequestState from '../ui/RequestState';
+import ResearchRevisionHistory from './ResearchRevisionHistory';
+import ResearchNoteContent from './ResearchNoteContent';
 
 export default function ExerciseResearchModal({ exercise, on_change, on_close, on_unauthorized }) {
   const { t, language, localize_message } = useLanguage();
@@ -16,6 +18,7 @@ export default function ExerciseResearchModal({ exercise, on_change, on_close, o
   const [more_retry_count, set_more_retry_count] = useState(0);
   const [content, set_content] = useState('');
   const [editing_record_id, set_editing_record_id] = useState(null);
+  const [editing_revision, set_editing_revision] = useState(null);
   const [pending, set_pending] = useState(false);
   const [error_message, set_error_message] = useState('');
   const [save_message, set_save_message] = useState('');
@@ -56,6 +59,7 @@ export default function ExerciseResearchModal({ exercise, on_change, on_close, o
   const reset_editor = () => {
     set_content('');
     set_editing_record_id(null);
+    set_editing_revision(null);
   };
 
   const refresh_records = () => {
@@ -74,7 +78,7 @@ export default function ExerciseResearchModal({ exercise, on_change, on_close, o
     set_save_message('');
     try {
       await api_request(editing_record_id ? `${request_path}/${editing_record_id}` : request_path, {
-        method: editing_record_id ? 'PUT' : 'POST', body: { content: trimmed_content },
+        method: editing_record_id ? 'PUT' : 'POST', body: { content: trimmed_content, ...(editing_record_id ? { expected_revision: editing_revision } : {}) },
       });
       reset_editor();
       set_save_message(t('연구 기록을 저장했습니다.'));
@@ -82,6 +86,7 @@ export default function ExerciseResearchModal({ exercise, on_change, on_close, o
     } catch (error) {
       if (error.status === 401) on_unauthorized();
       else set_error_message(error.message);
+      if (error.status === 409) set_revision((value) => value + 1);
     } finally {
       mutation_active_ref.current = false;
       set_pending(false);
@@ -138,7 +143,7 @@ export default function ExerciseResearchModal({ exercise, on_change, on_close, o
       <p className="modalEyebrow">{exercise_name}</p>
       <h2 id="exercise-research-title">{t('연구 기록')}</h2>
     </header>
-    <p id="exercise-research-description" className="infoText">{t('들은 조언이나 자극이 잘 온 방법을 기록해 두세요. 이 종목을 불러오면 최근 작성한 기록 한 개가 표시됩니다. 나에게만 보입니다.')}</p>
+    <p id="exercise-research-description" className="infoText">{t('들은 조언이나 자극이 잘 온 방법을 기록해 두세요. 이 종목을 불러오면 최근 작성한 기록 한 개가 표시됩니다. 코치를 등록하면 코치도 조회하고 수정할 수 있습니다.')}</p>
     <form className="exerciseResearchForm" onSubmit={save_record}>
       <label className="fieldLabel" htmlFor="exercise-research-content">{t(editing_record_id ? '연구 기록 수정' : '새 연구 기록')}</label>
       <textarea id="exercise-research-content" className="timeInput" ref={content_ref} rows={4} maxLength={2000} value={content} disabled={pending} required
@@ -164,10 +169,12 @@ export default function ExerciseResearchModal({ exercise, on_change, on_close, o
             <time dateTime={record.created_at}>{date_formatter.format(new Date(record.created_at))}</time>
             {record_index === 0 && <span className="exerciseResearchLatest">{t('최근 작성')}</span>}
           </div>
-          <p className="exerciseResearchContent">{record.content}</p>
+          <ResearchNoteContent record={record} />
+          {record.updated_at && <p className="infoText">{t(record.edited_by_mentor ? '코치가 수정한 기록' : '수정한 기록')} · {record.updated_by_name || t('탈퇴한 사용자')} · {date_formatter.format(new Date(record.updated_at))}</p>}
           <div className="exerciseResearchRecordActions">
             <button className="textButton" type="button" aria-label={t('{0} 연구 기록 수정', [record_index + 1])} disabled={is_busy} onClick={() => {
               set_editing_record_id(record.record_id);
+              set_editing_revision(record.revision);
               set_content(record.content);
               set_error_message('');
               set_save_message('');
@@ -175,6 +182,7 @@ export default function ExerciseResearchModal({ exercise, on_change, on_close, o
             }}>{t('수정')}</button>
             <button className="textButton" type="button" aria-label={t('{0} 연구 기록 삭제', [record_index + 1])} disabled={is_busy} onClick={() => delete_record(record)}>{t('삭제')}</button>
           </div>
+          {record.revision > 1 && <ResearchRevisionHistory path={`${request_path}/${record.record_id}/revisions`} revision={record.revision} on_unauthorized={on_unauthorized} />}
         </li>)}
       </ol> : <p className="emptyState">{t('아직 연구 기록이 없습니다. 이 종목의 첫 요령을 남겨 보세요.')}</p>}
       {has_more && more_retry_count < 3 && <button className="textButton" type="button" disabled={is_busy} onClick={load_more}>{t(loading_more ? '불러오는 중…' : '더 보기')}</button>}

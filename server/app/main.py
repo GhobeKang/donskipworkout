@@ -13,6 +13,7 @@ from .coaching_routes import router as coaching_router
 from .config import serverSettings
 from .database import create_database, create_session_factory
 from .exercise_research import router as exercise_research_router
+from .mentorship_routes import router as mentorship_router
 from .middleware import configure_logging, requestSecurityMiddleware
 from .notification_routes import router as notification_router
 from .photo_routes import router as photo_router
@@ -88,6 +89,7 @@ def create_app(settings=None, database_engine=None):
     app.include_router(photo_router)
     app.include_router(workout_router)
     app.include_router(exercise_research_router)
+    app.include_router(mentorship_router)
     app.include_router(timer_router)
     app.include_router(notification_router)
     app.include_router(safety_router)

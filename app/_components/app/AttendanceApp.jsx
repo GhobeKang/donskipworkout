@@ -5,9 +5,11 @@ import { useLanguage } from '../../_hooks/useLanguage';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { PushNotifications } from '@capacitor/push-notifications';
+import { LocalNotifications } from '@capacitor/local-notifications';
 import { api_request } from '../../_lib/api';
 import { clear_workout_notifications, prepare_workout_notifications_for_user } from '../../_lib/notifications';
 import { get_push_installation_uuid } from '../../_lib/pushNotifications';
+import { queue_coaching_notification_open } from '../../_lib/coachingNotifications';
 import AuthScreen from '../screens/AuthScreen';
 import RequestState from '../ui/RequestState';
 import StatusBar from '../layout/StatusBar';
@@ -40,6 +42,19 @@ function AttendanceContent() {
     set_user(null);
     set_auth_error('로그인이 만료되었습니다. 다시 로그인해 주세요.');
     set_toast_message('');
+  }, []);
+
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return undefined;
+    let listener;
+    let disposed = false;
+    LocalNotifications.addListener('localNotificationActionPerformed', ({ notification, actionId }) => {
+      if (actionId === 'tap') queue_coaching_notification_open(notification);
+    }).then((registered_listener) => {
+      if (disposed) registered_listener.remove();
+      else listener = registered_listener;
+    }).catch((error) => console.error('[COACHING_LOCAL_NOTIFICATION_ACTION_ERROR]', error.name || 'Error'));
+    return () => { disposed = true; listener?.remove(); };
   }, []);
 
   useEffect(() => {

@@ -11,6 +11,7 @@ export async function clear_deleted_account_data(user_uuid, { is_current_account
     `workout_set_draft:${user_uuid}:`, `workout_timer_snapshot_${user_uuid}`,
     `workout_timer_pending_${user_uuid}`, `workout_arrival_pending_${user_uuid}`,
     `workout_departure_pending_${user_uuid}`,
+    `coaching_notification_cursor:${user_uuid}`,
   ];
   let owns_device = false;
   try {
@@ -21,6 +22,7 @@ export async function clear_deleted_account_data(user_uuid, { is_current_account
     if (owns_device || is_current_account) {
       window.localStorage.removeItem('workout_notification_owner_uuid');
       window.localStorage.removeItem('attendance_push_installation_uuid');
+      window.localStorage.removeItem('coaching_notification_owner_uuid');
     }
   } catch (error) { console.error('[ACCOUNT_LOCAL_CLEANUP_ERROR]', error.name); }
   if (!Capacitor.isNativePlatform() || (!owns_device && !is_current_account)) return;
