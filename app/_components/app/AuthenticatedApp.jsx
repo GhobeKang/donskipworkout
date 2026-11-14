@@ -30,6 +30,7 @@ export default function AuthenticatedApp({ user, on_unauthorized, on_logout, on_
   const [revision, set_revision] = useState(0);
   const [today_revision, set_today_revision] = useState(0);
   const [exercise_catalog_revision, set_exercise_catalog_revision] = useState(0);
+  const [exercise_research_revision, set_exercise_research_revision] = useState(0);
   const last_saved_timer_revision = useRef('');
   const [pending, set_pending] = useState(false);
   const [toast_message, set_toast_message] = useState('');
@@ -43,6 +44,7 @@ export default function AuthenticatedApp({ user, on_unauthorized, on_logout, on_
   const refresh_data = () => set_revision((value) => value + 1);
   const refresh_today = () => set_today_revision((value) => value + 1);
   const refresh_exercise_catalog = () => set_exercise_catalog_revision((value) => value + 1);
+  const refresh_exercise_research = () => set_exercise_research_revision((value) => value + 1);
   useEffect(() => {
     // Drop retired location requests without changing manual timer actions or records.
     try {
@@ -222,8 +224,8 @@ export default function AuthenticatedApp({ user, on_unauthorized, on_logout, on_
       </>}
       {current_view === 'record' && <RecordsScreen revision={revision} on_unauthorized={on_unauthorized} initial_tab={record_navigation ? 'list' : 'calendar'} initial_workout_date={record_navigation?.workout_date} focus_record_uuid={record_navigation?.session_uuid} on_open_record={open_workout_record} timezone={settings.data?.timezone || today.data?.timezone} />}
       {current_view === 'record-detail' && selected_workout_record && <WorkoutRecordScreen record={selected_workout_record} revision={revision} on_unauthorized={on_unauthorized} on_back={() => set_current_view('record')} />}
-      <WorkoutLogScreen ref={workout_log_ref} user_uuid={user.user_uuid} initial_workout_date={today.data?.workout_date} is_active={current_view === 'workout'} catalog_revision={exercise_catalog_revision} on_unauthorized={on_unauthorized} on_open_library={() => navigate_to('workout-library')} on_open_checkin={() => navigate_to('checkin')} on_saved={refresh_today} timezone={settings.data?.timezone || today.data?.timezone} />
-      {current_view === 'workout-library' && <WorkoutScreen on_unauthorized={on_unauthorized} on_back={() => navigate_to('workout')} on_catalog_change={refresh_exercise_catalog} />}
+      <WorkoutLogScreen ref={workout_log_ref} user_uuid={user.user_uuid} initial_workout_date={today.data?.workout_date} is_active={current_view === 'workout'} catalog_revision={exercise_catalog_revision} research_revision={exercise_research_revision} on_research_change={refresh_exercise_research} on_unauthorized={on_unauthorized} on_open_library={() => navigate_to('workout-library')} on_open_checkin={() => navigate_to('checkin')} on_saved={refresh_today} timezone={settings.data?.timezone || today.data?.timezone} />
+      {current_view === 'workout-library' && <WorkoutScreen on_unauthorized={on_unauthorized} on_back={() => navigate_to('workout')} on_catalog_change={refresh_exercise_catalog} on_research_change={refresh_exercise_research} />}
       {current_view === 'challenge' && <CommunityGate on_unauthorized={on_unauthorized}><ChallengeScreen user_uuid={user.user_uuid} is_active={current_view === 'challenge'} on_unauthorized={on_unauthorized} on_back={() => navigate_to('today')} /></CommunityGate>}
       {current_view === 'settings' && <>
         <div className="accountBar"><span>{user.display_name || t("운동 사용자")}{t("님")}</span><button className="quietButton" type="button" disabled={pending} onClick={logout}>{t("전체 기기 로그아웃")}</button></div>

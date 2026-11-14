@@ -7,7 +7,7 @@ from fastapi import APIRouter, HTTPException, Query, Request
 from sqlalchemy import func, or_, select
 
 from .community_policy import community_policy_version
-from .community_safety import blocked_user_ids, require_room_visible, users_are_blocked
+from .community_safety import require_room_visible
 from .database import (
     challengeCheckin,
     challengePeriod,
@@ -48,7 +48,7 @@ def get_member_round(database, round_uuid: UUID, user_id: int):
     ).first()
     if result is None:
         raise HTTPException(404, '방을 찾을 수 없습니다.')
-    require_room_visible(database, user_id, database.get(challengeRoom, result[0].room_id))
+    require_room_visible(database.get(challengeRoom, result[0].room_id))
     return result
 
 
@@ -68,7 +68,6 @@ def read_notification_inbox(
     database: databaseDependency,
     limit: int = Query(default=30, ge=1, le=100),
 ):
-    blocked_ids = blocked_user_ids(database, user.user_id)
     rows = database.execute(
         select(notificationEvent, notificationInbox)
         .join(notificationInbox, notificationInbox.event_id == notificationEvent.event_id)
@@ -76,10 +75,6 @@ def read_notification_inbox(
         .outerjoin(challengeRoom, challengeRoom.room_id == challengeRound.room_id)
         .where(
             notificationInbox.user_id == user.user_id,
-            or_(notificationEvent.sender_user_id.is_(None),
-                notificationEvent.sender_user_id.not_in(blocked_ids)),
-            or_(challengeRoom.host_user_id.is_(None),
-                challengeRoom.host_user_id.not_in(blocked_ids)),
             or_(notificationEvent.round_id.is_(None), challengeRoom.status != 'cancelled'),
         )
         .order_by(notificationEvent.created_at.desc(), notificationEvent.event_id.desc())
@@ -323,9 +318,6 @@ def send_challenge_nudges(
     sent_count = 0
     skipped = []
     for target_uuid, (member, account) in targets:
-        if users_are_blocked(database, user.user_id, member.user_id):
-            skipped.append(str(target_uuid))
-            continue
         accepted_count = (
             database.scalar(
                 select(func.count(challengeCheckin.checkin_id)).where(
@@ -380,11 +372,12 @@ def send_challenge_nudges(
             sender_user_id=user.user_id,
             category='host_nudge',
             title='운동 챌린지 알림',
-            body='오늘의 운동 기록을 확인해 주세요.',
+            body=payload.message if payload.message is not None else '오늘의 운동 기록을 확인해 주세요.',
             payload={
                 'round_uuid': current_round.round_uuid,
                 'room_uuid': room.room_uuid,
                 'event_type': 'host_nudge',
+                'custom_message': payload.message is not None,
             },
             created_at=now,
         )

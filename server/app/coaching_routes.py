@@ -7,7 +7,7 @@ from sqlalchemy import select
 
 from .challenge_routes import get_round_for_user, lock_round
 from .community_policy import communityUserDependency
-from .community_safety import blocked_user_ids, require_interaction_allowed
+from .community_safety import require_host_available
 from .database import coachingQuestion, coachingReply, userAccount
 from .schemas import requestModel
 from .security import databaseDependency, utc_now
@@ -41,7 +41,6 @@ def question_scope(database, current_round, room, user_id):
     )
     return select(coachingQuestion).where(
         coachingQuestion.round_id == current_round.round_id, owner_filter,
-        coachingQuestion.author_user_id.not_in(blocked_user_ids(database, user_id)),
     )
 
 
@@ -99,7 +98,7 @@ def create_question(
     database.scalars(select(userAccount).where(userAccount.user_id.in_(
         [user.user_id, room.host_user_id],
     )).order_by(userAccount.user_id).with_for_update()).all()
-    require_interaction_allowed(database, user.user_id, room.host_user_id)
+    require_host_available(room.host_user_id)
     if room.host_user_id == user.user_id:
         raise HTTPException(403, '참가자만 방장에게 질문을 남길 수 있습니다.')
     lock_round(database, current_round)
@@ -171,7 +170,7 @@ def reply_to_question(
     database.scalars(select(userAccount).where(userAccount.user_id.in_(
         [user.user_id, other_user_id],
     )).order_by(userAccount.user_id).with_for_update()).all()
-    require_interaction_allowed(database, user.user_id, other_user_id)
+    require_host_available(other_user_id)
     if question.is_removed:
         raise HTTPException(403, '운영 정책에 따라 삭제된 대화에는 답변할 수 없습니다.')
     if room.host_user_id != question.host_user_id:

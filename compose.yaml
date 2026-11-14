@@ -5,6 +5,7 @@ services:
       - ./server/.env
     environment:
       GOOGLE_APPLICATION_CREDENTIALS: /run/secrets/firebase_service_account
+      APNS_AUTH_KEY_PATH: /run/secrets/apns_auth_key
       LOG_FILE: /app/logs/api.log
       PHOTO_STORAGE_DIR: /app/media/photos
       NOTIFICATION_CATALOG_PATH: /app/notification-config/catalog.json
@@ -16,6 +17,7 @@ services:
       - attendance_api_logs:/app/logs
     secrets:
       - firebase_service_account
+      - apns_auth_key
     restart: unless-stopped
     init: true
     read_only: true
@@ -33,3 +35,5 @@ volumes:
 secrets:
   firebase_service_account:
     file: ${FIREBASE_SERVICE_ACCOUNT_FILE:?Set FIREBASE_SERVICE_ACCOUNT_FILE in the project-root .env or shell to the service-account JSON path on the deployment host}
+  apns_auth_key:
+    file: ${APNS_AUTH_KEY_FILE:?Set APNS_AUTH_KEY_FILE in the project-root .env or shell to the APNs .p8 key path on the deployment host}

@@ -25,12 +25,16 @@ media/
 .codex-remote-attachments/
 .next/
 legacy/
+review/
 scripts/
 supabase/*
 !supabase/migrations/
 supabase/migrations/*
 !supabase/migrations/20261009045020_server_workout_push.sql
 !supabase/migrations/20261013054943_add_exercise_target_subarea.sql
+!supabase/migrations/20261020091237_allow_assisted_workout_weights.sql
+!supabase/migrations/20261022143042_add_exercise_research_records.sql
+!supabase/migrations/20261027185744_make_user_country_optional.sql
 .gradle/
 etc/
 out/

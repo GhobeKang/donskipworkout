@@ -339,7 +339,7 @@ img { max-width: 100%; }
 .challengeQuietHours { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--form_column_gap); }
 .challengeNotificationRow { display: flex; flex: 1; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-height: 58px; padding: 8px 0; border: 0; background: transparent; color: var(--white); text-align: left; }
 .challengeNotificationRow > span:first-child { display: grid; gap: 4px; min-width: 0; }
-.challengeNotificationRow small { color: var(--muted); font-size: 11px; }
+.challengeNotificationRow small { color: var(--muted); font-size: 11px; white-space: pre-wrap; overflow-wrap: anywhere; }
 .challengeUnreadMark { flex: none; color: var(--accent); font-size: 10px; font-weight: 700; }
 .challengeTabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; margin: 0 0 16px; padding: 4px; border: 1px solid var(--line); border-radius: 14px; background: var(--card); }
 .challengeTab { min-height: 42px; padding: 8px 5px; border: 0; border-radius: 10px; background: transparent; color: var(--muted); font-size: 12px; font-weight: 650; cursor: pointer; transition: background-color 180ms ease, color 180ms ease; }
@@ -648,6 +648,25 @@ img { max-width: 100%; }
 .exercisePickerOptionText .exerciseAlternateName, .exerciseLibraryItem .exerciseAlternateName { color: var(--accent-text); }
 .exerciseSourceBadge { color: var(--accent-text); font-size: 11px; font-weight: 500; }
 .exerciseItemActions { display: flex; flex-shrink: 0; }
+.exerciseLibraryText { flex: 1; }
+.exerciseResearchSummary { min-width: 0; margin: 8px 0 14px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--bg); }
+.exerciseResearchOpen { display: flex; align-items: center; gap: 6px; min-height: 44px; width: 100%; text-align: left; }
+.exerciseResearchOpen .material-symbols-rounded:last-child { margin-left: auto; }
+.exerciseResearchContent { margin: 8px 0 0; color: var(--white); font-size: 13px; line-height: 1.7; white-space: pre-wrap; overflow-wrap: anywhere; }
+.exerciseResearchLatest { display: inline-block; margin-right: 8px; color: var(--accent-text); font-size: 11px; font-weight: 700; }
+.exerciseResearchHint { margin: 4px 0 0; color: var(--muted); font-size: 12px; }
+.exerciseResearchForm { margin: 20px 0; }
+.exerciseResearchFormActions { display: flex; align-items: center; gap: 12px; margin-top: 12px; }
+.exerciseResearchFormActions > small { margin-right: auto; color: var(--muted); font-size: 12px; }
+.exerciseResearchFormActions .wideButton { width: auto; min-width: 92px; }
+.exerciseResearchListTitle { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 15px; }
+.exerciseResearchListTitle small { color: var(--muted); font-size: 11px; font-weight: 400; }
+.exerciseResearchList { display: grid; gap: 12px; list-style: none; padding: 0; }
+.exerciseResearchList > li { min-width: 0; padding: 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--bg); }
+.exerciseResearchRecordHeading { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.exerciseResearchRecordHeading time { color: var(--muted); font-size: 11px; }
+.exerciseResearchRecordActions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 8px; }
+.exerciseResearchRecordActions button { min-width: 44px; min-height: 44px; }
 
 /* Settings and sign in use the same typography, controls and surfaces. */
 .settingsCard { padding: 20px 18px; border-radius: var(--card-radius); background: var(--card); }
@@ -711,6 +730,9 @@ textarea.timeInput { resize: vertical; }
 .photoActions > button { flex: 1; min-height: 48px; margin: 0; }
 .photoManual { width: 100%; margin-top: 12px; }
 .savedPhoto { display: block; width: 100%; height: auto; object-fit: contain; border-radius: var(--card-radius); margin-bottom: 16px; }
+.savedPhotoContainer .savedPhoto { margin-bottom: 16px; }
+.savedPhotoExport { gap: 8px; }
+.savedPhotoContainer > p { margin-bottom: 0; overflow-wrap: anywhere; }
 .checkinSuccess { padding: 24px; border-radius: var(--card-radius); background: var(--card); text-align: center; }
 .checkinSuccess > .material-symbols-rounded { color: var(--accent-text); font-size: 36px; }
 .checkinSuccess h2 { font-size: 20px; }

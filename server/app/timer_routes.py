@@ -143,6 +143,31 @@ def expire_unfinished_timer(database, timer: workoutTimer, now: datetime):
     return True
 
 
+def finish_active_workout_timer(database, user_id: int, completed_at: datetime):
+    # Attendance callers hold the user lock, serializing timer starts and check-ins.
+    timer = database.scalar(
+        select(workoutTimer)
+        .where(workoutTimer.user_id == user_id, workoutTimer.status.in_(['running', 'paused']))
+        .with_for_update()
+    )
+    if timer is None:
+        return
+    if expire_unfinished_timer(database, timer, completed_at):
+        timer.measured_seconds = segment_seconds(database, timer.timer_id)
+        return
+    expected_revision = timer.revision
+    if timer.status == 'running':
+        close_open_segment(database, timer, completed_at, 'timer_recorded')
+    timer.measured_seconds = segment_seconds(database, timer.timer_id)
+    timer.status = 'finished'
+    timer.finished_at = completed_at
+    timer.needs_review_reason = None
+    timer.revision += 1
+    add_timer_event(
+        database, timer, str(uuid4()), 'finish', expected_revision, completed_at,
+    )
+
+
 @router.post('/workout-timers', status_code=201)
 def start_workout_timer(
     payload: workoutTimerStart,

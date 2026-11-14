@@ -1,5 +1,5 @@
 {
-  "effect_version": 9,
+  "effect_version": 10,
   "width": 900,
   "height": 1600,
   "max_upload_bytes": 2097152,
@@ -14,5 +14,5 @@
       -3
     ]
   },
-  "branding_id": "fixed_brand_v5"
+  "branding_id": "fixed_brand_v6"
 }

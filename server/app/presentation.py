@@ -110,7 +110,7 @@ def progress_message_for(roast_level, current_session, is_scheduled_day):
     return level_messages.get(progress_status, hero_quotes.get(roast_level, hero_quotes['off']))
 
 
-def session_output(session, today, workout_time=None):
+def session_output(session, today, workout_time=None, previous_bests=None):
     status = effective_status(session, today)
     return {
         'session_uuid': session.session_uuid,
@@ -141,7 +141,7 @@ def session_output(session, today, workout_time=None):
         'completed_at': session.completed_at.isoformat(timespec='milliseconds') + 'Z'
         if session.completed_at
         else None,
-        'exercise_groups': workout_groups_output(session.workout_sets),
+        'exercise_groups': workout_groups_output(session.workout_sets, previous_bests),
         'workout_time': workout_time,
     }
 

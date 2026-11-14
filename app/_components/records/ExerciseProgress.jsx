@@ -11,6 +11,7 @@ const metric_options = [
   { key: 'volume', label: '총 운동량', unit: 'kg·회' },
   { key: 'max_reps', label: '최대 반복 수', unit: '회' },
 ];
+const main_exercise_names = new Set(['스쿼트', '벤치프레스', '오버헤드프레스', '데드리프트']);
 const unset_area_key = '__unset__';
 const date_value = (workout_date) => Date.parse(`${workout_date}T00:00:00Z`);
 
@@ -43,6 +44,9 @@ export default function ExerciseProgress({ revision, on_unauthorized, timezone =
   const [period_days, set_period_days] = useState(0);
   const progress = useApiResource('/exercise-progress', `${revision}:${reload_count}`, on_unauthorized);
   const exercises = progress.data || [];
+  const main_exercises = exercises.filter((exercise) => main_exercise_names.has(
+    exercise.name.replace(/\s+/g, '').replace(/^프리/, ''),
+  ));
   const areas = [...new Set(exercises.map((exercise) => exercise.target_area || unset_area_key))]
     .sort((first, second) => first.localeCompare(second));
   const selected_area_key_valid = areas.includes(selected_area_key);
@@ -50,8 +54,8 @@ export default function ExerciseProgress({ revision, on_unauthorized, timezone =
   const area_exercises = exercises.filter((exercise) => (
     (exercise.target_area || unset_area_key) === active_area_key
   ));
-  const selected_exercise = exercises.find((exercise) => exercise.exercise_key === exercise_key)
-    || exercises[0];
+  const selected_exercise = main_exercises.find((exercise) => exercise.exercise_key === exercise_key)
+    || main_exercises[0];
   const area_points = aggregate_area_points(area_exercises);
   const selected_metric_key = chart_scope === 'area' ? 'volume' : metric_key;
   const selected_metric = metric_options.find((metric) => metric.key === selected_metric_key);
@@ -95,6 +99,9 @@ export default function ExerciseProgress({ revision, on_unauthorized, timezone =
         <button type="button" aria-pressed={chart_scope === 'area'} className={chart_scope === 'area' ? 'isActive' : ''} onClick={() => set_chart_scope('area')}>{t('부위별')}</button>
         <button type="button" aria-pressed={chart_scope === 'exercise'} className={chart_scope === 'exercise' ? 'isActive' : ''} onClick={() => set_chart_scope('exercise')}>{t('종목별')}</button>
       </div>
+      {chart_scope === 'exercise' && !main_exercises.length
+        ? <p className="emptyState">{t('아직 기록한 4대 종목이 없습니다. 프리 스쿼트, 프리 벤치프레스, 프리 오버헤드프레스, 프리 데드리프트의 세트를 저장하면 추이를 볼 수 있습니다.')}</p>
+        : <>
       {chart_scope === 'area' && <>
         <label className="fieldLabel" htmlFor="progress-area">{t('타겟 부위')}</label>
         <select id="progress-area" className="progressSelect" value={active_area_key} onChange={(event) => set_selected_area_key(event.target.value)}>
@@ -104,7 +111,7 @@ export default function ExerciseProgress({ revision, on_unauthorized, timezone =
       {chart_scope === 'exercise' && <>
         <label className="fieldLabel" htmlFor="progress-exercise">{t('운동 종목')}</label>
         <select id="progress-exercise" className="progressSelect" value={selected_exercise.exercise_key} onChange={(event) => set_exercise_key(event.target.value)}>
-          {exercises.map((exercise) => <option key={exercise.exercise_key} value={exercise.exercise_key}>{exercise_label(exercise, language)} · {report_area_label(exercise.target_area, language)}</option>)}
+          {main_exercises.map((exercise) => <option key={exercise.exercise_key} value={exercise.exercise_key}>{exercise_label(exercise, language)} · {report_area_label(exercise.target_area, language)}</option>)}
         </select>
         <div className="tabs progressMetrics" aria-label={t('비교 지표')}>
           {metric_options.map((metric) => <button type="button" key={metric.key} aria-pressed={metric_key === metric.key} className={metric_key === metric.key ? 'isActive' : ''} onClick={() => set_metric_key(metric.key)}>{t(metric.label)}</button>)}
@@ -129,6 +136,7 @@ export default function ExerciseProgress({ revision, on_unauthorized, timezone =
         <p className="infoText">{points.length === 1 ? <InfoTooltip label={t('첫 기록')}>{t('다른 날짜의 기록이 쌓이면 변화 추이를 볼 수 있습니다.')}</InfoTooltip> : `${first_point.workout_date} – ${latest_point.workout_date}`}</p>
         <details className="progressDetails"><summary>{t('날짜별 수치 보기')}</summary><div className="progressTableWrap"><table className="progressTable"><caption>{selected_label} · {t(selected_metric.label)} ({metric_unit})</caption><thead><tr><th scope="col">{t('기록 날짜')}</th><th scope="col">{t(selected_metric.label)}</th>{chart_scope === 'area' && <><th scope="col">{t('종목 수')}</th><th scope="col">{t('총 세트')}</th></>}</tr></thead><tbody>{[...points].reverse().map((point) => <tr key={point.workout_date}><td>{point.workout_date}</td><td>{format_value(point[selected_metric_key])} {metric_unit}</td>{chart_scope === 'area' && <><td>{point.exercise_count}</td><td>{point.set_count}</td></>}</tr>)}</tbody></table></div></details>
       </div> : <p className="emptyState">{t('선택한 기간에 저장된 세트가 없습니다.')}</p>}
+      </>}
     </>}
   </section>;
 }

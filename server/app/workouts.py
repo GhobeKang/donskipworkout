@@ -13,6 +13,8 @@ from .database import (
     workoutSession,
     workoutSet,
 )
+from .exercise_research import latest_research_by_exercise
+from .personal_records import previous_bests_by_exercise
 from .schemas import (
     areaWorkoutImportData,
     exercise_target_area,
@@ -146,7 +148,9 @@ def exercise_progress(user: userDependency, database: databaseDependency):
             workoutSession.workout_date,
             func.max(workoutSet.weight_kg).label('max_weight'),
             func.max(workoutSet.reps).label('max_reps'),
-            func.sum(workoutSet.weight_kg * workoutSet.reps).label('volume'),
+            func.sum(
+                case((workoutSet.weight_kg > 0, workoutSet.weight_kg), else_=0) * workoutSet.reps
+            ).label('volume'),
             func.count(workoutSet.set_id).label('set_count'),
         )
         .join(workoutSession, workoutSession.session_id == workoutSet.session_id)
@@ -194,7 +198,7 @@ def exercise_progress(user: userDependency, database: databaseDependency):
     )
 
 
-def exercise_output(exercise, exercise_source='custom', last_sets=None):
+def exercise_output(exercise, exercise_source='custom', last_sets=None, previous_best=None, latest_research_record=None):
     return {
         'exercise_id': exercise.exercise_id,
         'exercise_source': exercise_source,
@@ -202,24 +206,30 @@ def exercise_output(exercise, exercise_source='custom', last_sets=None):
         'target_area': getattr(exercise, 'target_area', None),
         'target_subarea': getattr(exercise, 'target_subarea', None),
         'last_sets': (exercise.last_sets if last_sets is None else last_sets) or [],
+        'previous_best': previous_best,
+        'latest_research_record': latest_research_record,
     }
 
 
-def workout_groups_output(workout_sets):
+def workout_groups_output(workout_sets, previous_bests=None):
     groups = []
     current_exercise_order = None
     for workout_set in sorted(workout_sets, key=lambda item: (item.exercise_order, item.set_order)):
         if workout_set.exercise_order != current_exercise_order:
+            exercise_id = (
+                workout_set.shared_exercise_id
+                if workout_set.exercise_source == 'shared'
+                else workout_set.exercise_id
+            )
             groups.append(
                 {
                     'exercise_source': workout_set.exercise_source,
-                    'exercise_id': (
-                        workout_set.shared_exercise_id
-                        if workout_set.exercise_source == 'shared'
-                        else workout_set.exercise_id
-                    ),
+                    'exercise_id': exercise_id,
                     'exercise_name': workout_set.exercise_name,
                     'sets': [],
+                    'previous_best': (previous_bests or {}).get(
+                        (workout_set.exercise_source, exercise_id)
+                    ),
                 }
             )
             current_exercise_order = workout_set.exercise_order
@@ -375,12 +385,25 @@ def list_exercises(
     ).all()
     shared_exercises = database.scalars(select(sharedExerciseItem)).all()
     previous_sets = latest_sets_by_exercise(database, user.user_id, before_date)
+    previous_bests = previous_bests_by_exercise(database, user.user_id, before_date)
+    latest_research = latest_research_by_exercise(database, user.user_id)
     exercises = [
-        exercise_output(exercise, last_sets=previous_sets.get(('custom', exercise.exercise_id), []))
+        exercise_output(
+            exercise,
+            last_sets=previous_sets.get(('custom', exercise.exercise_id), []),
+            previous_best=previous_bests.get(('custom', exercise.exercise_id)),
+            latest_research_record=latest_research.get(('custom', exercise.exercise_id)),
+        )
         for exercise in custom_exercises
     ]
     exercises.extend(
-        exercise_output(exercise, 'shared', previous_sets.get(('shared', exercise.exercise_id), []))
+        exercise_output(
+            exercise,
+            'shared',
+            previous_sets.get(('shared', exercise.exercise_id), []),
+            previous_bests.get(('shared', exercise.exercise_id)),
+            latest_research.get(('shared', exercise.exercise_id)),
+        )
         for exercise in shared_exercises
     )
     return sorted(exercises, key=lambda exercise: (exercise['name'], exercise['exercise_source']))

@@ -222,7 +222,7 @@ def workout_totals(workout_sets):
         'set_count': len(workout_sets),
         'sets_per_workout': round(len(workout_sets) / days, 2) if days else None,
         'rep_count': sum(item.reps for item in workout_sets),
-        'volume_kg': round(sum(float(item.weight_kg) * item.reps for item in workout_sets), 2),
+        'volume_kg': round(sum(max(float(item.weight_kg), 0) * item.reps for item in workout_sets), 2),
         'best_weight_kg': max((float(item.weight_kg) for item in workout_sets), default=None),
     }
 

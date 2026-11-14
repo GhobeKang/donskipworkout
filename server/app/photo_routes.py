@@ -33,6 +33,7 @@ from .photo_processing import (
 from .presentation import local_today, session_output, settings_output
 from .schemas import sessionData
 from .security import databaseDependency, userDependency, utc_now
+from .timer_routes import finish_active_workout_timer
 
 router = APIRouter(prefix='/api/v1')
 
@@ -79,7 +80,7 @@ def photo_workout_summary(database, session):
             },
         )
         group['set_count'] += 1
-        group['volume_kg'] += workout_set.weight_kg * workout_set.reps
+        group['volume_kg'] += max(workout_set.weight_kg, 0) * workout_set.reps
     return [{**group, 'volume_kg': float(group['volume_kg'])} for group in exercise_groups.values()]
 
 
@@ -260,6 +261,8 @@ def complete_photo(
         if not is_photo_supplement or note.strip():
             session.note = note.strip() or None
         database.flush()
+        if not is_photo_supplement:
+            finish_active_workout_timer(database, user.user_id, accepted_at)
         record_activity_for_challenges(
             database,
             user.user_id,

@@ -15,16 +15,8 @@ from .database import (
     workoutSet,
 )
 from .muscle_activity import muscle_activity_comparison
+from .personal_records import exercise_key, personal_record_achievements
 from .workout_times import compare_workout_times, workout_time_days
-
-
-def exercise_key(workout_set):
-    exercise_id = (
-        workout_set.shared_exercise_id
-        if workout_set.exercise_source == 'shared'
-        else workout_set.exercise_id
-    )
-    return (workout_set.exercise_source, exercise_id) if exercise_id is not None else None
 
 
 def exercise_identity(workout_set):
@@ -90,7 +82,7 @@ def compare_conditions(previous_sets, current_sets):
                     'current_value': float(current_value),
                     'delta': float(delta),
                     'percent_change': round(float(delta / previous_value * 100), 1)
-                    if previous_value
+                    if previous_value > 0
                     else None,
                     'direction': 'improved'
                     if delta > 0
@@ -252,7 +244,8 @@ def area_totals(workout_sets):
             'session_count': len({item.workout_date for item in area_sets}),
             'set_count': len(area_sets),
             'rep_count': sum(item.reps for item in area_sets),
-            'volume_kg': round(float(sum(item.weight_kg * item.reps for item in area_sets)), 2),
+            # Assistance is not negative training volume; bodyweight is not recorded.
+            'volume_kg': round(float(sum(max(item.weight_kg, 0) * item.reps for item in area_sets)), 2),
         }
         for target_area, area_sets in grouped_sets.items()
     }
@@ -445,6 +438,7 @@ def personal_report_output(
             workoutSet.weight_kg,
             workoutSet.reps,
             workoutSession.workout_date,
+            workoutSession.session_status,
             exercise_report_area().label('target_area'),
         )
         .join(workoutSession, workoutSession.session_id == workoutSet.session_id)
@@ -465,12 +459,12 @@ def personal_report_output(
         )
         .where(
             workoutSession.user_id == user_id,
-            workoutSession.session_status == 'completed',
             workoutSession.workout_date <= as_of_date,
         )
         .order_by(workoutSession.workout_date, workoutSet.set_id)
     ).all()
-    valid_sets = [item for item in set_rows if exercise_key(item)]
+    recorded_sets = [item for item in set_rows if exercise_key(item)]
+    valid_sets = [item for item in recorded_sets if item.session_status == 'completed']
     previous_start = previous_start or period_start - timedelta(days=7)
     previous_end = previous_end or as_of_date - timedelta(days=7)
     current_sets = [item for item in valid_sets if item.workout_date >= period_start]
@@ -616,13 +610,19 @@ def personal_report_output(
         ),
         **behavior,
         'challenges': challenges,
+        'personal_records': personal_record_achievements(
+            [item for item in recorded_sets if item.workout_date < period_start],
+            [item for item in recorded_sets if item.workout_date >= period_start],
+        ),
         'preferences': preferences,
         'coverage': {
             'completed_count': len(current_dates),
             'recorded_count': len(current_days),
             'previous_recorded_count': len(previous_days),
             'excluded_set_count': sum(
-                exercise_key(item) is None for item in set_rows if item.workout_date >= period_start
+                exercise_key(item) is None
+                for item in set_rows
+                if item.workout_date >= period_start and item.session_status == 'completed'
             ),
         },
         'evaluation': evaluate_report(

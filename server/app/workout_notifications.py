@@ -251,7 +251,6 @@ def enqueue_due_workout_notifications(session_factory, catalog, enabled_provider
 
 
 def notification_cancellation_reason(database, event, device, now):
-    from .community_safety import users_are_blocked
     from .database import userCredential
 
     if not device.active or device.user_id != event.recipient_user_id:
@@ -263,8 +262,6 @@ def notification_cancellation_reason(database, event, device, now):
         sender_credential = database.get(userCredential, event.sender_user_id)
         if sender_credential is None or not sender_credential.is_active:
             return 'sender_inactive'
-        if users_are_blocked(database, event.sender_user_id, event.recipient_user_id):
-            return 'user_blocked'
     if event.category not in {workout_category, 'push_test'}:
         return None
     expires_at = parse_notification_time(event.payload.get('expires_at'))

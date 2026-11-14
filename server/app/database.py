@@ -5,9 +5,11 @@ from sqlalchemy import (
     JSON,
     BigInteger,
     Boolean,
+    CheckConstraint,
     Date,
     DateTime,
     ForeignKey,
+    Index,
     Integer,
     MetaData,
     Numeric,
@@ -37,7 +39,7 @@ class userAccount(databaseBase):
     user_uuid: Mapped[str] = mapped_column(String(36), unique=True)
     email: Mapped[str | None] = mapped_column(String(255), unique=True)
     display_name: Mapped[str | None] = mapped_column(String(100))
-    country_code: Mapped[str] = mapped_column(String(2), default='KR')
+    country_code: Mapped[str | None] = mapped_column(String(2))
     timezone: Mapped[str] = mapped_column(String(64), default='Asia/Seoul')
     community_policy_version: Mapped[str | None] = mapped_column(String(32))
     community_policy_accepted_at: Mapped[datetime | None] = mapped_column(DateTime)
@@ -127,6 +129,30 @@ class sharedExerciseItem(databaseBase):
     name: Mapped[str] = mapped_column(String(100))
     target_area: Mapped[str | None] = mapped_column(String(20))
     target_subarea: Mapped[str | None] = mapped_column(String(30))
+
+
+class exerciseResearchRecord(databaseBase):
+    __tablename__ = 'exercise_research_records'
+    __table_args__ = (
+        CheckConstraint(
+            '(exercise_id IS NOT NULL AND shared_exercise_id IS NULL) OR '
+            '(exercise_id IS NULL AND shared_exercise_id IS NOT NULL)',
+            name='exercise_research_records_exercise_check',
+        ),
+        CheckConstraint('length(trim(content)) > 0', name='exercise_research_records_content_check'),
+        Index('exercise_research_records_custom_idx', 'user_id', 'exercise_id', 'created_at', 'record_id'),
+        Index('exercise_research_records_shared_idx', 'user_id', 'shared_exercise_id', 'created_at', 'record_id'),
+    )
+    record_id: Mapped[int] = mapped_column(id_type, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(id_type, ForeignKey('users.user_id', ondelete='CASCADE'))
+    exercise_id: Mapped[int | None] = mapped_column(
+        id_type, ForeignKey('exercise_items.exercise_id', ondelete='CASCADE')
+    )
+    shared_exercise_id: Mapped[int | None] = mapped_column(
+        id_type, ForeignKey('shared_exercise_items.exercise_id', ondelete='CASCADE')
+    )
+    content: Mapped[str] = mapped_column(String(2000))
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())
 
 
 class userSharedExerciseProgress(databaseBase):
@@ -415,6 +441,7 @@ class workoutTimerRevision(databaseBase):
 
 
 class userBlock(databaseBase):
+    # Legacy records remain only so account deletion can clean up their foreign keys.
     __tablename__ = 'user_blocks'
     blocker_user_id: Mapped[int] = mapped_column(
         id_type, ForeignKey('users.user_id'), primary_key=True

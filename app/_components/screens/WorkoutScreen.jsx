@@ -7,13 +7,16 @@ import { api_request } from '../../_lib/api';
 import RequestState from '../ui/RequestState';
 import MaterialIcon from '../ui/MaterialIcon';
 import ExerciseEditorModal from '../workout/ExerciseEditorModal';
+import ExerciseResearchModal from '../workout/ExerciseResearchModal';
+import ExerciseResearchSummary from '../workout/ExerciseResearchSummary';
 
-export default function WorkoutScreen({ on_unauthorized, on_back, on_catalog_change }) {
+export default function WorkoutScreen({ on_unauthorized, on_back, on_catalog_change, on_research_change }) {
   const { t, language, localize_message } = useLanguage();
   const [revision, set_revision] = useState(0);
   const [search_query, set_search_query] = useState('');
   const [is_editor_open, set_is_editor_open] = useState(false);
   const [editing_exercise, set_editing_exercise] = useState(null);
+  const [research_exercise, set_research_exercise] = useState(null);
   const [pending_id, set_pending_id] = useState(null);
   const [error_message, set_error_message] = useState('');
   const exercises = useApiResource('/exercises', revision, on_unauthorized);
@@ -55,7 +58,7 @@ export default function WorkoutScreen({ on_unauthorized, on_back, on_catalog_cha
   };
 
   const remove_exercise = async (exercise) => {
-    if (pending_id !== null || !window.confirm(t("{0} 종목을 삭제할까요? 저장된 운동 기록은 유지됩니다.", [exercise.name]))) return;
+    if (pending_id !== null || !window.confirm(t("{0} 종목을 삭제할까요? 저장된 운동 기록은 유지되며, 연구 기록은 함께 삭제됩니다.", [exercise.name]))) return;
     set_pending_id(exercise.exercise_id);
     set_error_message('');
     try {
@@ -81,6 +84,10 @@ export default function WorkoutScreen({ on_unauthorized, on_back, on_catalog_cha
     <p className="infoText">{t("운동 세트 기록에서 사용할 종목을 관리합니다. 공용 종목과 직접 등록한 종목을 함께 기록할 수 있습니다.")}</p>
     <button className="wideButton primary" type="button" aria-haspopup="dialog" disabled={pending_id !== null} onClick={() => open_editor()}><MaterialIcon>add</MaterialIcon>{t("운동 종목 추가")}</button>
     {is_editor_open && <ExerciseEditorModal exercise={editing_exercise} pending={pending_id !== null} error_message={error_message} on_save={save_exercise} on_close={close_editor} />}
+    {research_exercise && <ExerciseResearchModal key={`${research_exercise.exercise_source}:${research_exercise.exercise_id}`} exercise={research_exercise} on_change={() => {
+      set_revision((value) => value + 1);
+      on_research_change();
+    }} on_close={() => set_research_exercise(null)} on_unauthorized={on_unauthorized} />}
     {!is_editor_open && error_message && <p className="errorText" role="alert">{localize_message(error_message)}</p>}
     <RequestState loading={exercises.loading} error={exercises.error} on_retry={() => set_revision((value) => value + 1)} />
     {exercises.data && <section className="exerciseLibrary" aria-label={t("운동 종목 목록")}>
@@ -93,9 +100,11 @@ export default function WorkoutScreen({ on_unauthorized, on_back, on_catalog_cha
       {matching_exercises.length ? matching_exercises.map((exercise) => {
         const secondary_name = exercise_secondary_label(exercise, language);
         return <article className="exerciseLibraryItem" key={`${exercise.exercise_source}:${exercise.exercise_id}`}>
-        <div><strong>{exercise_label(exercise, language)} <span className="exerciseSourceBadge">{exercise.exercise_source === 'shared' ? t("기본") : t("내 종목")}</span></strong>
+        <div className="exerciseLibraryText"><strong>{exercise_label(exercise, language)} <span className="exerciseSourceBadge">{exercise.exercise_source === 'shared' ? t("기본") : t("내 종목")}</span></strong>
           {secondary_name && <small className="exerciseAlternateName">{secondary_name}</small>}
-          <small>{exercise_area_label(exercise, language)}{exercise.last_sets.length ? ` · ${t("최근 {0}", [exercise.last_sets.map((item) => t("{0}kg × {1}회", [item.weight_kg, item.reps])).join(' · ')])}` : ` · ${t("아직 기록한 세트가 없습니다")}`}</small></div>
+          <small>{exercise_area_label(exercise, language)}{exercise.last_sets.length ? ` · ${t("최근 {0}", [exercise.last_sets.map((item) => t("{0}kg × {1}회", [item.weight_kg, item.reps])).join(' · ')])}` : ` · ${t("아직 기록한 세트가 없습니다")}`}</small>
+          <ExerciseResearchSummary latest_record={exercise.latest_research_record} on_open={() => set_research_exercise(exercise)} disabled={pending_id !== null} />
+        </div>
         {exercise.exercise_source === 'custom' && <div className="exerciseItemActions">
           <button type="button" aria-label={t("{0} 종목 수정", [exercise.name])} aria-haspopup="dialog" disabled={pending_id !== null} onClick={() => open_editor(exercise)}><MaterialIcon>edit</MaterialIcon></button>
           <button type="button" aria-label={t("{0} 삭제", [exercise.name])} disabled={pending_id !== null} onClick={() => remove_exercise(exercise)}><MaterialIcon>delete</MaterialIcon></button>

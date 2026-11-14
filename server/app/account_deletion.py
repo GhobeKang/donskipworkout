@@ -20,6 +20,7 @@ from .database import (
     coachingReply,
     contentReport,
     exerciseItem,
+    exerciseResearchRecord,
     notificationEvent,
     notificationInbox,
     notificationOutbox,
@@ -167,7 +168,7 @@ def delete_account_data(database, user):
     database.execute(delete(workoutTimer).where(workoutTimer.user_id == user_id))
     for model in (
         challengeRoundMember, challengeInviteAttempt, notificationPreference, pushDevice,
-        exerciseItem, userSharedExerciseProgress, attendanceSetting, scheduleDay, weeklyPromise,
+        exerciseResearchRecord, exerciseItem, userSharedExerciseProgress, attendanceSetting, scheduleDay, weeklyPromise,
         authSession, userCredential,
     ):
         database.execute(delete(model).where(model.user_id == user_id))

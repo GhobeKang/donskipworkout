@@ -45,7 +45,7 @@ export default function ChallengeInbox({ is_active, on_unauthorized, on_open_roo
     {error_message && <p className="infoText" role="alert">{error_message}</p>}
     {notifications.length ? <ul className="challengeMemberList">{notifications.map((notification) => <li key={notification.notification_uuid}>
       <button className="challengeNotificationRow" type="button" onClick={() => open_notification(notification)}>
-        <span><strong>{notification.category === 'room_deleted' ? t('{0} 방이 삭제되었습니다.', [notification.room_name]) : t(notification.title)}</strong><small>{t(notification.body)}</small></span>
+        <span><strong>{notification.category === 'room_deleted' ? t('{0} 방이 삭제되었습니다.', [notification.room_name]) : t(notification.title)}</strong><small>{notification.custom_message ? notification.body : t(notification.body)}</small></span>
         {!notification.read_at && <span className="challengeUnreadMark">{t('새 알림')}</span>}
       </button>
     </li>)}</ul> : <p className="emptyState">{t('새 알림이 없습니다.')}</p>}

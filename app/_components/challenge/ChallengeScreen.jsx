@@ -9,7 +9,8 @@ import ChallengeNotificationSettings from './ChallengeNotificationSettings';
 import ChallengeInbox from './ChallengeInbox';
 import ChallengeQuestions from './ChallengeQuestions';
 import ChallengeMemberReports from './ChallengeMemberReports';
-import ChallengeProgressMember, { get_progress_status_label } from './ChallengeProgressMember';
+import ChallengeProgressMember from './ChallengeProgressMember';
+import ChallengeNudgeComposer from './ChallengeNudgeComposer';
 import SafetyActions from '../safety/SafetyActions';
 
 function get_default_start_date() {
@@ -82,8 +83,6 @@ export default function ChallengeScreen({ user_uuid, is_active, on_unauthorized,
   const [issued_invite, set_issued_invite] = useState(null);
   const [draft_rulebook, set_draft_rulebook] = useState(null);
   const [rulebook_dirty, set_rulebook_dirty] = useState(false);
-  const [nudge_targets, set_nudge_targets] = useState([]);
-  const [nudge_feedback, set_nudge_feedback] = useState('');
   const [start_date, set_start_date] = useState(get_default_start_date);
   const invite_link_handled = useRef(false);
   const invite_code_input = useRef(null);
@@ -266,7 +265,6 @@ export default function ChallengeScreen({ user_uuid, is_active, on_unauthorized,
       set_issued_invite(null);
       set_draft_rulebook(null);
       set_rulebook_dirty(false);
-      set_nudge_targets([]);
       set_active_tab('rooms');
       set_success_message(t('방을 삭제했습니다.'));
       await load_rooms();
@@ -345,26 +343,6 @@ export default function ChallengeScreen({ user_uuid, is_active, on_unauthorized,
     window.requestAnimationFrame(() => {
       invite_code_input.current?.setSelectionRange(formatted_cursor_position, formatted_cursor_position);
     });
-  };
-
-  const send_nudges = async () => {
-    if (pending || !selected_room) return;
-    set_pending(true);
-    set_error_message('');
-    set_nudge_feedback('');
-    try {
-      const result = await api_request(`/challenge-rounds/${selected_room.round_uuid}/nudges`, {
-        method: 'POST',
-        body: { request_id: window.crypto.randomUUID(), member_uuids: nudge_targets },
-      });
-      set_nudge_feedback(t('재촉 접수 {0}명 · 제외 {1}명', [result.accepted_count, result.skipped_user_uuids.length]));
-      set_nudge_targets([]);
-    } catch (error) {
-      if (error.status === 401) on_unauthorized();
-      else set_error_message(localize_message(error.message));
-    } finally {
-      set_pending(false);
-    }
   };
 
   const move_challenge_tab = (event, current_tab) => {
@@ -500,13 +478,8 @@ export default function ChallengeScreen({ user_uuid, is_active, on_unauthorized,
       {is_host && progress_data?.status === 'active' && (() => {
         const active_period = progress_data.periods.find((period) => period.status === 'active');
         const eligible_members = active_period?.members.filter((member) => ['in_progress', 'at_risk'].includes(member.status) && member.user_uuid !== user_uuid) || [];
-        return <article className="challengeCard">
-          <div className="sectionHeading"><h2>{t('미완료 참가자 재촉')}</h2></div>
-          <p className="infoText">{t('현재 구간에서 목표 미달이고 재촉 수신에 동의한 참가자만 알림을 받습니다. 1일 최대 2회, 4시간 간격 제한을 적용합니다.')}</p>
-          {eligible_members.length ? <ul className="challengeMemberList">{eligible_members.map((member) => <li key={member.user_uuid}><label className="challengeNotificationOption"><input type="checkbox" checked={nudge_targets.includes(member.user_uuid)} onChange={(event) => set_nudge_targets((current) => event.target.checked ? [...current, member.user_uuid] : current.filter((target_uuid) => target_uuid !== member.user_uuid))} /><span><strong>{member.display_name}</strong><small>{member.completed_count}/{member.target_count}{t('일')} · {get_progress_status_label(t, member.status)}</small></span></label></li>)}</ul> : <p className="emptyState">{t('현재 재촉할 수 있는 참가자가 없습니다.')}</p>}
-          {nudge_feedback && <p className="challengeSuccess" role="status">{nudge_feedback}</p>}
-          <button className="wideButton secondary" type="button" disabled={pending || !nudge_targets.length} onClick={send_nudges}>{t('선택한 참가자 재촉')}</button>
-        </article>;
+        return <ChallengeNudgeComposer key={selected_room.round_uuid} round_uuid={selected_room.round_uuid}
+          eligible_members={eligible_members} disabled={pending} on_unauthorized={on_unauthorized} />;
       })()}
       <button className="quietButton refreshButton" type="button" disabled={pending} onClick={() => load_room(selected_room.room_uuid)}><MaterialIcon>refresh</MaterialIcon>{t('최신 상태 불러오기')}</button>
       {delete_confirmation_modal}

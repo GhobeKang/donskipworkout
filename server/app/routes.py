@@ -22,6 +22,7 @@ from .database import (
 )
 from .muscle_activity import muscle_activity_comparison
 from .notification_catalog import notificationCatalog, read_notification_catalog
+from .personal_records import previous_bests_by_exercise
 from .presentation import (
     calendar_output,
     day_names,
@@ -66,6 +67,7 @@ from .security import (
     utc_now,
 )
 from .sharing import monday_of, period_report_output, schedule_next_promise, weekly_share_output
+from .timer_routes import finish_active_workout_timer
 from .workout_times import workout_time_days
 from .workouts import replace_workout_groups, workout_groups_output
 
@@ -182,7 +184,7 @@ def replace_settings(payload: settingsData, user: userDependency, database: data
         select(userAccount).where(userAccount.user_id == user.user_id).with_for_update()
     )
     values = payload.model_dump(exclude={'schedule_days', 'country_code', 'timezone'})
-    if payload.country_code is not None:
+    if 'country_code' in payload.model_fields_set:
         account.country_code = payload.country_code
     if payload.timezone is not None:
         account.timezone = payload.timezone
@@ -221,10 +223,10 @@ def read_today(user: userDependency, database: databaseDependency):
 @router.post('/sessions/today/actions', response_model=sessionData)
 def act_today(payload: sessionAction, user: userDependency, database: databaseDependency):
     today = local_today(user.timezone)
-    now = datetime.now(timezone.utc).replace(tzinfo=None)
     database.scalar(
         select(userAccount).where(userAccount.user_id == user.user_id).with_for_update()
     )
+    now = utc_now()
     settings = settings_output(database, user.user_id)
     session = database.scalar(
         select(workoutSession)
@@ -281,6 +283,7 @@ def act_today(payload: sessionAction, user: userDependency, database: databaseDe
         session.completed_at = now
         session.reusable = settings['reuse_enabled']
         database.flush()
+        finish_active_workout_timer(database, user.user_id, now)
         record_activity_for_challenges(
             database,
             user.user_id,
@@ -423,6 +426,7 @@ def read_session(session_uuid: UUID, user: userDependency, database: databaseDep
     )[user.user_id]
     return session_output(
         session, local_today(user.timezone), time_days.get(session.workout_date.isoformat()),
+        previous_bests=previous_bests_by_exercise(database, user.user_id, session.workout_date),
     )
 
 

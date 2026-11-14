@@ -125,7 +125,7 @@ const localized_copy = {
 
 const poster_styles = `*{box-sizing:border-box}html,body{margin:0;width:1080px;height:1920px;overflow:hidden}body{background:#f5f5f2;color:#1b1e20;font-family:Arial,'Malgun Gothic',sans-serif}.poster{position:relative;width:1080px;height:1920px;padding:46px 68px;background:radial-gradient(ellipse at 90% 0%,#ff894a25,transparent 44%),#f5f5f2}.topline{display:flex;justify-content:space-between;align-items:center;font-size:23px;font-weight:800;letter-spacing:1px}.topline span{font-weight:500;font-size:19px;color:#6b7175;letter-spacing:2px}.kicker{margin:30px 0 12px;font-size:22px;letter-spacing:3px;font-weight:700;color:#823805}.headline{margin:0;font-size:87px;line-height:1.025;letter-spacing:-5px;font-weight:900}.headline em{font-style:normal;color:#aa4618}.subtitle{margin:20px 0 0;font-size:27px;line-height:1.4;color:#62686b;letter-spacing:-.3px}.screen{position:absolute;left:110px;top:360px;width:860px;height:1560px;overflow:hidden;border:8px solid #202326;border-bottom:0;border-radius:36px 36px 0 0;background:#121416;box-shadow:0 18px 52px #10182026}.screen img{display:block;width:844px;height:auto}.poster:lang(ko) .headline{font-size:79px;line-height:1.13;letter-spacing:-5px}.poster:lang(ko) .kicker{letter-spacing:1px}.poster:lang(ko) .subtitle{font-size:25px}.feature{width:1024px;height:500px;position:relative;overflow:hidden;color:#f5f5f2;background:#121416}.feature>img{position:absolute;inset:0;width:1024px;height:500px;object-fit:cover}.feature .copy{position:absolute;left:54px;top:57px;width:535px}.feature .brand{font-size:16px;letter-spacing:3px;font-weight:800}.feature h1{font-size:64px;line-height:1.04;letter-spacing:-3.4px;margin:50px 0 21px;font-weight:900}.feature h1 em{color:#ff894a;font-style:normal}.feature p{font-size:17px;line-height:1.5;color:#d8d9d4;margin:0}.feature:lang(ko) h1{font-family:'Malgun Gothic',Arial,sans-serif;font-size:57px;line-height:1.17;letter-spacing:-3px;margin-top:45px}`;
 
-async function export_artwork(browser,base_url,language) {
+async function export_artwork(browser,base_url,language,feature_only=false) {
   const copy=localized_copy[language];
   const page=await browser.newPage({viewport:{width:1080,height:1920},deviceScaleFactor:1});
   const export_html=async(html,file,width,height)=>{
@@ -136,7 +136,7 @@ async function export_artwork(browser,base_url,language) {
     await sharp(buffer).removeAlpha().png().toFile(path.join(output_root,language,file));
   };
   await export_html(`<main class="feature" lang="${language}"><img src="${base_url}/__assets/source/feature_artwork.png"><div class="copy"><div class="brand">DON'T SKIP</div><h1>${copy.feature_title}</h1><p>${copy.feature_subtitle}</p></div></main>`,'feature_graphic.png',1024,500);
-  for(let index=0;index<copy.screens.length;index++) {
+  for(let index=0;!feature_only && index<copy.screens.length;index++) {
     const [kicker,title,subtitle,screen_name]=copy.screens[index];
     const screen_file=`${language}_${String(index+1).padStart(2,'0')}_${screen_name}.png`;
     await export_html(`<main class="poster" lang="${language}"><div class="topline">DON'T SKIP<span>0${index+1} / 04</span></div><div class="kicker">${kicker}</div><h1 class="headline">${title}</h1><p class="subtitle">${subtitle}</p><div class="screen"><img src="${base_url}/__assets/source/screens/${screen_file}"></div></main>`,`phone_${String(index+1).padStart(2,'0')}_${screen_name}.png`,1080,1920);
@@ -145,6 +145,7 @@ async function export_artwork(browser,base_url,language) {
 }
 
 async function main() {
+  const feature_only = process.argv.includes('--feature-only');
   for(const folder of ['en','ko','source/screens']) await fs.mkdir(path.join(output_root,folder),{recursive:true});
   const server=static_server();
   await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
@@ -153,9 +154,9 @@ async function main() {
   try {
     const capture_log=[];
     for(const language of ['en','ko']) {
-      capture_log.push(await capture_screens(browser,base_url,language));
-      await export_artwork(browser,base_url,language);
-      console.log(`${language}: feature graphic and four phone PNGs exported`);
+      if (!feature_only) capture_log.push(await capture_screens(browser,base_url,language));
+      await export_artwork(browser,base_url,language,feature_only);
+      console.log(`${language}: ${feature_only ? 'feature graphic' : 'feature graphic and four phone PNGs'} exported`);
     }
     const preview_page=await browser.newPage({viewport:{width:1520,height:1040},deviceScaleFactor:1});
     const preview_rows=['en','ko'].map(language=>`<section><div class="feature"><h2>${language==='en'?'ENGLISH':'한국어'}</h2><img src="${base_url}/__assets/${language}/feature_graphic.png"><p>FEATURE GRAPHIC · 1024 × 500</p></div>${localized_copy[language].screens.map((screen,index)=>`<div class="phone"><img src="${base_url}/__assets/${language}/phone_${String(index+1).padStart(2,'0')}_${screen[3]}.png"><p>0${index+1} · ${screen[0]}</p></div>`).join('')}</section>`).join('');
@@ -163,7 +164,7 @@ async function main() {
     await preview_page.evaluate(()=>Promise.all([...document.images].map(image=>image.decode())));
     await sharp(await preview_page.screenshot()).removeAlpha().png().toFile(path.join(output_root,'preview.png'));
     await preview_page.close();
-    await fs.writeFile(path.join(output_root,'source/capture_log.json'),JSON.stringify(capture_log,null,2));
+    if (!feature_only) await fs.writeFile(path.join(output_root,'source/capture_log.json'),JSON.stringify(capture_log,null,2));
     const asset_manifest=[];
     for(const language of ['en','ko']) for(const file of await fs.readdir(path.join(output_root,language))) {
       const file_path=path.join(output_root,language,file);

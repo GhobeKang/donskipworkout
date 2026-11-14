@@ -5,7 +5,7 @@ from fastapi import Depends, HTTPException
 from .database import userAccount
 from .security import userDependency
 
-community_policy_version = '2026-10-16'
+community_policy_version = '2026-10-18'
 community_policy_sections = [
     {
         'title': '이용약관과 커뮤니티 이용 정책',
@@ -29,15 +29,13 @@ community_policy_sections = [
         'Share only content you have the right to share and respect other people’s consent and safety.',
     },
     {
-        'title': '신고·차단과 운영 조치',
-        'title_en': 'Reporting, blocking and moderation',
-        'body': '앱의 신고 기능으로 콘텐츠·이용자를 신고할 수 있으며, 차단하면 해당 이용자와의 '
-        '코칭 대화와 직접 알림이 제한되고 해당 이용자의 콘텐츠가 숨겨집니다. 운영자는 신고 내용을 '
-        '검토하고 콘텐츠 숨김, 계정 이용 제한 등의 조치를 할 수 있습니다. 방장도 신고·차단 대상입니다. '
+        'title': '신고와 운영 조치',
+        'title_en': 'Reporting and moderation',
+        'body': '앱의 신고 기능으로 콘텐츠·이용자를 신고할 수 있습니다. 운영자는 신고 내용을 '
+        '검토하고 콘텐츠 숨김, 계정 이용 제한 등의 조치를 할 수 있습니다. 방장도 신고 대상입니다. '
         '조치에 대한 문의·이의 제기는 sayudogu@gmail.com으로 보낼 수 있습니다.',
-        'body_en': 'Use the in-app reporting controls to report content or users. Blocking hides that '
-        'user’s content and prevents coaching conversations and direct notifications between you. '
-        'Hosts can also be reported or blocked. Moderators review reports and may remove content or '
+        'body_en': 'Use the in-app reporting controls to report content or users. '
+        'Hosts can also be reported. Moderators review reports and may remove content or '
         'suspend accounts. Contact sayudogu@gmail.com with questions or appeals.',
     },
     {
@@ -47,7 +45,7 @@ community_policy_sections = [
         '방장에게 표시될 수 있습니다. 코칭 대화는 작성자와 수신 방장 사이에 제공되며 신고하면 '
         '신고 대상 내용이 운영자에게 전달됩니다. 운동 기록·코칭은 의료 진단이나 치료를 대신하지 않습니다. '
         '계정은 설정에서 삭제할 수 있고, 정책이 바뀌면 변경된 내용을 확인하고 동의한 후 커뮤니티에 '
-        '참여해야 합니다. 삭제·차단·신고 기능을 악용하거나 타인의 계정을 이용해서는 안 됩니다.',
+        '참여해야 합니다. 삭제·신고 기능을 악용하거나 타인의 계정을 이용해서는 안 됩니다.',
         'body_en': 'Challenge participants can see your display name, attendance and evaluation results. '
         'Hosts may see detailed growth reports after the challenge ends. Coaching is shared with the '
         'author and receiving host; reported content is disclosed to moderators for review. Workout '

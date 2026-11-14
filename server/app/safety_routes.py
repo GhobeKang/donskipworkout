@@ -9,7 +9,6 @@ from sqlalchemy import delete, func, select, update
 from .account_deletion import clean_deleted_photos, delete_account_data
 from .community_policy import community_policy_sections, community_policy_version
 from .community_safety import (
-    cancel_direct_notifications,
     hide_room,
     require_shared_user,
 )
@@ -25,7 +24,6 @@ from .database import (
     photoDeletionJob,
     pushDevice,
     userAccount,
-    userBlock,
     userCredential,
 )
 from .schemas import requestModel
@@ -153,39 +151,6 @@ def delete_account_with_credentials(payload: publicAccountDeletion, request: Req
     clear_session_cookie(response, request)
     return {'deleted': True, 'deleted_user_uuid': deleted_user_uuid,
             'photo_cleanup': 'queued_or_completed'}
-
-
-@router.get('/safety/blocks')
-def list_user_blocks(user: userDependency, database: databaseDependency):
-    rows = database.execute(select(userBlock, userAccount).join(
-        userAccount, userAccount.user_id == userBlock.blocked_user_id,
-    ).where(userBlock.blocker_user_id == user.user_id)).all()
-    return {'users': [{'user_uuid': account.user_uuid, 'display_name': account.display_name,
-                       'created_at': block.created_at.isoformat() + 'Z'}
-                      for block, account in rows]}
-
-
-@router.put('/safety/blocks/{target_uuid}', status_code=204)
-def block_user(target_uuid: UUID, user: userDependency, database: databaseDependency):
-    target = require_shared_user(database, user.user_id, target_uuid)
-    # Both send and block operations take these locks in the same order.
-    database.scalars(select(userAccount).where(userAccount.user_id.in_(
-        [user.user_id, target.user_id],
-    )).order_by(userAccount.user_id).with_for_update()).all()
-    if database.get(userBlock, (user.user_id, target.user_id)) is None:
-        database.add(userBlock(blocker_user_id=user.user_id, blocked_user_id=target.user_id))
-    cancel_direct_notifications(database, user.user_id, target.user_id)
-    database.commit()
-
-
-@router.delete('/safety/blocks/{target_uuid}', status_code=204)
-def unblock_user(target_uuid: UUID, user: userDependency, database: databaseDependency):
-    target = database.scalar(select(userAccount).where(userAccount.user_uuid == str(target_uuid)))
-    if target is not None:
-        database.execute(delete(userBlock).where(
-            userBlock.blocker_user_id == user.user_id, userBlock.blocked_user_id == target.user_id,
-        ))
-        database.commit()
 
 
 def report_target(database, user_id, content_type, content_id):

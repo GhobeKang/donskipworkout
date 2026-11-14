@@ -36,9 +36,14 @@ class loginRequest(requestModel):
 class registerRequest(loginRequest):
     password: SecretStr = Field(min_length=12, max_length=128)
     display_name: str = Field(min_length=1, max_length=100)
-    country_code: str = Field(default='KR', pattern=r'^[A-Z]{2}$')
+    country_code: str | None = Field(default=None, pattern=r'^[A-Z]{2}$')
     timezone: str = Field(default='Asia/Seoul', min_length=1, max_length=64)
     accepted_policy_version: str = Field(min_length=1, max_length=32)
+
+    @field_validator('country_code', mode='before')
+    @classmethod
+    def normalize_country_code(cls, value: str | None) -> str | None:
+        return None if value == '' else value
 
     @field_validator('display_name')
     @classmethod
@@ -69,6 +74,11 @@ class settingsData(requestModel):
     notification_free_workout_enabled: StrictBool = False
     notification_missed_enabled: StrictBool = True
     notification_snooze_enabled: StrictBool = True
+
+    @field_validator('country_code', mode='before')
+    @classmethod
+    def normalize_country_code(cls, value: str | None) -> str | None:
+        return registerRequest.normalize_country_code(value)
 
     @field_validator('schedule_days')
     @classmethod
@@ -120,7 +130,7 @@ class exerciseInput(requestModel):
 
 
 class workoutSetInput(requestModel):
-    weight_kg: Decimal = Field(ge=0, le=999.99, max_digits=5, decimal_places=2)
+    weight_kg: Decimal = Field(ge=-999.99, le=999.99, max_digits=5, decimal_places=2)
     reps: int = Field(strict=True, ge=1, le=1000)
 
 
@@ -145,11 +155,16 @@ class workoutSetData(BaseModel):
     reps: int
 
 
+class exercisePersonalBestData(workoutSetData):
+    workout_date: str
+
+
 class exerciseGroupData(BaseModel):
     exercise_source: Literal['shared', 'custom']
     exercise_id: int | None
     exercise_name: str
     sets: list[workoutSetData]
+    previous_best: exercisePersonalBestData | None = None
 
 
 class workoutLogData(BaseModel):
@@ -170,6 +185,29 @@ class areaWorkoutImportData(BaseModel):
     exercise_groups: list[areaImportExerciseData] = Field(default_factory=list)
 
 
+class exerciseResearchInput(requestModel):
+    content: str = Field(min_length=1, max_length=2000)
+
+    @field_validator('content')
+    @classmethod
+    def normalize_content(cls, value: str) -> str:
+        content = value.strip()
+        if not content or any(ord(character) < 32 and character not in '\n\r\t' for character in content):
+            raise ValueError('Research content must be nonempty without control characters')
+        return content
+
+
+class exerciseResearchData(BaseModel):
+    record_id: int
+    content: str
+    created_at: str
+
+
+class exerciseResearchListData(BaseModel):
+    records: list[exerciseResearchData]
+    has_more: bool
+
+
 class exerciseData(BaseModel):
     exercise_source: Literal['shared', 'custom']
     exercise_id: int
@@ -177,6 +215,8 @@ class exerciseData(BaseModel):
     target_area: str | None
     target_subarea: str | None = None
     last_sets: list[workoutSetData]
+    previous_best: exercisePersonalBestData | None = None
+    latest_research_record: exerciseResearchData | None = None
 
 
 class userData(BaseModel):
@@ -385,6 +425,14 @@ class reportAreaRecordData(BaseModel):
     record_count: int
 
 
+class reportPersonalRecordData(BaseModel):
+    exercise_source: Literal['shared', 'custom']
+    exercise_id: int
+    exercise_name: str
+    previous_best: exercisePersonalBestData
+    current_best: exercisePersonalBestData
+
+
 class reportChallengeData(BaseModel):
     new_areas: list[reportNewAreaData]
     personal_record_areas: list[reportAreaRecordData]
@@ -500,6 +548,7 @@ class personalReportData(BaseModel):
     evaluation: reportEvaluationData
     workout_time: workoutTimeReport | None = None
     muscle_activity: muscleActivityComparison | None = None
+    personal_records: list[reportPersonalRecordData] = Field(default_factory=list)
 
 
 class weeklyShareData(BaseModel):
@@ -619,6 +668,17 @@ class pushTestRequest(requestModel):
 class challengeNudgeRequest(requestModel):
     request_id: UUID
     member_uuids: list[UUID] = Field(default_factory=list, max_length=10)
+    message: str | None = Field(default=None, min_length=1, max_length=200)
+
+    @field_validator('message')
+    @classmethod
+    def validate_message(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        message = value.strip()
+        if not message or any(ord(char) < 32 and char not in '\n\r\t' for char in message):
+            raise ValueError('A nonempty message without control characters is required')
+        return message
 
 
 class settingsOptions(BaseModel):

@@ -4,6 +4,43 @@ Python 3.12+, FastAPI, SQLAlchemy 2, Supabase PostgreSQL 17 기반 서버입니�
 기존 FastAPI API와 HttpOnly 쿠키 세션 인증을 유지하며, 데이터는 전용 `attendance` 스키마에 저장합니다.
 Supabase Auth/Storage로 인증이나 사진 파일 저장을 변경하는 작업은 포함하지 않습니다.
 
+## 국가 선택 입력
+
+- 가입과 설정에서 국가는 선택 항목이며, 미선택 상태에서도 모든 기능을 이용할 수 있습니다.
+- 가입 요청의 `country_code` 생략·`null`·빈 문자열은 국가 미제공으로 처리합니다.
+  `KR` 같은 임의의 기본 국가를 저장하지 않습니다.
+- 설정 변경에서 `country_code`를 생략하면 기존 값을 유지하고, `null` 또는 빈 문자열을
+  전달하면 삭제합니다. 국가와 독립적인 `timezone`은 운동 날짜·알림에 계속 사용합니다.
+- API 배포 전에 `supabase/migrations/20261027185744_make_user_country_optional.sql`을
+  적용해야 합니다. 기존 DB의 `NOT NULL`과 `KR` 기본값을 제거하며 기존 국가 값은 유지합니다.
+- DB 마이그레이션 → API 배포 → 웹 빌드 및 iOS 리소스 복사 → 새 iOS 빌드 제출 순서로
+  반영합니다. 개인정보처리방침의 공개 페이지도 선택 항목 안내로 갱신해야 합니다.
+
+## 보조 중량 기록
+
+- 딥스·풀업처럼 보조 머신을 쓰는 세트는 `weight_kg`를 음수로 저장합니다.
+  예를 들어 20kg 보조는 `-20`, 맨몸은 `0`, 추가 중량 20kg은 `20`입니다.
+  허용 범위는 `-999.99`~`999.99`kg이며 소수점 두 자리까지입니다.
+- 실제 부하는 체중 + 입력 중량이지만 현재 체중을 저장하지 않습니다.
+  따라서 음수 세트는 운동량 합산에서 제외하고 세트·반복 수에는 포함합니다.
+  동일 체중에서 `-30` → `-20`은 부하 증가이며 최고 기록에도 이 순서로 반영됩니다.
+  음수 기준값의 변화율은 실제 부하의 증가율이 아니므로 계산하지 않습니다.
+- 새 환경은 `supabase/migrations/20261020091237_allow_assisted_workout_weights.sql`을 적용해야 합니다.
+  기존 DB의 `workout_sets_weight_kg_check`가 음수를 차단하므로 API 코드만 배포하면 저장이 실패합니다.
+
+## 종목별 연구 기록
+
+- 기본 종목과 직접 만든 종목에 조언·자극이 잘 온 방법을 최대 2,000자로 작성합니다.
+  연구 기록은 사용자별 비공개 목록이며 운동일과 독립적으로 유지됩니다.
+- 운동 세트 카드에는 가장 최근에 작성한 한 건을 표시합니다. 기록 수정은 작성 순서를
+  바꾸지 않으며 최신 기록을 삭제하면 이전 기록이 표시됩니다.
+- `GET/POST /api/v1/exercises/{custom|shared}/{exercise_id}/research-records`로 목록 조회·작성,
+  `PUT/DELETE .../research-records/{record_id}`로 수정·삭제합니다.
+  목록은 작성 시각·ID 내림차순이며 `offset`과 `limit`(기본 20, 최대 100)을 지원합니다.
+- 새 환경은 `supabase/migrations/20261022143042_add_exercise_research_records.sql`을 적용해야 합니다.
+  `attendance` 비공개 스키마에 저장하며 Supabase Data API로는 노출하지 않습니다.
+  종목 삭제·회원 탈퇴 시 연결된 연구 기록도 삭제됩니다.
+
 ## 실행
 
 프로젝트 루트에서 PowerShell로 실행합니다.
@@ -23,9 +60,10 @@ Copy-Item .env.example .env
 ```powershell
 # 프로젝트 루트에서 실행
 Copy-Item server/.env.example server/.env
-# server/.env에 운영 DB, CORS_ORIGINS, ALLOWED_HOSTS, FIREBASE_PROJECT_ID를 입력
+# server/.env에 운영 DB, CORS_ORIGINS, ALLOWED_HOSTS, FIREBASE_PROJECT_ID 및 APNs 설정을 입력
 $env:DOCKER_IMAGE_NAME = 'your-docker-id/donskipworkout-api:latest'
 $env:FIREBASE_SERVICE_ACCOUNT_FILE = 'C:/private/firebase-service-account.json'
+$env:APNS_AUTH_KEY_FILE = 'C:/private/AuthKey_YOUR_KEY_ID.p8'
 docker compose pull attendance_api
 docker compose up -d --no-build attendance_api
 docker compose ps
@@ -35,14 +73,68 @@ docker compose logs -f attendance_api
 운영용 `compose.yaml`은 Dockerfile을 사용하지 않고 Docker Hub에서 이미지를 받아 실행합니다.
 Dockerfile 빌드는 프로젝트 루트의 Docker Hub push 스크립트에서만 수행합니다.
 
-기본 `compose.yaml`에 Firebase 서비스 계정 JSON 연결도 포함되어 있습니다.
-`DOCKER_IMAGE_NAME`과 `FIREBASE_SERVICE_ACCOUNT_FILE`은 셸 또는 프로젝트 루트 `.env`에
+기본 `compose.yaml`에 Firebase 서비스 계정 JSON 및 APNs `.p8` 키 연결이 포함되어 있습니다.
+`DOCKER_IMAGE_NAME`, `FIREBASE_SERVICE_ACCOUNT_FILE`, `APNS_AUTH_KEY_FILE`은 셸 또는 프로젝트 루트 `.env`에
 설정합니다. JSON 경로는 Docker 호스트의 절대 경로이며 위 Windows 예시를 실제 서버의
 경로로 바꾸세요. `FIREBASE_PROJECT_ID`는 `server/.env`에 설정합니다.
-JSON 경로가 없으면 Compose가 실행을 중단합니다. 파일은 이미지에 복사하지 않고
-컨테이너 내부 `/run/secrets/firebase_service_account`로 읽기 전용 연결합니다.
+인증 파일 경로가 없으면 Compose가 실행을 중단합니다. 파일은 이미지에 복사하지 않고
+컨테이너 내부 `/run/secrets/firebase_service_account`, `/run/secrets/apns_auth_key`로 읽기 전용 연결합니다.
 
 ## Docker Hub push
+
+### 2026-10-28 국가 선택 입력 운영 반영
+
+- DB 마이그레이션 `20261027185744_make_user_country_optional` 적용 완료.
+  국가 컬럼의 `NOT NULL`과 `KR` 기본값을 제거하고 기존 값은 유지했습니다.
+- 운영 이미지: `ghobekang/donskipworkout-api:optional-country-20261028-bac259989b`.
+  기존 운영 이미지에서 `database.py`, `schemas.py`, `routes.py`의 국가 처리만 변경했습니다.
+- 후보 이미지와 실제 운영 컨테이너에서 각각 20개 PostgreSQL 검증을 통과했습니다.
+  국가 없는 가입·설정 저장·수동 운동 인증, 기존 값 유지·삭제와 형식 검증을 확인했고
+  검증 데이터는 전부 롤백했습니다. 기존 사용자 수는 3명으로 유지됐습니다.
+- Docker `healthy`, HTTPS `/health` 200, 비인증 세션·연구 기록 API 401,
+  배포 코드 해시와 기존 실행 환경·볼륨 유지 확인.
+- 복구 자료: 운영 서버 `/home/dontskip/deployments/optional-country-20261028/`.
+  이전 이미지는 `ghobekang/donskipworkout-api:before-optional-country-20261028`로 보관했습니다.
+- 배포 증거와 iOS 준비 자료는 `review/optional_country_20261028/`에 있습니다.
+
+### 2026-10-22 종목별 연구 기록 운영 반영
+
+- DB 마이그레이션 `20261022143042_add_exercise_research_records` 적용 완료.
+  비공개 `attendance` 스키마, RLS와 전용 `attendance_api` 접근 정책을 사용합니다.
+- 운영 이미지: `ghobekang/donskipworkout-api:research-records-20261022-58fee2b879`.
+  기존 운영 이미지를 기준으로 연구 기록에 필요한 Python 파일 여섯 개만 반영했습니다.
+- 실제 PostgreSQL에서 24개 검증이 통과했고 검증 데이터는 롤백했습니다.
+  배포 후 Docker `healthy`, HTTPS `/health` 200, 비인증 연구 기록 API 401을 확인했습니다.
+- 복구 정보는 운영 서버 `/home/dontskip/deployments/research-records-20261022/`,
+  변경·검증 기록은 `review/research_photo_release_20261022/`에 있습니다.
+- 연구 기록 화면과 인증 사진 내보내기는 앱 번들에 포함되므로 설치 앱은 별도 업데이트가 필요합니다.
+  운영 API를 사용하는 정적 빌드는 같은 리뷰 폴더의 `frontend-production.zip`에 보관했습니다.
+
+### 2026-10-21 인증 완료 시 운동 타이머 자동 종료 운영 반영
+
+- 기존 운영 컨테이너에서 사진·수동 출석 후에도 타이머가 `running`으로 남는 현상을 재현했다.
+- 운영 이미지: `ghobekang/donskipworkout-api:timer-auto-finish-20261021-ad8f435130`.
+  기존 `assisted-weights-20261020` 이미지의 `routes.py`, `photo_routes.py`, `timer_routes.py`만 변경했다.
+- 사진·수동 인증이 처음 완료되면 실행 중·일시정지 타이머의 종료 시각과 누적 시간을 같은 트랜잭션에 저장한다.
+  6시간 이상 지난 측정은 `needs_review`로 남기며, 중복 인증과 사진 보강은 새 타이머를 종료하지 않는다.
+- 후보 이미지와 배포된 실제 운영 컨테이너에서 인증·타이머 13개 시나리오가 모두 통과했다.
+  인증 의존성을 검증 계정으로 대체한 ASGI 요청과 실제 운영 DB를 사용했고, 검증 데이터는 외부 트랜잭션 롤백으로 제거했다.
+- Docker `healthy`, HTTPS `/health` 200, 쿠키 없는 `/api/v1/auth/session` 401과 코드 해시를 확인했다.
+  실행 환경·TLS·볼륨·포트 설정이 배포 전과 같은지도 확인했다. DB 마이그레이션은 없다.
+- 복구 정보: 운영 서버 `/home/dontskip/deployments/timer-auto-finish-20261021/`.
+  이전 이미지는 `ghobekang/donskipworkout-api:before-timer-auto-finish-20261021` 태그로 보존했다.
+  새 이미지는 운영 서버 로컬에 보관했으며 registry push는 수행하지 않았다.
+- 변경 diff와 검증 결과는 `review/timer_auto_finish_release_20261021/`에 보관했고 임시 검증 파일은 삭제했다.
+
+### 2026-10-20 보조 중량 수정 운영 반영
+
+- DB의 음수 중량 제약 마이그레이션 `20261020091237` 적용 완료.
+- 기존 캐릭터 배포 이미지를 기반으로 검토한 Python 파일 다섯 개만 변경했다.
+- 운영 이미지: `ghobekang/donskipworkout-api:assisted-weights-20261020`, Docker `healthy`, HTTPS `/health` 200 확인.
+- 실제 운영 컨테이너·DB에서 음수 저장·조회·합산 검증을 통과했고 테스트 행은 롤백했다.
+- Docker Hub push는 자동 승인 검토에서 차단되어 이 태그는 운영 서버 로컬에만 있다.
+  다른 서버에서 pull하려면 별도 업로드 승인이 필요하다.
+- Android 6번과 범위·해시·복구 기록은 `docs/store-builds/2026-10-20-assisted-weights/README.md`에 보관했다.
 
 ### 2026-10-17 iOS 인증 로그 배포 기록
 
@@ -71,6 +163,23 @@ services:
         - -c
         - import urllib.request; urllib.request.urlopen("https://kuuki-jp.com:8000/health", timeout=3)
 ```
+
+### 2026-10-19 iOS APNs 연결 및 실기기 검증
+
+- Apple Team `HXFCFUL9YY`에 `donskip APNs production` 키(`YM7N5SN2F7`)를 생성했습니다.
+  범위는 Production의 `com.donskip.attendancecheck` 토픽 하나입니다.
+- 운영 서버 `/home/dontskip/.env`에 APNs Key ID, Team ID, 토픽, `production` 환경을 설정했습니다.
+  이 서버는 저장소 기본 배포와 달리 루트 `.env`를 API의 `env_file`로 사용합니다.
+- 키는 서버 `/home/dontskip/notification-config/apns/`의 접근 제한 폴더에 보관하고,
+  `/run/secrets/apns_auth_key`로 읽기 전용 연결했습니다. 원본 키는 Git과 이미지에 포함하지 않았습니다.
+- 기존 설정은 `/home/dontskip/apns-backups/20261019T120322Z/`에 접근 제한 백업했습니다.
+  API 컨테이너만 교체했고 이미지 `91bb153`, TLS, FCM 및 기존 데이터 볼륨을 유지했습니다.
+- 배포 전 일회성 컨테이너에서 키 읽기와 ES256 서명을 검증했고, 운영 HTTPS `/health`는 200입니다.
+- 2026-10-19 21:04 KST에 최근 등록된 활성 iOS 기기 1대의 테스트를 실제 운영 outbox에 넣었습니다.
+  Outbox `1340`, 이벤트 `a55c292f-8cd8-45ab-8185-8913a299afa9`가 첫 시도에
+  `provider_accepted`가 되었으며 오류는 없습니다.
+  APNs 접수 ID는 `64854133-BF15-5A16-333C-41466EB9A61B`입니다.
+- 사용자가 해당 iPhone의 테스트 알림 도착을 확인했습니다. 서버 접수와 실기기 표시를 모두 검증했습니다.
 
 ### 이미지 업로드
 
@@ -262,7 +371,11 @@ FCM은 AWS ARN이 아니라 Firebase 프로젝트 ID와 신뢰된 서버 자격 
 서비스 계정 키는 `.gitignore` 대상이며, 유출되었다면 Firebase/Google Cloud Console에서 즉시 폐기하세요.
 APNs만 설정해도 동일한 작업자가 실행됩니다. Apple Developer 계정에서 Push Notifications를 앱 ID에 활성화하고,
 APNs 인증 키(`.p8`), Key ID, Team ID를 준비합니다. `server/.env`에 `APNS_KEY_ID`, `APNS_TEAM_ID`,
-`APNS_AUTH_KEY_PATH`, `APNS_TOPIC=com.donskip.attendancecheck`를 함께 설정합니다. 개발용 Xcode 빌드는
+`APNS_TOPIC=com.donskip.attendancecheck`를 설정합니다. 로컬 실행은 `APNS_AUTH_KEY_PATH`에 키의 절대 경로를
+설정하고, Docker 배포는 프로젝트 루트 `.env` 또는 셸의 `APNS_AUTH_KEY_FILE`에 배포 호스트의 키 경로를
+설정합니다. `compose.yaml`이 키를 `/run/secrets/apns_auth_key`로 읽기 전용 연결하고
+`APNS_AUTH_KEY_PATH`도 이 컨테이너 내부 경로로 지정합니다. 키 파일이 없으면 Compose 배포를 중단합니다.
+개발용 Xcode 빌드는
 `APNS_ENVIRONMENT=sandbox`, TestFlight/App Store 빌드는 `production`을 사용합니다. 키는 저장소나
 Docker 이미지에 넣지 말고 서버 비밀 파일로 마운트합니다. iOS 앱은 Push Notifications capability가 포함된
 프로비저닝 프로필로 서명하고 실기기에서 권한, 토큰 등록, 로그아웃 후 수신을 확인해야 합니다.
@@ -557,6 +670,33 @@ Pose: triumphant workout-completed VICTORY. One bent arm raised overhead with a 
 ```
 
 </details>
+
+### 2026-10-20 캐릭터 시트 기준 교체
+
+- 기준 이미지는 `public/assets/character/character-sheet.png`입니다. 기본·더블 바이셉스·엄지·덤벨 컬·
+  승리 포즈의 PNG 5종을 이 시트의 얼굴, 체형, 운동복, 신발에 맞춰 교체했습니다.
+- 기본 포즈는 시트의 검지를 든 사선 자세입니다. 기본·바이셉스·덤벨은 시트의 기본 찡그린 표정,
+  엄지·승리는 시트의 만족 표정을 사용하며 윙크와 내민 혀는 없습니다.
+- 기존 클라이언트와의 호환을 위해 `coach_wink`를 포함한 외부 캐릭터 ID 5개는 유지합니다.
+  `coach_wink`의 실제 이미지는 이제 검지를 든 기본 포즈입니다.
+- 효과 버전은 10, 브랜딩 ID는 `fixed_brand_v6`입니다. 배포 중 기존 효과를 유지하던 촬영 화면은
+  새로고침해야 하며, 이미 저장된 합성 사진은 다시 만들거나 수정하지 않습니다.
+- 이전 캐릭터 파일은 `etc/review-replaced-character-sheet/2026-10-20/`에 보관했습니다.
+  공용 투명 원본은 `public/assets/character/coach-strict-transparent.png`입니다.
+- 운영 이미지는 `ghobekang/donskipworkout-api:character-sheet-20261020-b04063227b`입니다.
+  기존 `91bb153` 위에 캐릭터 PNG 5개와 `photo_effects.json`만 덮은 서버 로컬 이미지이며 Registry push는 하지 않았습니다.
+- 운영 설정 백업은 `/home/dontskip/character-backups/20261020T030903Z/`입니다.
+  TLS, APNs·FCM 설정과 기존 데이터 마운트를 유지했습니다.
+- 투명 PNG와 180×252 이하 썸네일, 한영 브랜딩 10개 조합을 로컬과 운영 사전 검증 컨테이너에서
+  확인했습니다. 배포 후 운영 HTTPS `/health`는 200입니다.
+- 생성은 built-in ImageGen의 `transparent_background=true`로 포즈마다 별도로 실행했습니다.
+  공통 프롬프트: Use the attached character sheet as the definitive identity. Match the broad squat
+  charcoal muscular coach, round head, short swept hair, cream graphic facial features, burgundy shorts
+  with cream trim and off-white trainers. Exactly one complete full-body character with transparent
+  padding, soft neutral studio lighting, genuine RGBA transparency, no background, floor, scenery,
+  text or watermark. Both eyes open, no wink or tongue. Pose variations: raised index finger with the
+  basic stern frown; double biceps with stern frown; double thumbs-up with the satisfied expression;
+  one-arm dumbbell curl with stern frown; raised victory fist with the satisfied expression.
 
 공유 픽셀 변환식은 `clamp(floor(((channel - 128) * contrast + 128) * brightness + offset + 0.5))`입니다.
 Canvas.filter의 브라우저별 지원 차이를 피하기 위해 프런트엔드도 같은 픽셀 변환을 수행합니다.

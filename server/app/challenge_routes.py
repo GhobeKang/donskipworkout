@@ -28,11 +28,7 @@ from .challenge_service import (
     round_progress,
 )
 from .community_policy import communityUserDependency
-from .community_safety import (
-    blocked_user_ids,
-    filter_blocked_members,
-    require_room_visible,
-)
+from .community_safety import require_room_visible
 from .database import (
     challengeEvaluation,
     challengeInvitation,
@@ -92,7 +88,7 @@ def get_round_for_user(database, round_uuid: str, user_id: int):
     ).first()
     if result is None:
         raise HTTPException(404, '방을 찾을 수 없습니다.')
-    require_room_visible(database, user_id, result[1])
+    require_room_visible(result[1])
     return result
 
 
@@ -143,8 +139,8 @@ def room_can_be_deleted(rounds, now: datetime) -> bool:
     )
 
 
-def round_output(database, room: challengeRoom, current_round: challengeRound, viewer_user_id):
-    require_room_visible(database, viewer_user_id, room)
+def round_output(database, room: challengeRoom, current_round: challengeRound):
+    require_room_visible(room)
     members = database.execute(
         select(challengeRoundMember, userAccount)
         .join(userAccount, userAccount.user_id == challengeRoundMember.user_id)
@@ -156,7 +152,7 @@ def round_output(database, room: challengeRoom, current_round: challengeRound, v
         select(challengeRound).where(challengeRound.room_id == room.room_id)
     ).all()
     host = database.get(userAccount, room.host_user_id) if room.host_user_id is not None else None
-    return filter_blocked_members(database, viewer_user_id, {
+    return {
         'room_uuid': room.room_uuid,
         'round_uuid': current_round.round_uuid,
         'room_name': room.name,
@@ -178,12 +174,11 @@ def round_output(database, room: challengeRoom, current_round: challengeRound, v
             **{key: value for key, value in rulebook.rulebook_json.items() if not key.startswith('_')},
         } if rulebook else {key: value for key, value in current_round.draft_rulebook.items() if not key.startswith('_')},
         'draft_rulebook': {key: value for key, value in current_round.draft_rulebook.items() if not key.startswith('_')},
-    })
+    }
 
 
 @router.get('/challenge-rooms')
 def list_challenge_rooms(user: communityUserDependency, database: databaseDependency):
-    blocked_ids = blocked_user_ids(database, user.user_id)
     rows = database.execute(
         select(challengeRound, challengeRoom)
         .join(challengeRoom, challengeRoom.room_id == challengeRound.room_id)
@@ -224,7 +219,7 @@ def list_challenge_rooms(user: communityUserDependency, database: databaseDepend
                 and room.status == 'open'
                 and room_can_be_deleted(room_rounds_by_id[room.room_id], now),
             }
-            for current_round, room in rows if room.host_user_id not in blocked_ids
+            for current_round, room in rows
         ]
     }
 
@@ -274,7 +269,7 @@ def create_challenge_room(
     except IntegrityError:
         database.rollback()
         raise HTTPException(409, '방을 만들 수 없습니다. 다시 시도해 주세요.') from None
-    return round_output(database, room, current_round, user.user_id)
+    return round_output(database, room, current_round)
 
 
 @router.get('/challenge-rooms/{room_uuid}')
@@ -294,7 +289,7 @@ def read_challenge_room(room_uuid: str, user: communityUserDependency, database:
     if row is None:
         raise HTTPException(404, '방을 찾을 수 없습니다.')
     current_round, room = row
-    return round_output(database, room, current_round, user.user_id)
+    return round_output(database, room, current_round)
 
 
 @router.delete('/challenge-rooms/{room_uuid}', status_code=204)
@@ -496,7 +491,7 @@ def join_challenge_by_invite(
     if invitation is None or room.status == 'cancelled':
         database.commit()
         raise HTTPException(404, '사용할 수 없는 초대 코드입니다.')
-    require_room_visible(database, user.user_id, room)
+    require_room_visible(room)
     if room.host_user_id is None:
         raise HTTPException(409, '방장이 없는 챌린지에는 참여할 수 없습니다.')
     if current_round.status not in {'draft', 'awaiting_consent'}:
@@ -541,7 +536,7 @@ def join_challenge_by_invite(
     except IntegrityError:
         database.rollback()
         raise HTTPException(409, '이미 이 초대에 참여했거나 방 정원이 가득 찼습니다.') from None
-    return round_output(database, room, current_round, user.user_id)
+    return round_output(database, room, current_round)
 
 
 @router.put('/challenge-rounds/{round_uuid}/rulebook')
@@ -570,7 +565,7 @@ def update_challenge_rulebook(
             member.consented_roster_version = None
             member.consented_at = None
     database.commit()
-    return round_output(database, room, current_round, user.user_id)
+    return round_output(database, room, current_round)
 
 
 @router.post('/challenge-rounds/{round_uuid}/publish')
@@ -623,7 +618,7 @@ def publish_challenge_rulebook(
         database, current_round, room, user.user_id, version, now
     )
     database.commit()
-    response = round_output(database, room, current_round, user.user_id)
+    response = round_output(database, room, current_round)
     response['notification_delivery'] = notification_delivery
     return response
 
@@ -643,7 +638,7 @@ def consent_to_challenge(
         ).with_for_update()
     )
     if member.consented_rulebook_version == current_round.rulebook_version and member.consented_roster_version == current_round.roster_version:
-        return round_output(database, room, current_round, user.user_id)
+        return round_output(database, room, current_round)
     latest = latest_rulebook(database, current_round.round_id)
     if latest is None or current_round.status not in {'awaiting_consent', 'draft'}:
         raise HTTPException(409, '동의할 수 있는 게시된 룰북이 없습니다.')
@@ -655,7 +650,7 @@ def consent_to_challenge(
     member.consented_at = now
     member.participant_status = 'consented'
     database.commit()
-    return round_output(database, room, current_round, user.user_id)
+    return round_output(database, room, current_round)
 
 
 @router.post('/challenge-rounds/{round_uuid}/start')
@@ -731,7 +726,7 @@ def schedule_challenge_start(
         delete(challengeInvitation).where(challengeInvitation.round_id == current_round.round_id)
     )
     database.commit()
-    return round_output(database, room, current_round, user.user_id)
+    return round_output(database, room, current_round)
 
 
 @router.delete('/challenge-rounds/{round_uuid}/consents/me', status_code=204)
@@ -781,7 +776,7 @@ def public_periods(database, periods):
     return result
 
 
-def public_evaluation(database, evaluation: dict, viewer_user_id):
+def public_evaluation(database, evaluation: dict):
     result = deepcopy(evaluation)
     result.pop('growth_reports', None)
     result.pop('growth_report_history', None)
@@ -806,7 +801,7 @@ def public_evaluation(database, evaluation: dict, viewer_user_id):
         account = database.get(userAccount, member_result.pop('user_id'))
         member_result['user_uuid'] = account.user_uuid if account else None
         member_result['display_name'] = account.display_name if account else '참가자'
-    return filter_blocked_members(database, viewer_user_id, result)
+    return result
 
 
 @router.get('/challenge-rounds/{round_uuid}/progress')
@@ -817,7 +812,7 @@ def read_challenge_progress(round_uuid: str, user: communityUserDependency, data
     snapshot = finalize_round_if_due(database, current_round, now)
     if snapshot is not None:
         database.commit()
-        return public_evaluation(database, snapshot, user.user_id)
+        return public_evaluation(database, snapshot)
     periods = round_progress(database, current_round, now)
     target_total = sum(period['target_count'] * len(period['members']) for period in periods)
     credited_total = sum(
@@ -826,7 +821,7 @@ def read_challenge_progress(round_uuid: str, user: communityUserDependency, data
         for member_result in period['members']
     )
     database.commit()
-    periods = filter_blocked_members(database, user.user_id, public_periods(database, periods))
+    periods = public_periods(database, periods)
     return {
         'round_uuid': current_round.round_uuid,
         'status': current_round.status,
@@ -849,7 +844,7 @@ def read_challenge_results(round_uuid: str, user: communityUserDependency, datab
     snapshot = finalize_round_if_due(database, current_round, now)
     if snapshot is not None:
         database.commit()
-        return public_evaluation(database, snapshot, user.user_id)
+        return public_evaluation(database, snapshot)
 
 
 
@@ -906,7 +901,6 @@ def host_growth_reports(database, current_round, room, user_id, now):
             ).order_by(challengeEvaluation.evaluation_version.desc()).limit(1).with_for_update())
             if evaluation is not None:
                 evaluation.result_json = {**snapshot, 'growth_reports': reports}
-    hidden_member_ids = {str(member_id) for member_id in blocked_user_ids(database, user_id)}
     current_names = {str(account_id): display_name for account_id, display_name in database.execute(
         select(userAccount.user_id, userAccount.display_name).where(
             userAccount.user_id.in_([int(member_id) for member_id in reports if member_id.isdecimal()]),
@@ -914,7 +908,7 @@ def host_growth_reports(database, current_round, room, user_id, now):
     )}
     reports = {member_id: {**enrich_growth_report(report),
                           'display_name': current_names.get(member_id) or '참가자'}
-               for member_id, report in reports.items() if member_id not in hidden_member_ids}
+               for member_id, report in reports.items()}
     return reports, {
         'round_uuid': current_round.round_uuid,
         'report_state': report_state,
@@ -975,7 +969,7 @@ def propose_challenge_continuation(
         )
     )
     if next_round is not None:
-        return round_output(database, room, next_round, user.user_id)
+        return round_output(database, room, next_round)
     previous_rulebook = latest_rulebook(database, previous_round.round_id)
     if previous_rulebook is None:
         raise HTTPException(409, '복사할 룰북이 없습니다.')
@@ -1029,5 +1023,5 @@ def propose_challenge_continuation(
         if existing_round is None:
             raise HTTPException(409, '다음 회차를 만들지 못했습니다. 최신 방 상태를 확인해 주세요.') from None
         room = database.get(challengeRoom, existing_round.room_id)
-        return round_output(database, room, existing_round, user.user_id)
-    return round_output(database, room, next_round, user.user_id)
+        return round_output(database, room, existing_round)
+    return round_output(database, room, next_round)
