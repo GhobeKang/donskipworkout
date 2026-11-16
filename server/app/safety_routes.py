@@ -47,7 +47,7 @@ class policyAcceptance(requestModel):
 
 
 class accountDeletion(requestModel):
-    password: SecretStr = Field(min_length=1, max_length=128)
+    password: SecretStr = Field(min_length=1)
     confirmation: Literal['DELETE']
 
 

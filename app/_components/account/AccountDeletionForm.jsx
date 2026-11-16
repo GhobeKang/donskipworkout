@@ -43,7 +43,7 @@ export default function AccountDeletionForm({ user_uuid, on_deleted, is_public =
     <form className={safety_styles.form} onSubmit={delete_account}>
       <fieldset disabled={pending}>
         {is_public && <label htmlFor={`${field_id}-email`}>{t('계정 이메일')}<input id={`${field_id}-email`} type="email" autoComplete="username" required maxLength={255} value={email} onChange={(event) => set_email(event.target.value)} /></label>}
-        <label htmlFor={`${field_id}-password`}>{t('현재 비밀번호')}<input id={`${field_id}-password`} type="password" autoComplete="current-password" required maxLength={128} value={password} onChange={(event) => set_password(event.target.value)} /></label>
+        <label htmlFor={`${field_id}-password`}>{t('현재 비밀번호')}<input id={`${field_id}-password`} type="password" autoComplete="current-password" required value={password} onChange={(event) => set_password(event.target.value)} /></label>
         <label htmlFor={`${field_id}-confirmation`}>{t('삭제를 확인하려면 DELETE를 입력하세요.')}<input id={`${field_id}-confirmation`} autoComplete="off" spellCheck={false} required value={confirmation} onChange={(event) => set_confirmation(event.target.value)} /></label>
         {error_message && <p className="requestState" role="alert">{error_message}</p>}
         <button className={safety_styles.dangerButton} type="submit" disabled={pending || confirmation !== 'DELETE' || !password}>{t(pending ? '삭제 중…' : '계정과 데이터 영구 삭제')}</button>

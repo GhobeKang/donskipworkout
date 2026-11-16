@@ -363,7 +363,7 @@
   "이름": "Name",
   "이메일": "Email",
   "비밀번호": "Password",
-  "비밀번호는 12~128자로 입력해 주세요.": "Use 12–128 characters for your password.",
+  "비밀번호는 숫자와 특수문자를 포함해 9자 이상으로 입력해 주세요.": "Use at least 9 characters, including a number and a special character.",
   "확인 중…": "Checking…",
   "계정 만들기": "Create account",
   "이미 계정이 있어요 · 로그인": "Already have an account? Sign in",

@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import CountryTimezoneFields from '../settings/CountryTimezoneFields';
 import CommunityPolicy, { LegalDocuments } from '../legal/CommunityPolicy';
 
+const registration_password_pattern = String.raw`(?=[\s\S]*\p{Nd})(?=[\s\S]*[\p{P}\p{S}])[\s\S]{9,}`;
+
 export default function AuthScreen({ on_authenticate, pending, error, on_clear_error }) {
   const { t, localize_message } = useLanguage();
   const [auth_mode, set_auth_mode] = useState('login');
@@ -38,8 +40,8 @@ export default function AuthScreen({ on_authenticate, pending, error, on_clear_e
           else set_timezone(value);
         }} />}
         <label>{t("이메일")}<input name="email" type="email" autoComplete="username" required maxLength={255} value={email} onChange={(event) => set_email(event.target.value)} /></label>
-        <label>{t("비밀번호")}<input name="password" type="password" autoComplete={is_register ? 'new-password' : 'current-password'} required minLength={is_register ? 12 : 1} maxLength={128} value={password} onChange={(event) => set_password(event.target.value)} /></label>
-        {is_register && <p className="infoText">{t("비밀번호는 12~128자로 입력해 주세요.")}</p>}
+        <label>{t("비밀번호")}<input name="password" type="password" autoComplete={is_register ? 'new-password' : 'current-password'} required minLength={is_register ? 9 : 1} pattern={is_register ? registration_password_pattern : undefined} title={is_register ? t('비밀번호는 숫자와 특수문자를 포함해 9자 이상으로 입력해 주세요.') : undefined} value={password} onChange={(event) => set_password(event.target.value)} /></label>
+        {is_register && <p className="infoText">{t('비밀번호는 숫자와 특수문자를 포함해 9자 이상으로 입력해 주세요.')}</p>}
         {is_register && <CommunityPolicy show_agreement accepted_version={accepted_policy_version} on_change={set_accepted_policy_version} disabled={pending} />}
         {error && <p className="errorText" role="alert">{localize_message(error)}</p>}
         <button className="wideButton primary" type="submit" disabled={is_register && !accepted_policy_version}>{pending ? t("확인 중…") : is_register ? t("계정 만들기") : t("로그인")}</button>

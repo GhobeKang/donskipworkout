@@ -3,6 +3,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from pathlib import Path
 from typing import Annotated, Literal
+from unicodedata import category
 from uuid import UUID
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
@@ -24,7 +25,7 @@ class requestModel(BaseModel):
 
 class loginRequest(requestModel):
     email: EmailStr = Field(max_length=255)
-    password: SecretStr = Field(min_length=1, max_length=128)
+    password: SecretStr = Field(min_length=1)
     installation_uuid: UUID | None = None
 
     @field_validator('email')
@@ -34,11 +35,21 @@ class loginRequest(requestModel):
 
 
 class registerRequest(loginRequest):
-    password: SecretStr = Field(min_length=12, max_length=128)
+    password: SecretStr = Field(min_length=9)
     display_name: str = Field(min_length=1, max_length=100)
     country_code: str | None = Field(default=None, pattern=r'^[A-Z]{2}$')
     timezone: str = Field(default='Asia/Seoul', min_length=1, max_length=64)
     accepted_policy_version: str = Field(min_length=1, max_length=32)
+
+    @field_validator('password')
+    @classmethod
+    def validate_password(cls, value: SecretStr) -> SecretStr:
+        password = value.get_secret_value()
+        has_number = any(character.isdecimal() for character in password)
+        has_special_character = any(category(character)[0] in {'P', 'S'} for character in password)
+        if not has_number or not has_special_character:
+            raise ValueError('Password must contain a number and a special character')
+        return value
 
     @field_validator('country_code', mode='before')
     @classmethod

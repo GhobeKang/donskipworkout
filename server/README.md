@@ -4,6 +4,15 @@ Python 3.12+, FastAPI, SQLAlchemy 2, Supabase PostgreSQL 17 기반 서버입니�
 기존 FastAPI API와 HttpOnly 쿠키 세션 인증을 유지하며, 데이터는 전용 `attendance` 스키마에 저장합니다.
 Supabase Auth/Storage로 인증이나 사진 파일 저장을 변경하는 작업은 포함하지 않습니다.
 
+## 비밀번호 규칙
+
+- 신규 가입 비밀번호는 숫자와 특수문자를 각각 하나 이상 포함한 9자 이상입니다.
+  영문자·대소문자 필수 조건과 비밀번호 최대 길이 조건은 없습니다.
+- 숫자는 Unicode 십진 숫자, 특수문자는 Unicode 문장부호·기호를 인정합니다.
+  공백은 특수문자로 세지 않으며, 비밀번호를 자르거나 공백을 제거하지 않습니다.
+- 로그인과 계정 삭제는 기존 비밀번호를 그대로 검증하며 비밀번호 최대 길이 조건이 없습니다.
+  가입 화면과 서버 가입 API에서 같은 조합 조건을 검사합니다.
+
 ## 국가 선택 입력
 
 - 국가 선택은 가입 화면에서만 제공하며, 미선택 상태에서도 모든 기능을 이용할 수 있습니다.
@@ -504,7 +513,7 @@ API 코드 배포·재시작 후 사용할 수 있고 DB 마이그레이션은 �
 
 | 메서드/경로 | 입력/출력 |
 | --- | --- |
-| POST `/api/v1/auth/register` | `email`, `password`(12~128자), `display_name`, `country_code`(ISO 2자리), `timezone`(IANA 이름) → 세션 만료초와 사용자; HttpOnly 쿠키 발급 |
+| POST `/api/v1/auth/register` | `email`, `password`(숫자·특수문자를 각각 포함한 9자 이상), `display_name`, `country_code`(ISO 2자리), `timezone`(IANA 이름) → 세션 만료초와 사용자; HttpOnly 쿠키 발급 |
 | POST `/api/v1/auth/login` | `email`, `password` → 세션 만료초와 사용자; HttpOnly 쿠키 발급 |
 | GET `/api/v1/auth/session` | 현재 HttpOnly 세션 검증 및 사용자 복원 |
 | POST `/api/v1/auth/logout` | 해당 사용자의 **모든 기기** 서버 세션 삭제, 쿠키 삭제, 204 |
