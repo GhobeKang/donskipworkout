@@ -9,6 +9,7 @@ import MaterialIcon from '../ui/MaterialIcon';
 import RequestState from '../ui/RequestState';
 import MentorWorkspace from './MentorWorkspace';
 import styles from './Mentorship.module.css';
+import HelpLink from '../help/HelpLink';
 
 function MentorRegistration({ on_registered, on_unauthorized }) {
   const { t } = useLanguage();
@@ -77,6 +78,7 @@ export default function MentorshipScreen({ on_unauthorized, on_research_change, 
     on_back={() => { set_selected_relationship_uuid(''); refresh(); }} />;
   return <section className="viewPanel isVisible">
     <header className="pageHeader"><div><p className="eyebrow">{t('함께 이어가는 운동')}</p><h1>{t('코치 · 회원')}</h1></div><MaterialIcon>school</MaterialIcon></header>
+    <HelpLink question_id="coaching">{t('코치 등록과 공유 범위 알아보기')}</HelpLink>
     <div className={styles.stack}>
       <article className={`${styles.card} ${styles.intro}`}>
         <h2>{t('챌린지 밖에서도, 코칭은 계속')}</h2>

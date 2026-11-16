@@ -47,7 +47,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 button:not(:disabled):hover { filter: brightness(.96); }
 fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
 img { max-width: 100%; }
-.material-symbols-rounded { display: inline-block; font-family: 'Material Symbols Rounded'; font-size: 22px; font-weight: 500; font-style: normal; line-height: 1; letter-spacing: normal; text-transform: none; white-space: nowrap; direction: ltr; font-feature-settings: 'liga'; -webkit-font-smoothing: antialiased; flex-shrink: 0; }
+.material-symbols-rounded { display: inline-block; width: 1em; height: 1em; overflow: hidden; font-family: 'Material Symbols Rounded'; font-size: 22px; font-weight: 500; font-style: normal; line-height: 1; letter-spacing: normal; text-transform: none; white-space: nowrap; direction: ltr; font-feature-settings: 'liga'; -webkit-font-smoothing: antialiased; flex-shrink: 0; }
 .phoneShell { width: min(100%, 430px); min-height: 100dvh; margin: auto; background: var(--bg); position: relative; }
 .statusBar { min-height: calc(72px + env(safe-area-inset-top)); display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: calc(14px + env(safe-area-inset-top)) var(--layout-side-gap) 10px; }
 .statusBrand { display: flex; align-items: center; gap: 10px; min-width: 0; }

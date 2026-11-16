@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { api_request } from '../../_lib/api';
 import { useLanguage } from '../../_hooks/useLanguage';
 import MaterialIcon from '../ui/MaterialIcon';
+import HelpLink from '../help/HelpLink';
 
 function create_request_id() {
   return globalThis.crypto?.randomUUID?.()
@@ -269,6 +270,7 @@ export default function WorkoutTimer({ user_uuid, is_active, on_unauthorized }) 
 
   return <article className="workoutTimerCard">
     <div className="sectionHeading"><h2>{t('운동 시간')}</h2>{timer?.record_source === 'self_reported' && <span className="challengeStatus">{t('사용자 확인 기록')}</span>}</div>
+    <HelpLink question_id="timer">{t('시간 측정과 출석의 차이')}</HelpLink>
     <div className="workoutTimerReadout" aria-live="off">{format_duration(shown_seconds)}</div>
     <p className="infoText">{status_message}</p>
     {error_message && <p className="timerError" role="alert">{error_message}</p>}

@@ -9,6 +9,7 @@ import MentorConversation from './MentorConversation';
 import MentorResearchRecords from './MentorResearchRecords';
 import MentorReport from './MentorReport';
 import styles from './Mentorship.module.css';
+import HelpLink from '../help/HelpLink';
 
 export default function MentorWorkspace({ relationship_uuid, on_unauthorized, on_back, on_research_change, initial_tab = 'messages' }) {
   const { t } = useLanguage();
@@ -21,6 +22,7 @@ export default function MentorWorkspace({ relationship_uuid, on_unauthorized, on
   return <section className="viewPanel isVisible">
     <header className="pageHeader"><button className="backButton" type="button" onClick={on_back} disabled={action.pending} aria-label={t('코칭 목록으로')}><MaterialIcon>arrow_back</MaterialIcon></button>
       <div><p className="eyebrow">{t(relationship?.role === 'mentor' ? '코칭 회원' : '내 코치')}</p><h1>{relationship?.counterpart_name || t('코칭')}</h1></div></header>
+    <HelpLink question_id="coaching-sharing">{t('코치 등록과 공유 범위 알아보기')}</HelpLink>
     <RequestState loading={resource.loading} error={resource.error} on_retry={retry_count < 2 ? () => { set_retry_count((value) => value + 1); set_revision((value) => value + 1); } : undefined} />
     {relationship && !resource.error && <div className={styles.stack}>
       {relationship.ended_at && <p className={styles.notice}>{t('관계가 해제되었습니다. 기존 대화만 조회할 수 있습니다.')}</p>}

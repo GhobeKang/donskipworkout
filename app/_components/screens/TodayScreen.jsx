@@ -5,6 +5,8 @@ import { useEffect, useState } from 'react';
 import MaterialIcon from '../ui/MaterialIcon';
 import ActionModal from '../ui/ActionModal';
 import WorkoutTimer from '../workout/WorkoutTimer';
+import HelpLink from '../help/HelpLink';
+import FirstUseGuide from '../help/FirstUseGuide';
 
 function get_workout_clock(timezone, current_time) {
   const clock_parts = new Intl.DateTimeFormat('en-CA', {
@@ -78,6 +80,8 @@ export default function TodayScreen({ user_uuid, data, pending, revision, on_una
       <button className="wideButton primary" type="button" disabled={pending} onClick={primary_action}><MaterialIcon>{is_completed ? 'check_circle' : is_finished ? 'event' : session_status === 'started' ? 'photo_camera' : 'north_east'}</MaterialIcon>{pending ? t('기록 중…') : action_label}</button>
       {!is_finished && <div className="secondaryActions">{can_start && <button className="quietButton" type="button" disabled={pending || !can_snooze} onClick={() => open_action_modal('snooze')}>{is_scheduled_late ? t('미루기 불가') : session?.snooze_count ? t('미루기 사용함') : t('30분 뒤에')}</button>}<button className="quietButton" type="button" disabled={pending} onClick={() => open_action_modal('rest')}>{t('오늘은 휴식')}</button></div>}
     </article>
+    <FirstUseGuide />
+    <HelpLink question_id="attendance">{t('세트 기록과 출석은 어떻게 다른가요?')}</HelpLink>
     <button className="challengeEntry" type="button" disabled={pending} onClick={on_open_challenges}><span className="memoryIcon"><MaterialIcon>groups</MaterialIcon></span><span><strong>{t('내 챌린지')}</strong><small>{t('친구와 운동 약속을 만들고 진행 상황을 확인합니다.')}</small></span><MaterialIcon>chevron_right</MaterialIcon></button>
     <section className="memorySection"><div className="sectionHeading"><h2>{t('지난번의 나')}</h2><button className="quietButton" type="button" disabled={pending} onClick={on_open_workout}>{t('세트 기록')}<MaterialIcon>arrow_forward</MaterialIcon></button></div>{memory ? <button type="button" className="memoryRow" disabled={pending} onClick={() => on_open_memory(memory)}><span className="memoryIcon"><MaterialIcon>fitness_center</MaterialIcon></span><span className="memorySummary"><strong>{memory.note || memory.title}</strong><time dateTime={memory.workout_date}>{format_workout_date(memory.workout_date, language)}</time></span><MaterialIcon>chevron_right</MaterialIcon></button> : <p className="emptyState">{t('보여줄 과거는 아직 없다. 오늘부터 남기자.')}</p>}</section>
     <button className="quietButton refreshButton" type="button" disabled={pending} onClick={on_refresh}><MaterialIcon>refresh</MaterialIcon>{t('최신 기록 불러오기')}</button>

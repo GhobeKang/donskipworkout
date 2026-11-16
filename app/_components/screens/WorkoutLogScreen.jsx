@@ -10,6 +10,7 @@ import WorkoutFloatingActions from '../workout/WorkoutFloatingActions';
 import AreaWorkoutImportModal from '../workout/AreaWorkoutImportModal';
 import ExerciseResearchModal from '../workout/ExerciseResearchModal';
 import MaterialIcon from '../ui/MaterialIcon';
+import HelpLink from '../help/HelpLink';
 import RequestState from '../ui/RequestState';
 
 function current_workout_date(timezone) {
@@ -396,6 +397,7 @@ export default function WorkoutLogScreen({ ref, user_uuid, initial_workout_date,
 
   return <section className={'viewPanel workoutLogPanel' + (is_active ? ' isVisible' : '')}>
     <header className="pageHeader"><div><p className="eyebrow">{t('성장 욕심이 있다면 일단 남겨봐.')}</p><h1>{t('들었으면,\n기록으로 남겨봐.')}</h1></div></header>
+    <div><p className="infoText">{t('세트 입력은 자동 저장됩니다. 출석 인증은 별도로 완료해 주세요.')}</p><HelpLink question_id="save-workout">{t('자동 저장과 기록 방법 보기')}</HelpLink></div>
     <div className="workoutDatePicker">
       <label className="fieldLabel" htmlFor="workout-record-date">{t("기록 날짜")}</label>
       <input id="workout-record-date" className="timeInput" type="date" value={selected_date} max={current_workout_date(timezone)} onChange={(event) => {

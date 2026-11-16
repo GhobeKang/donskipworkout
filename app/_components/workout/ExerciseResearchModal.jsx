@@ -7,6 +7,7 @@ import MaterialIcon from '../ui/MaterialIcon';
 import RequestState from '../ui/RequestState';
 import ResearchRevisionHistory from './ResearchRevisionHistory';
 import ResearchNoteContent from './ResearchNoteContent';
+import HelpLink from '../help/HelpLink';
 
 export default function ExerciseResearchModal({ exercise, on_change, on_close, on_unauthorized }) {
   const { t, language, localize_message } = useLanguage();
@@ -144,6 +145,7 @@ export default function ExerciseResearchModal({ exercise, on_change, on_close, o
       <h2 id="exercise-research-title">{t('연구 기록')}</h2>
     </header>
     <p id="exercise-research-description" className="infoText">{t('들은 조언이나 자극이 잘 온 방법을 기록해 두세요. 이 종목을 불러오면 최근 작성한 기록 한 개가 표시됩니다. 코치를 등록하면 코치도 조회하고 수정할 수 있습니다.')}</p>
+    <HelpLink question_id="research">{t('연구일지와 코치 공유 안내')}</HelpLink>
     <form className="exerciseResearchForm" onSubmit={save_record}>
       <label className="fieldLabel" htmlFor="exercise-research-content">{t(editing_record_id ? '연구 기록 수정' : '새 연구 기록')}</label>
       <textarea id="exercise-research-content" className="timeInput" ref={content_ref} rows={4} maxLength={2000} value={content} disabled={pending} required

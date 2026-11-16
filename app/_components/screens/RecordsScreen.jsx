@@ -1,4 +1,5 @@
 import InfoTooltip from '../ui/InfoTooltip';
+import HelpLink from '../help/HelpLink';
 import { useLanguage } from '../../_hooks/useLanguage';
 import { useEffect, useState } from 'react';
 import useApiResource from '../../_hooks/useApiResource';
@@ -62,6 +63,7 @@ export default function RecordsScreen({ revision, on_unauthorized, initial_tab, 
 
   return <section className="viewPanel isVisible">
     <header className="pageHeader"><div><p className="eyebrow">{t('이거 봐봐, 너가 이만큼 해냈어.')}</p><h1>{t('보이는 만큼,\n성장했다는 증거.')}</h1></div></header>
+    <HelpLink question_id="records">{t('지난 기록 확인 방법 보기')}</HelpLink>
     <div className="infoEntry"><button type="button" className="shareEntry" aria-pressed={selected_tab === 'share'} onClick={() => set_selected_tab('share')}><span><strong>{t('나의 변화 리포트')}</strong><small>{t('변화의 근거를 모아, 나만의 리포트로.')}</small></span><MaterialIcon>ios_share</MaterialIcon></button></div>
     <div className={`tabs ${records_styles.recordsTabs}`} aria-label={t("기록 보기")}>{[['calendar', t("캘린더")], ['list', t("운동 목록")], ['muscles', t("근육 활동")], ['progress', t("성장 추이")], ['stats', t("통계")]].map(([tab, label]) => <button type="button" key={tab} className={selected_tab === tab ? 'isActive' : ''} aria-pressed={selected_tab === tab} onClick={() => set_selected_tab(tab)}>{label}</button>)}</div>
     {selected_tab === 'share' && <WeeklyShare revision={revision} on_unauthorized={on_unauthorized} timezone={timezone} />}

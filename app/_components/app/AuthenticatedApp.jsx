@@ -21,7 +21,6 @@ import WorkoutRecordScreen from '../screens/WorkoutRecordScreen';
 import WorkoutScreen from '../screens/WorkoutScreen';
 import ChallengeScreen from '../challenge/ChallengeScreen';
 import MentorshipScreen from '../mentorship/MentorshipScreen';
-import CoachingNotificationSettings from '../mentorship/CoachingNotificationSettings';
 import ExerciseResearchModal from '../workout/ExerciseResearchModal';
 import RequestState from '../ui/RequestState';
 import Toast from '../ui/Toast';
@@ -29,6 +28,8 @@ import LanguageSelector from '../settings/LanguageSelector';
 import AccountDeletionForm from '../account/AccountDeletionForm';
 import SafetySettings from '../safety/SafetySettings';
 import { CommunityGate, LegalDocuments } from '../legal/CommunityPolicy';
+import HelpProvider from '../help/HelpProvider';
+import HelpLink from '../help/HelpLink';
 
 export default function AuthenticatedApp({ user, on_unauthorized, on_logout, on_account_deleted }) {
   const { t, language, localize_message } = useLanguage();
@@ -44,7 +45,7 @@ export default function AuthenticatedApp({ user, on_unauthorized, on_logout, on_
   const [notifications_open, set_notifications_open] = useState(false);
   const [challenge_navigation, set_challenge_navigation] = useState(null);
   const notification_inbox = useNotificationInbox({ user_uuid: user.user_uuid, is_open: notifications_open, on_unauthorized });
-  const coaching_notification_status = useCoachingNotifications({ user_uuid: user.user_uuid, language, on_unauthorized });
+  useCoachingNotifications({ user_uuid: user.user_uuid, language, on_unauthorized });
   const last_saved_timer_revision = useRef('');
   const [pending, set_pending] = useState(false);
   const [toast_message, set_toast_message] = useState('');
@@ -226,7 +227,7 @@ export default function AuthenticatedApp({ user, on_unauthorized, on_logout, on_
     }
   };
   const navigate_to = async (view) => {
-    if (pending || checkin_preparing_ref.current) return;
+    if (pending || checkin_preparing_ref.current) return false;
     set_mutation_error('');
     if (view === 'checkin') {
       checkin_preparing_ref.current = true;
@@ -238,7 +239,7 @@ export default function AuthenticatedApp({ user, on_unauthorized, on_logout, on_
         await workout_log_ref.current.prepare_checkin(today.data.workout_date);
       } catch (error) {
         set_mutation_error(error.message);
-        return;
+        return false;
       } finally {
         checkin_preparing_ref.current = false;
         set_pending(false);
@@ -250,6 +251,7 @@ export default function AuthenticatedApp({ user, on_unauthorized, on_logout, on_
     set_challenge_navigation(null);
     set_selected_workout_record(null);
     set_current_view(view);
+    return true;
   };
   const open_memory_record = (record) => {
     if (pending) return;
@@ -265,7 +267,9 @@ export default function AuthenticatedApp({ user, on_unauthorized, on_logout, on_
     set_current_view('record-detail');
   };
   const today_pending = pending || today.loading || Boolean(today.error);
-  return <div className="phoneShell">
+  return <HelpProvider user_uuid={user.user_uuid} on_unauthorized={on_unauthorized}
+    has_completed_checkin={today.data?.session?.session_status === 'completed' || today.data?.weekly_attendance?.completed_count > 0 || Boolean(today.data?.memory)}
+    navigation_pending={pending} on_navigate={(view) => current_view === view ? true : navigate_to(view)}><div className="phoneShell">
     <StatusBar on_open_settings={() => navigate_to('settings')} settings_active={current_view === 'settings'} disabled={pending}
       on_open_notifications={() => set_notifications_open(true)} unread_count={notification_inbox.unread_count} notifications_open={notifications_open} />
     <main className="appContent" aria-busy={pending}>
@@ -284,13 +288,12 @@ export default function AuthenticatedApp({ user, on_unauthorized, on_logout, on_
       {current_view === 'mentorship' && <CommunityGate on_unauthorized={on_unauthorized}><MentorshipScreen key={coaching_navigation?.notification_uuid || 'coaching-home'} initial_relationship_uuid={coaching_navigation?.relationship_uuid} initial_tab={coaching_navigation?.target} on_unauthorized={on_unauthorized} on_research_change={refresh_exercise_research} /></CommunityGate>}
       {coaching_research && <ExerciseResearchModal key={coaching_research.notification_uuid} exercise={coaching_research} on_change={refresh_exercise_research} on_close={() => set_coaching_research(null)} on_unauthorized={on_unauthorized} />}
       {current_view === 'settings' && <>
+        <HelpLink entry />
         <div className="accountBar"><span>{user.display_name || t("운동 사용자")}{t("님")}</span><button className="quietButton" type="button" disabled={pending} onClick={logout}>{t("전체 기기 로그아웃")}</button></div>
         {(!settings.data || !options.data) && <article className="settingsCard"><LanguageSelector /></article>}
         <RequestState loading={settings.loading || options.loading} error={settings.error || options.error} on_retry={refresh_data} />
         {settings.data && options.data && <SettingsScreen data={settings.data} options={options.data} pending={pending || settings.loading || options.loading} on_save={(body) => mutate('/settings', 'PUT', body, t("설정을 저장했습니다."))} />}
         <SafetySettings on_unauthorized={on_unauthorized} />
-        <CoachingNotificationSettings status={coaching_notification_status} />
-        <button type="button" className="wideButton secondary" disabled={pending} onClick={() => navigate_to('mentorship')}>{t('코칭 관리')}</button>
         <AccountDeletionForm user_uuid={user.user_uuid} on_deleted={on_account_deleted} />
         <footer><LegalDocuments compact /></footer>
       </>}
@@ -298,5 +301,5 @@ export default function AuthenticatedApp({ user, on_unauthorized, on_logout, on_
     <BottomNavigation current_view={current_view === 'record-detail' ? 'record' : current_view} on_navigate={navigate_to} disabled={pending} />
     {notifications_open && <NotificationInbox inbox={notification_inbox} on_close={() => set_notifications_open(false)} on_open_notification={open_notification_destination} />}
     <Toast message={toast_message} />
-  </div>;
+  </div></HelpProvider>;
 }

@@ -9,6 +9,7 @@ import PersonalReport from './PersonalReport';
 import { create_report_document } from '../../_lib/personalReport';
 import { report_period_choices, report_today, report_year } from '../../_lib/reportPeriods';
 import ReportPeriodPicker from './ReportPeriodPicker';
+import HelpLink from '../help/HelpLink';
 
 export default function WeeklyShare({ revision, on_unauthorized, timezone = 'Asia/Seoul' }) {
   const { t } = useLanguage();
@@ -20,6 +21,7 @@ export default function WeeklyShare({ revision, on_unauthorized, timezone = 'Asi
   const [generated_report, set_generated_report] = useState(null);
   return <section className="weeklyShare" aria-labelledby="weekly-share-title">
     <div className="sectionHeading"><h2 id="weekly-share-title">{t('남 말고, 어제의 나와.')}</h2></div>
+    <HelpLink question_id="report">{t('변화 리포트 사용 방법 보기')}</HelpLink>
     <p className="infoText">{t('기간을 선택해 부위별 운동량과 꾸준함을 살펴봐요.')}</p>
     <ReportPeriodPicker selection={selection} today={today} on_change={(next_selection) => { set_selection(next_selection); set_generated_report(null); }} on_generate={() => set_generated_report({ path: `/sharing/report?period_type=${selection.period_type}&start_date=${selection.start_date}`, generation: (generated_report?.generation || 0) + 1 })} />
     {generated_report ? <GeneratedReport key={`${generated_report.path}:${generated_report.generation}`} report_path={generated_report.path} revision={revision} on_unauthorized={on_unauthorized} /> : <p className="infoText" role="status">{t('주차 또는 월을 선택한 뒤 리포트를 생성해 주세요.')}</p>}

@@ -4,6 +4,7 @@ import MaterialIcon from '../ui/MaterialIcon';
 import ToggleButton from '../ui/ToggleButton';
 import LanguageSelector from '../settings/LanguageSelector';
 import CountryTimezoneFields from '../settings/CountryTimezoneFields';
+import HelpLink from '../help/HelpLink';
 
 const notification_fields = [
   { field_name: 'notification_workout_enabled', label: '운동 30분 전 알림' },
@@ -37,6 +38,7 @@ export default function SettingsScreen({ data, options, pending, on_save }) {
       <fieldset className="settingsFields" disabled={pending}>
         <article className="settingsCard">
           <h2><MaterialIcon>calendar_month</MaterialIcon>{t(" 운동 일정")}</h2>
+          <HelpLink question_id="schedule">{t('일정과 설정 저장 방법 보기')}</HelpLink>
           <CountryTimezoneFields country_code={draft.country_code} timezone={draft.timezone} on_change={change_field} />
           <p className="infoText">{t('운동 요일과 시간은 선택한 시간대 기준입니다. 시간대를 바꾸면 앞으로의 알림에 적용되고 기존 운동 날짜는 유지됩니다.')}</p>
           <p className="infoText">{t('운동 요일과 알림은 저장 즉시 바뀌지만, 공유 평가의 목표 횟수는 다음 주부터 바뀌어요. 지난 약속은 바뀌지 않아요.')}</p>
@@ -54,6 +56,7 @@ export default function SettingsScreen({ data, options, pending, on_save }) {
         </article>
         <article className="settingsCard">
           <h2><MaterialIcon>notifications</MaterialIcon>{t(" 알림 설정")}</h2>
+          <HelpLink question_id="notifications">{t('알림이 오지 않거나 자주 올 때')}</HelpLink>
           <p className="infoText">{t("정기 운동 알림과 자유운동 날 권유 알림을 각각 설정할 수 있습니다. 앱 알림 권한이 필요합니다.")}</p>
           <p className="infoText">{t('지금 출발을 누르면 당일 일반 운동 알림은 중단됩니다. 3시간 안에 인증하면 재촉 알림도 보내지 않습니다.')}</p>
           {notification_fields.map(({ field_name, label, description }) => <div className="toggleRow" key={field_name}><span>{t(label)}{description && <small>{t(description)}</small>}</span><ToggleButton active={draft[field_name]} label={t(label)} onClick={() => change_field(field_name, !draft[field_name])} /></div>)}

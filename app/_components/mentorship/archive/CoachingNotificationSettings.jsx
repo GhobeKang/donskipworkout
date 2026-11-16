@@ -1,5 +1,5 @@
-import { useLanguage } from '../../_hooks/useLanguage';
-import styles from './Mentorship.module.css';
+import { useLanguage } from '../../../_hooks/useLanguage';
+import styles from '../Mentorship.module.css';
 
 export default function CoachingNotificationSettings({ status }) {
   const { t, localize_message } = useLanguage();

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { api_request } from '../../_lib/api';
 import { useLanguage } from '../../_hooks/useLanguage';
 import MaterialIcon from '../ui/MaterialIcon';
+import HelpLink from '../help/HelpLink';
 import ActionModal from '../ui/ActionModal';
 import ChallengeNotificationSettings from './ChallengeNotificationSettings';
 import ChallengeInbox from './ChallengeInbox';
@@ -372,6 +373,7 @@ export default function ChallengeScreen({ user_uuid, is_active, on_unauthorized,
         <div><p className="eyebrow">{t('운동 모임')} · {selected_room.round_number}{t('회차')}</p><h1>{selected_room.room_name}</h1></div>
         <ChallengeStatus status={selected_room.status} />
       </header>
+      <HelpLink question_id="challenge-start">{t('룰북 동의와 챌린지 시작 방법')}</HelpLink>
       {on_open_mentorship && <button className="wideButton secondary" type="button" onClick={on_open_mentorship}><MaterialIcon>school</MaterialIcon>{t('코칭 관리')}</button>}
       {can_delete_room(selected_room, is_host) && <div className="challengeRoomActions">
         <RoomDeleteButton room={selected_room} user_is_host={is_host} pending={pending} on_delete={request_room_delete} />
@@ -492,6 +494,7 @@ export default function ChallengeScreen({ user_uuid, is_active, on_unauthorized,
     {on_open_mentorship && <button className="wideButton secondary" type="button" onClick={on_open_mentorship}><MaterialIcon>school</MaterialIcon>{t('코칭 관리')}</button>}
     {error_message && <div className="requestState" role="alert"><p>{error_message}</p></div>}
     {success_message && <div className="challengeSuccess" role="status">{success_message}</div>}
+    <HelpLink question_id="challenge">{t('챌린지 참여 방법 보기')}</HelpLink>
     <div className="challengeTabs" role="tablist" aria-label={t('내 챌린지 메뉴')}>
       {[
         ['rooms', '참여 중인 방'],

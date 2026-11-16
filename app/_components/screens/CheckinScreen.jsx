@@ -6,6 +6,7 @@ import PhotoComposer from '../checkin/PhotoComposer';
 import SavedPhoto from '../checkin/SavedPhoto';
 import RequestState from '../ui/RequestState';
 import { create_submission_id } from '../../_lib/photo';
+import HelpLink from '../help/HelpLink';
 
 export default function CheckinScreen({ session, workout_date, pending, on_back, on_open_workout, on_complete, on_photo_complete, on_unauthorized }) {
   const { t } = useLanguage();
@@ -35,6 +36,7 @@ export default function CheckinScreen({ session, workout_date, pending, on_back,
 
   return <section className="viewPanel isVisible">
     <header className="pageHeader checkinHeader"><button className="backButton" type="button" onClick={on_back} disabled={pending} aria-label={t("오늘 화면으로 돌아가기")}><MaterialIcon>arrow_back</MaterialIcon></button><div><p className="eyebrow">{t('왔다면, 흔적을 남겨.')}</p><h1>{t('출석 도장, 쾅.')}</h1></div></header>
+    <HelpLink question_id="manual-checkin">{t('사진 인증과 수동 출석 방법 보기')}</HelpLink>
     {session?.photo_path && <SavedPhoto photo_path={session.photo_path} workout_date={session.workout_date || workout_date} />}
     {!is_finished && <>
       <RequestState loading={catalog.loading} error={catalog.error} on_retry={() => set_catalog_revision((value) => value + 1)} />
