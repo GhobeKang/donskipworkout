@@ -169,7 +169,7 @@ export default function ChallengeMemberReport({ report, heading_ref, on_back }) 
     {changes.has_changes && <details className="challengeGrowthMethod">
       <summary>{t('점수 계산 방식과 데이터 한계')}</summary>
       <p>{t('출석 20점, 총중량 성장 50점, 인증 시간 준수 20점, 추가 운동 성장 10점의 합계입니다.')}</p>
-      <p>{t('출석일과 기간은 챌린지의 서울 기준입니다. 수행 내역과 인증 시각 표시는 팀원의 운동일·시간대 기준입니다.')}</p>
+      <p>{t('출석일과 기간은 챌린지의 {0} 기준입니다. 수행 내역과 인증 시각 표시는 팀원의 운동일·시간대 기준입니다.', [report.timezone || 'Asia/Seoul'])}</p>
       <p>{t('결과 확인 중에는 기록 보완으로 값이 바뀔 수 있습니다. 결과 확정 후에는 저장된 리포트를 보여줍니다.')}</p>
       {report.snapshot_origin === 'historical_backfill' && <p>{t('기존에 확정된 회차는 최초 리포트 조회 시 남아 있는 기록으로 생성했습니다. 당시 정산 시점의 운동 기록을 복원한 값은 아닙니다.')}</p>}
       {report.snapshot_origin === 'criteria_recalculation' && <p>{t('평가 기준 변경으로 남아 있는 기록을 사용해 한 번 재산정했습니다. 이전 버전 리포트는 보관되며, 이후 기록 수정으로 이번 점수가 바뀌지 않습니다.')}</p>}

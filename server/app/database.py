@@ -318,7 +318,7 @@ class challengeRound(databaseBase):
     start_at: Mapped[datetime | None] = mapped_column(DateTime)
     end_at: Mapped[datetime | None] = mapped_column(DateTime)
     settlement_end_at: Mapped[datetime | None] = mapped_column(DateTime)
-    timezone: Mapped[str] = mapped_column(String(40), default='Asia/Seoul')
+    timezone: Mapped[str] = mapped_column(String(64), default='Asia/Seoul')
     rulebook_version: Mapped[int] = mapped_column(Integer, default=0)
     roster_version: Mapped[int] = mapped_column(Integer, default=1)
     draft_rulebook: Mapped[dict] = mapped_column(

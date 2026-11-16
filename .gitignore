@@ -37,6 +37,7 @@ supabase/migrations/*
 !supabase/migrations/20261027185744_make_user_country_optional.sql
 !supabase/migrations/20261114151245_mentor_apprentice_system.sql
 !supabase/migrations/20261114152233_repair_account_deletion_backend_privileges.sql
+!supabase/migrations/20261116094953_challenge_host_timezone.sql
 .gradle/
 etc/
 out/

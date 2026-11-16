@@ -31,15 +31,22 @@ export default function SettingsScreen({ data, options, pending, on_save }) {
       : [...current.schedule_days, day_index].sort(),
   }));
   const is_dirty = JSON.stringify(draft) !== JSON.stringify(data);
+  const save_settings = (event) => {
+    event.preventDefault();
+    if (pending || !is_dirty) return;
+    const settings_data = { ...draft };
+    delete settings_data.country_code;
+    on_save(settings_data);
+  };
   return <section className="viewPanel isVisible">
     <header className="pageHeader"><div><p className="eyebrow">{t('의지 말고, 장치를 만들어.')}</p><h1>{t('내 운동의 룰.')}</h1></div></header>
     <article className="settingsCard"><LanguageSelector /></article>
-    <form onSubmit={(event) => { event.preventDefault(); if (!pending && is_dirty) on_save(draft); }}>
+    <form onSubmit={save_settings}>
       <fieldset className="settingsFields" disabled={pending}>
         <article className="settingsCard">
           <h2><MaterialIcon>calendar_month</MaterialIcon>{t(" 운동 일정")}</h2>
           <HelpLink question_id="schedule">{t('일정과 설정 저장 방법 보기')}</HelpLink>
-          <CountryTimezoneFields country_code={draft.country_code} timezone={draft.timezone} on_change={change_field} />
+          <CountryTimezoneFields show_country={false} timezone={draft.timezone} on_change={change_field} />
           <p className="infoText">{t('운동 요일과 시간은 선택한 시간대 기준입니다. 시간대를 바꾸면 앞으로의 알림에 적용되고 기존 운동 날짜는 유지됩니다.')}</p>
           <p className="infoText">{t('운동 요일과 알림은 저장 즉시 바뀌지만, 공유 평가의 목표 횟수는 다음 주부터 바뀌어요. 지난 약속은 바뀌지 않아요.')}</p>
           <div className="settingRow"><span>{t("운동 요일 및 시간")}</span><span>{draft.schedule_days.length ? draft.schedule_days.map((day) => options.day_names[day]).join(' / ') : t("정기 일정 없음")} {draft.workout_time}</span></div>

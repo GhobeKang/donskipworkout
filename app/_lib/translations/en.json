@@ -1903,5 +1903,9 @@
   "이번 기간에 새로 쓴 나의 최고 기록": "Personal bests set during this period",
   "이번 기간에는 갱신한 PR이 없습니다.": "No new personal bests during this period.",
   "첫 도전은 선택 기간에 처음으로 세트를 기록한 부위입니다.": "New areas are those with their first logged sets during the selected period.",
+  "기준 시간대": "Time zone",
+  "회차 생성 시 방장의 설정 시간대를 고정합니다. 시작·마감·하루 출석 판정은 이 시간대를 따릅니다.": "The host's time zone is fixed when the round is created. Start times, deadlines, and daily attendance use this time zone.",
+  "출석일과 인증 시각은 {0} 기준입니다.": "Attendance dates and check-in times use {0}.",
+  "출석일과 기간은 챌린지의 {0} 기준입니다. 수행 내역과 인증 시각 표시는 팀원의 운동일·시간대 기준입니다.": "Attendance dates and periods use the challenge time zone, {0}. Workout details and certification times use each member's workout dates and time zone.",
   "최대 중량을 우선하고, 중량이 같으면 반복 횟수를 비교합니다. 중량과 횟수는 같은 세트의 기록입니다. 그날 이전 최고 기록을 넘긴 종목을 기간별로 한 번씩 모으며, 첫 운동일과 동률은 PR 갱신에 포함하지 않습니다. 출석 여부와 관계없이 저장한 세트 기준입니다.": "We compare the heaviest weight first, then reps at that weight. Weight and reps come from the same set. Each exercise appears once per period when it exceeds its best from an earlier day; the first workout day and ties are excluded. All saved sets count, regardless of attendance."
 }

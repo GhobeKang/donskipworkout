@@ -1,7 +1,7 @@
 """Host-only growth evidence, compared with the immediately preceding equal-length window."""
 
 from collections import defaultdict
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, datetime, time, timedelta, timezone
 from decimal import Decimal
 from types import SimpleNamespace
 from zoneinfo import ZoneInfo
@@ -20,6 +20,7 @@ from .database import (
     workoutSet,
 )
 from .personal_report import compare_conditions, exercise_key, performance_summary, period_behavior
+from .workout_notifications import scheduled_utc
 from .workout_times import compare_workout_times, workout_time_days
 
 growth_method_version = 'growth_v2'
@@ -464,9 +465,9 @@ def build_round_growth_reports(database, current_round, now):
         return {}
     round_timezone = ZoneInfo(current_round.timezone)
     current_start = current_round.start_at.replace(tzinfo=timezone.utc).astimezone(round_timezone).date()
-    duration_days = (current_round.end_at - current_round.start_at).days
+    current_end = current_round.end_at.replace(tzinfo=timezone.utc).astimezone(round_timezone).date()
+    duration_days = (current_end - current_start).days
     previous_start = current_start - timedelta(days=duration_days)
-    current_end = current_start + timedelta(days=duration_days)
     accepted_by_member = defaultdict(set)
     accepted_sessions = {}
     for user_id, session_id, evaluation_date, accepted_at in database.execute(select(
@@ -485,7 +486,7 @@ def build_round_growth_reports(database, current_round, now):
     )):
         accepted_by_member[user_id].add(evaluation_date)
         accepted_sessions[session_id] = {'evaluation_date': evaluation_date, 'certified_at': accepted_at}
-    previous_start_at = current_round.start_at - timedelta(days=duration_days)
+    previous_start_at = scheduled_utc(previous_start, time.min, current_round.timezone)
     baseline_filter = and_(
         workoutSession.completed_at >= previous_start_at,
         workoutSession.completed_at < current_round.start_at,

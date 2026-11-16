@@ -1,4 +1,4 @@
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, time, timedelta
 from math import floor
 from uuid import uuid4
 from zoneinfo import ZoneInfo
@@ -16,12 +16,11 @@ from .database import (
     challengeRulebook,
     challengeVerificationEvent,
 )
+from .workout_notifications import scheduled_utc
 
-seoul_timezone = ZoneInfo('Asia/Seoul')
 
-
-def local_workout_date(accepted_at: datetime) -> date:
-    return accepted_at.replace(tzinfo=ZoneInfo('UTC')).astimezone(seoul_timezone).date()
+def local_workout_date(accepted_at: datetime, timezone_name: str) -> date:
+    return accepted_at.replace(tzinfo=ZoneInfo('UTC')).astimezone(ZoneInfo(timezone_name)).date()
 
 
 def accepted_checkins_for_round(database, round_id: int):
@@ -60,7 +59,6 @@ def record_activity_for_challenges(
     accepted_at: datetime,
     photo_id: int | None = None,
 ):
-    evaluation_date = local_workout_date(accepted_at)
     rows = database.execute(
         select(challengeRound, challengeRoundMember, challengeRulebook)
         .join(challengeRoundMember, challengeRoundMember.round_id == challengeRound.round_id)
@@ -80,6 +78,7 @@ def record_activity_for_challenges(
     ).all()
 
     for current_round, member, rulebook in rows:
+        evaluation_date = local_workout_date(accepted_at, current_round.timezone)
         if rulebook.verification_mode == 'photo_required' and verification_type != 'photo':
             continue
         period = database.scalar(
@@ -162,7 +161,8 @@ def round_progress(database, current_round: challengeRound, now: datetime):
         .where(challengePeriod.round_id == current_round.round_id)
         .order_by(challengePeriod.period_index)
     ).all()
-    seoul_now = now.replace(tzinfo=ZoneInfo('UTC')).astimezone(seoul_timezone)
+    round_timezone = ZoneInfo(current_round.timezone)
+    round_now = now.replace(tzinfo=ZoneInfo('UTC')).astimezone(round_timezone)
     checkins_by_member = accepted_checkins_for_round(database, current_round.round_id)
     period_results = []
     for period in periods:
@@ -173,8 +173,8 @@ def round_progress(database, current_round: challengeRound, now: datetime):
             completed_count = len(accepted_dates)
             target_count = period.target_count
             remaining_count = max(target_count - completed_count, 0)
-            period_end = period.end_at.replace(tzinfo=ZoneInfo('UTC')).astimezone(seoul_timezone).date()
-            available_dates = max((period_end - seoul_now.date()).days, 0)
+            period_end = period.end_at.replace(tzinfo=ZoneInfo('UTC')).astimezone(round_timezone).date()
+            available_dates = max((period_end - round_now.date()).days, 0)
             is_live = current_round.status == 'active' and now < period.end_at
             if member.participant_status == 'removed':
                 status = 'removed'
@@ -298,6 +298,7 @@ def finalize_round_if_due(database, current_round: challengeRound, now: datetime
     achieved_count = sum(result['result'] == 'achieved' for result in results)
     result_snapshot = {
         'round_uuid': current_round.round_uuid,
+        'timezone': current_round.timezone,
         'status': 'completed',
         'evaluation_version': 1,
         'method_version': 'v1',
@@ -337,9 +338,13 @@ def create_round_periods(
     target_count: int,
 ):
     period_count = duration_days // 7
+    start_date = local_workout_date(start_at, current_round.timezone)
     for period_index in range(period_count):
-        period_start = start_at + timedelta(days=period_index * 7)
-        period_end = period_start + timedelta(days=7)
+        period_start_date = start_date + timedelta(days=period_index * 7)
+        period_start = scheduled_utc(period_start_date, time.min, current_round.timezone)
+        period_end = scheduled_utc(
+            period_start_date + timedelta(days=7), time.min, current_round.timezone,
+        )
         database.add(
             challengePeriod(
                 round_id=current_round.round_id,

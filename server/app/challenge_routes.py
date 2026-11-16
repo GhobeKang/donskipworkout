@@ -46,9 +46,9 @@ from .database import (
 from .notification_service import create_room_news_events
 from .schemas import challengeInviteJoin, challengeRoomCreate, challengeRulebookUpdate
 from .security import databaseDependency, utc_now
+from .workout_notifications import scheduled_utc
 
 router = APIRouter(prefix='/api/v1')
-seoul_timezone = ZoneInfo('Asia/Seoul')
 invite_code_alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
 
 
@@ -116,7 +116,7 @@ def latest_rulebook(database, round_id: int):
 
 
 def published_rulebook_matches_draft(current_round: challengeRound, rulebook: challengeRulebook):
-    return all(
+    return rulebook.rulebook_json.get('timezone', 'Asia/Seoul') == current_round.timezone and all(
         rulebook.rulebook_json.get(key) == value
         for key, value in current_round.draft_rulebook.items() if not key.startswith('_')
     )
@@ -162,6 +162,7 @@ def round_output(database, room: challengeRoom, current_round: challengeRound):
         'host_vacant': host is None,
         'round_number': current_round.round_number,
         'status': current_round.status,
+        'timezone': current_round.timezone,
         'can_delete': room.status == 'open' and room_can_be_deleted(room_rounds, utc_now()),
         'start_at': current_round.start_at.isoformat() if current_round.start_at else None,
         'end_at': current_round.end_at.isoformat() if current_round.end_at else None,
@@ -241,7 +242,7 @@ def create_challenge_room(
         round_uuid=str(uuid4()),
         round_number=1,
         status='draft',
-        timezone='Asia/Seoul',
+        timezone=user.timezone,
         roster_version=1,
         rulebook_version=0,
         draft_rulebook={
@@ -584,15 +585,15 @@ def publish_challenge_rulebook(
     if not start_date_value:
         raise HTTPException(422, '룰북에 시작 날짜를 정해 주세요.')
     start_date = datetime.fromisoformat(start_date_value).date()
-    seoul_today = datetime.now(seoul_timezone).date()
-    if start_date < seoul_today + timedelta(days=1):
+    now = utc_now()
+    round_today = now.replace(tzinfo=timezone.utc).astimezone(ZoneInfo(current_round.timezone)).date()
+    if start_date < round_today + timedelta(days=1):
         raise HTTPException(422, '시작 날짜는 내일부터 선택할 수 있습니다.')
     latest = latest_rulebook(database, current_round.round_id)
-    now = utc_now()
     if latest and latest.published_at > now - timedelta(minutes=5):
         raise HTTPException(429, '룰북 게시 후 5분 동안은 다시 게시할 수 없습니다.')
     version = current_round.rulebook_version + 1
-    rulebook_json = {**draft, 'timezone': 'Asia/Seoul', 'start_date': start_date.isoformat()}
+    rulebook_json = {**draft, 'timezone': current_round.timezone, 'start_date': start_date.isoformat()}
     current_round.rulebook_version = version
     current_round.status = 'awaiting_consent'
     for member in database.scalars(
@@ -684,11 +685,12 @@ def schedule_challenge_start(
     ):
         raise HTTPException(409, '모든 참가자가 최신 룰북과 명단에 동의해야 합니다.')
     start_date = datetime.fromisoformat(latest.rulebook_json['start_date']).date()
-    local_start = datetime.combine(start_date, time.min, tzinfo=seoul_timezone)
-    start_at = local_start.astimezone(timezone.utc).replace(tzinfo=None)
+    start_at = scheduled_utc(start_date, time.min, current_round.timezone)
     if start_at <= utc_now() + timedelta(hours=1):
         raise HTTPException(422, '시작은 현재 시각보다 1시간 이상 뒤여야 합니다.')
-    end_at = start_at + timedelta(days=latest.duration_days)
+    end_at = scheduled_utc(
+        start_date + timedelta(days=latest.duration_days), time.min, current_round.timezone,
+    )
 
     member_ids = [member.user_id for member in participants]
     database.scalars(
@@ -778,6 +780,7 @@ def public_periods(database, periods):
 
 def public_evaluation(database, evaluation: dict):
     result = deepcopy(evaluation)
+    result.setdefault('timezone', 'Asia/Seoul')
     result.pop('growth_reports', None)
     result.pop('growth_report_history', None)
     result.pop('growth_snapshot_origin', None)
@@ -825,6 +828,7 @@ def read_challenge_progress(round_uuid: str, user: communityUserDependency, data
     return {
         'round_uuid': current_round.round_uuid,
         'status': current_round.status,
+        'timezone': current_round.timezone,
         'updated_at': now.isoformat() + 'Z',
         'evaluation_status': 'settling' if current_round.status == 'settling' else 'in_progress',
         'rulebook_version': current_round.rulebook_version,
@@ -911,6 +915,7 @@ def host_growth_reports(database, current_round, room, user_id, now):
                for member_id, report in reports.items()}
     return reports, {
         'round_uuid': current_round.round_uuid,
+        'timezone': current_round.timezone,
         'report_state': report_state,
         'method_version': growth_method_version,
         'evidence_method_version': growth_evidence_version,
@@ -989,7 +994,7 @@ def propose_challenge_continuation(
         round_number=previous_round.round_number + 1,
         previous_round_id=previous_round.round_id,
         status='draft',
-        timezone='Asia/Seoul',
+        timezone=user.timezone,
         roster_version=1,
         rulebook_version=0,
         draft_rulebook={

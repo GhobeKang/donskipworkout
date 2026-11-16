@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { api_request } from '../../_lib/api';
+import { get_challenge_timezone, next_challenge_start_date } from '../../_lib/challengeTime';
 import { useLanguage } from '../../_hooks/useLanguage';
 import MaterialIcon from '../ui/MaterialIcon';
 import HelpLink from '../help/HelpLink';
@@ -13,12 +14,6 @@ import ChallengeMemberReports from './ChallengeMemberReports';
 import ChallengeProgressMember from './ChallengeProgressMember';
 import ChallengeNudgeComposer from './ChallengeNudgeComposer';
 import SafetyActions from '../safety/SafetyActions';
-
-function get_default_start_date() {
-  const seoul_now = new Date(Date.now() + 9 * 60 * 60 * 1000);
-  seoul_now.setUTCDate(seoul_now.getUTCDate() + 1);
-  return seoul_now.toISOString().slice(0, 10);
-}
 
 function get_round_end_date(start_date, duration_days) {
   if (!start_date || !duration_days) return '';
@@ -67,6 +62,7 @@ export default function ChallengeScreen({ user_uuid, is_active, on_unauthorized,
   const { t, localize_message } = useLanguage();
   const [rooms, set_rooms] = useState([]);
   const [selected_room, set_selected_room] = useState(null);
+  const round_timezone = get_challenge_timezone(selected_room);
   const [delete_confirmation_room, set_delete_confirmation_room] = useState(null);
   const [progress_data, set_progress_data] = useState(null);
   const [progress_loading, set_progress_loading] = useState(false);
@@ -84,7 +80,7 @@ export default function ChallengeScreen({ user_uuid, is_active, on_unauthorized,
   const [issued_invite, set_issued_invite] = useState(null);
   const [draft_rulebook, set_draft_rulebook] = useState(null);
   const [rulebook_dirty, set_rulebook_dirty] = useState(false);
-  const [start_date, set_start_date] = useState(get_default_start_date);
+  const [start_date, set_start_date] = useState(() => next_challenge_start_date());
   const invite_link_handled = useRef(false);
   const invite_code_input = useRef(null);
 
@@ -119,8 +115,8 @@ export default function ChallengeScreen({ user_uuid, is_active, on_unauthorized,
     try {
       const result = await api_request(`/challenge-rooms/${room_uuid}`);
       set_selected_room(result);
-      set_draft_rulebook({ ...result.draft_rulebook, start_date: result.draft_rulebook?.start_date || get_default_start_date() });
-      set_start_date(result.rulebook?.start_date || result.draft_rulebook?.start_date || get_default_start_date());
+      set_draft_rulebook({ ...result.draft_rulebook, start_date: result.draft_rulebook?.start_date || next_challenge_start_date(get_challenge_timezone(result)) });
+      set_start_date(result.rulebook?.start_date || result.draft_rulebook?.start_date || next_challenge_start_date(get_challenge_timezone(result)));
       set_rulebook_dirty(!result.draft_rulebook?.start_date);
     } catch (error) {
       if (error.status === 401) on_unauthorized();
@@ -139,8 +135,8 @@ export default function ChallengeScreen({ user_uuid, is_active, on_unauthorized,
       const result = await api_request(path, { method, body });
       if (select_result && result) {
         set_selected_room(result);
-        set_draft_rulebook({ ...result.draft_rulebook, start_date: result.draft_rulebook?.start_date || get_default_start_date() });
-        set_start_date(result.rulebook?.start_date || result.draft_rulebook?.start_date || get_default_start_date());
+        set_draft_rulebook({ ...result.draft_rulebook, start_date: result.draft_rulebook?.start_date || next_challenge_start_date(get_challenge_timezone(result)) });
+        set_start_date(result.rulebook?.start_date || result.draft_rulebook?.start_date || next_challenge_start_date(get_challenge_timezone(result)));
         set_rulebook_dirty(!result.draft_rulebook?.start_date);
       }
       if (path.endsWith('/publish') && result?.notification_delivery) {
@@ -387,11 +383,12 @@ export default function ChallengeScreen({ user_uuid, is_active, on_unauthorized,
           <div className="challengeRulebookTitle"><p className="eyebrow">{t('챌린지 약속 문서')}</p><h2>{t('룰북')}</h2><span>{selected_room.room_name} · {selected_room.round_number}{t('회차')}</span></div>
           <span className="challengeRulebookVersion">{published_version > 0 ? `v${published_version}` : t('초안')}</span>
         </header>
+        <p className="infoText">{t('기준 시간대')}: <strong>{round_timezone}</strong><br />{t('회차 생성 시 방장의 설정 시간대를 고정합니다. 시작·마감·하루 출석 판정은 이 시간대를 따릅니다.')}</p>
         {can_edit ? <div className="challengeRulebookPaper">
           <div className="challengeRulebookPaperHeading"><MaterialIcon>edit_note</MaterialIcon><span>{t('방장 편집')}</span></div>
           <div className="challengeForm">
             <div className="challengeRulebookFields">
-              <label>{t('시작 날짜')}<input type="date" value={start_date} min={get_default_start_date()} onChange={(event) => { set_start_date(event.target.value); set_rulebook_dirty(true); }} /></label>
+              <label>{t('시작 날짜')}<input type="date" value={start_date} min={next_challenge_start_date(round_timezone)} onChange={(event) => { set_start_date(event.target.value); set_rulebook_dirty(true); }} /></label>
               <label>{t('회차 기간')}<select value={draft_rulebook?.duration_days || 7} onChange={(event) => update_draft('duration_days', Number(event.target.value))}><option value={7}>7{t('일')}</option><option value={14}>14{t('일')}</option><option value={28}>28{t('일')}</option></select></label>
               <div className="challengeRulebookEndDate"><span>{t('종료 날짜')}</span><strong>{get_round_end_date(start_date, draft_rulebook?.duration_days || 7) || t('종료일 미정')}</strong></div>
               <label>{t('주차별 운동 목표')}<select value={draft_rulebook?.target_count || 3} onChange={(event) => update_draft('target_count', Number(event.target.value))}>{Array.from({ length: 7 }, (_, index) => index + 1).map((count) => <option key={count} value={count}>{count}{t('일')}</option>)}</select></label>
@@ -431,6 +428,7 @@ export default function ChallengeScreen({ user_uuid, is_active, on_unauthorized,
       <ChallengeQuestions key={`${selected_room.round_uuid}:${user_uuid}`} round_uuid={selected_room.round_uuid} user_uuid={user_uuid} is_host={is_host} is_active={is_active && !selected_room.host_vacant} can_write={Boolean(user_membership) && !['invited', 'removed', 'withdrawn'].includes(user_membership.participant_status) && selected_room.status !== 'cancelled' && !selected_room.host_vacant} on_unauthorized={on_unauthorized} />
       {progress_data && <article className="challengeCard">
         <div className="sectionHeading challengeProgressHeading"><div><p className="eyebrow">{t('챌린지 리포트')}</p><h2>{t(progress_data.status === 'completed' ? '회차 결과' : '운동 진행 현황')}</h2></div><span className="challengeLiveStatus"><span className={'challengeLiveDot' + (progress_loading ? ' isRefreshing' : '')} />{progress_loading ? t('갱신 중…') : t('서버 집계')}</span></div>
+        <p className="infoText">{t('출석일과 인증 시각은 {0} 기준입니다.', [progress_data.timezone || round_timezone])}</p>
         <div className="challengeProgressOverview">
           <div className="challengeProgressOverviewValues">
             <span>{t(progress_data.status === 'completed' ? '전체 달성률' : '팀 목표 진행률')}</span>
@@ -456,7 +454,7 @@ export default function ChallengeScreen({ user_uuid, is_active, on_unauthorized,
             <div className="challengeProgressPeriodSummary"><div className="challengeProgressPeriodTrack" aria-hidden="true"><span style={{ width: `${period_progress_percent}%` }} /></div><strong>{period_credited_count}<small> / {period_target_count}</small></strong></div>
             <details className="challengeProgressDetails">
               <summary><MaterialIcon>groups</MaterialIcon><span>{t('참가자 명단')}</span><small>{period.members.length}{t('명')}</small><MaterialIcon className="challengeProgressChevron">expand_more</MaterialIcon></summary>
-              <ul className="challengeProgressMemberList">{period.members.map((member) => <ChallengeProgressMember key={member.user_uuid} member={member} is_self={member.user_uuid === user_uuid} />)}</ul>
+              <ul className="challengeProgressMemberList">{period.members.map((member) => <ChallengeProgressMember key={member.user_uuid} member={member} is_self={member.user_uuid === user_uuid} timezone={progress_data.timezone || round_timezone} />)}</ul>
             </details>
           </section>;
         })}</div>

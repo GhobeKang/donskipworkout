@@ -15,7 +15,7 @@ export function get_progress_status_label(t, status) {
   return status_labels[status] || t('상태 확인 필요');
 }
 
-export default function ChallengeProgressMember({ member, is_self }) {
+export default function ChallengeProgressMember({ member, is_self, timezone = 'Asia/Seoul' }) {
   const { language, t } = useLanguage();
   const member_progress_percent = Math.min(100, Math.max(0,
     member.achievement_percent ?? Math.round(member.completed_count / member.target_count * 100)));
@@ -23,7 +23,7 @@ export default function ChallengeProgressMember({ member, is_self }) {
     (evaluation_date) => ({ evaluation_date, accepted_at: null }),
   );
   const date_formatter = new Intl.DateTimeFormat(language === 'en' ? 'en-US' : 'ko-KR', {
-    timeZone: 'Asia/Seoul', year: 'numeric', month: 'long', day: 'numeric',
+    timeZone: timezone, year: 'numeric', month: 'long', day: 'numeric',
     hour: 'numeric', minute: '2-digit', hour12: true,
   });
 

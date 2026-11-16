@@ -11,29 +11,31 @@ const country_codes = `
   TO TR TT TV TW TZ UA UG UM US UY UZ VA VC VE VG VI VN VU WF WS XK YE YT ZA ZM ZW
 `.trim().split(/\s+/);
 
-export default function CountryTimezoneFields({ country_code, timezone, on_change }) {
+export default function CountryTimezoneFields({ country_code, timezone, on_change, show_country = true }) {
   const { t, language } = useLanguage();
   const [country_options, set_country_options] = useState([]);
   const [timezone_options, set_timezone_options] = useState([]);
 
   useEffect(() => {
-    const locale = language === 'en' ? 'en' : 'ko';
-    const country_names = new Intl.DisplayNames([locale], { type: 'region' });
-    set_country_options(country_codes
-      .map((code) => ({ code, name: country_names.of(code) }))
-      .filter(({ code, name }) => name && name !== code)
-      .sort((first, second) => first.name.localeCompare(second.name, locale)));
+    if (show_country) {
+      const locale = language === 'en' ? 'en' : 'ko';
+      const country_names = new Intl.DisplayNames([locale], { type: 'region' });
+      set_country_options(country_codes
+        .map((code) => ({ code, name: country_names.of(code) }))
+        .filter(({ code, name }) => name && name !== code)
+        .sort((first, second) => first.name.localeCompare(second.name, locale)));
+    }
     const available_timezones = Intl.supportedValuesOf?.('timeZone') || [];
     set_timezone_options([...new Set(['UTC', 'Asia/Seoul', timezone, ...available_timezones].filter(Boolean))].sort());
-  }, [language, timezone]);
+  }, [language, timezone, show_country]);
 
   return <div className="localeFields">
-    <label>{t('국가 (선택)')}
+    {show_country && <label>{t('국가 (선택)')}
       <select name="country_code" value={country_code || ''} onChange={(event) => on_change('country_code', event.target.value || null)}>
         <option value="">{t('선택 안 함')}</option>
         {country_options.map(({ code, name }) => <option key={code} value={code}>{name}</option>)}
       </select>
-    </label>
+    </label>}
     <label>{t('시간대')}
       <select name="timezone" required value={timezone || ''} onChange={(event) => on_change('timezone', event.target.value)}>
         {timezone_options.map((time_zone) => <option key={time_zone} value={time_zone}>{time_zone}</option>)}
