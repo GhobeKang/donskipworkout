@@ -34,6 +34,7 @@ from .database import (
     userAccount,
     userBlock,
     userCredential,
+    userOnboarding,
     userSharedExerciseProgress,
     weeklyPromise,
     workoutPhoto,
@@ -192,7 +193,7 @@ def delete_account_data(database, user):
     for model in (
         challengeRoundMember, challengeInviteAttempt, notificationPreference, pushDevice,
         exerciseResearchRecord, exerciseItem, userSharedExerciseProgress, attendanceSetting, scheduleDay, weeklyPromise,
-        authSession, userCredential,
+        authSession, userCredential, userOnboarding,
     ):
         database.execute(delete(model).where(model.user_id == user_id))
     database.flush()

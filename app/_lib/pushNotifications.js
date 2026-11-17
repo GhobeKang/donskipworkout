@@ -118,7 +118,7 @@ async function register_push_device({ user_uuid, language = 'ko' }) {
 async function activate_push_registration({user_uuid, language, request_permission}) {
   update_registration_state(user_uuid, language, 'checking');
   let permission = await PushNotifications.checkPermissions();
-  if (permission.receive !== 'granted' && request_permission) {
+  if (['prompt', 'prompt-with-rationale'].includes(permission.receive) && request_permission) {
     update_registration_state(user_uuid, language, 'requesting');
     permission = await PushNotifications.requestPermissions();
   }
@@ -137,7 +137,18 @@ async function activate_push_registration({user_uuid, language, request_permissi
   return result;
 }
 
-export async function enable_push_notifications({ user_uuid, language = 'ko', request_permission = true } = {}) {
+export async function request_push_notification_permission() {
+  if (!Capacitor.isNativePlatform()) return 'unsupported';
+  let permission = await PushNotifications.checkPermissions();
+  if (['prompt', 'prompt-with-rationale'].includes(permission.receive)) {
+    permission = await PushNotifications.requestPermissions();
+  }
+  if (permission.receive === 'granted' && Capacitor.getPlatform() === 'android'
+      && !(await LocalNotifications.areEnabled()).value) return 'denied';
+  return permission.receive;
+}
+
+export async function enable_push_notifications({ user_uuid, language = 'ko', request_permission = false } = {}) {
   if (!Capacitor.isNativePlatform()) return {registered: false, reason: 'web'};
   const registration_key = (user_uuid || '') + ':' + language;
   // Share the permission flow too, so automatic setup and a recovery tap cannot prompt twice.

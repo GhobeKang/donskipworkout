@@ -11,7 +11,7 @@ const country_codes = `
   TO TR TT TV TW TZ UA UG UM US UY UZ VA VC VE VG VI VN VU WF WS XK YE YT ZA ZM ZW
 `.trim().split(/\s+/);
 
-export default function CountryTimezoneFields({ country_code, timezone, on_change, show_country = true }) {
+export default function CountryTimezoneFields({ country_code, timezone, on_change, show_country = true, show_timezone = true }) {
   const { t, language } = useLanguage();
   const [country_options, set_country_options] = useState([]);
   const [timezone_options, set_timezone_options] = useState([]);
@@ -36,10 +36,10 @@ export default function CountryTimezoneFields({ country_code, timezone, on_chang
         {country_options.map(({ code, name }) => <option key={code} value={code}>{name}</option>)}
       </select>
     </label>}
-    <label>{t('시간대')}
+    {show_timezone && <label>{t('시간대')}
       <select name="timezone" required value={timezone || ''} onChange={(event) => on_change('timezone', event.target.value)}>
         {timezone_options.map((time_zone) => <option key={time_zone} value={time_zone}>{time_zone}</option>)}
       </select>
-    </label>
+    </label>}
   </div>;
 }

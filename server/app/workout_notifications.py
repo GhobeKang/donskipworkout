@@ -16,6 +16,7 @@ from .database import (
     pushDevice,
     scheduleDay,
     userAccount,
+    userOnboarding,
     workoutSession,
 )
 
@@ -133,6 +134,10 @@ def enqueue_due_workout_notifications(session_factory, catalog, enabled_provider
             .join(attendanceSetting, attendanceSetting.user_id == userAccount.user_id)
             .where(
                 has_ready_device,
+                ~exists(select(userOnboarding.user_id).where(
+                    userOnboarding.user_id == userAccount.user_id,
+                    userOnboarding.status != 'completed',
+                )),
                 or_(
                     attendanceSetting.notification_workout_enabled.is_(True),
                     attendanceSetting.notification_free_workout_enabled.is_(True),
@@ -271,6 +276,9 @@ def notification_cancellation_reason(database, event, device, now):
         return None
     if not device.workout_push_enabled:
         return 'local_cleanup_not_completed'
+    onboarding = database.get(userOnboarding, event.recipient_user_id)
+    if onboarding and onboarding.status != 'completed':
+        return 'onboarding_not_completed'
     try:
         workout_date = date.fromisoformat(event.payload['workout_date'])
     except (KeyError, ValueError):

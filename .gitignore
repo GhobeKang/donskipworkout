@@ -38,6 +38,8 @@ supabase/migrations/*
 !supabase/migrations/20261114151245_mentor_apprentice_system.sql
 !supabase/migrations/20261114152233_repair_account_deletion_backend_privileges.sql
 !supabase/migrations/20261116094953_challenge_host_timezone.sql
+!supabase/migrations/20261117100519_user_onboarding.sql
+!supabase/migrations/20261117100531_body_weight_workout_load.sql
 .gradle/
 etc/
 out/

@@ -30,8 +30,9 @@ import SafetySettings from '../safety/SafetySettings';
 import { CommunityGate, LegalDocuments } from '../legal/CommunityPolicy';
 import HelpProvider from '../help/HelpProvider';
 import HelpLink from '../help/HelpLink';
+import OnboardingReminder from '../onboarding/OnboardingReminder';
 
-export default function AuthenticatedApp({ user, on_unauthorized, on_logout, on_account_deleted }) {
+export default function AuthenticatedApp({ user, on_unauthorized, on_logout, on_account_deleted, onboarding, onboarding_pending, onboarding_error, on_resume_onboarding }) {
   const { t, language, localize_message } = useLanguage();
   const [current_view, set_current_view] = useState('today');
   const [record_navigation, set_record_navigation] = useState(null);
@@ -122,17 +123,17 @@ export default function AuthenticatedApp({ user, on_unauthorized, on_logout, on_
     if (search_params.has('invite') || search_params.has('room')) set_current_view('challenge');
   }, []);
   useEffect(() => {
+    if (onboarding?.required) return undefined;
     let disposed = false;
-    enable_push_notifications({user_uuid: user.user_uuid, language}).then((result) => {
+    enable_push_notifications({user_uuid: user.user_uuid, language, request_permission: false}).then(() => {
       if (!disposed) window.dispatchEvent(new Event('coaching-notifications-refresh'));
-      if (!disposed && result.reason === 'denied') set_toast_message(t('푸시 알림을 받으려면 알림 권한이 필요합니다.'));
     }).catch((error) => {
       if (disposed) return;
       if (error.status === 401) on_unauthorized();
       else set_toast_message(localize_message(error.message || '푸시 기기 등록에 실패했습니다.'));
     });
     return () => { disposed = true; };
-  }, [user.user_uuid, language, t, localize_message, on_unauthorized]);
+  }, [user.user_uuid, language, localize_message, on_unauthorized, onboarding?.required]);
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return undefined;
     let listener;
@@ -168,7 +169,7 @@ export default function AuthenticatedApp({ user, on_unauthorized, on_logout, on_
     const refresh_on_resume = () => {
       if (document.visibilityState !== 'visible') return;
       set_revision((value) => value + 1);
-      refresh_push_registration({user_uuid: user.user_uuid, language}).catch((error) => {
+      if (!onboarding?.required) refresh_push_registration({user_uuid: user.user_uuid, language}).catch((error) => {
         console.error('[PUSH_REGISTRATION_ERROR]', error.message || 'unknown');
       });
     };
@@ -178,7 +179,7 @@ export default function AuthenticatedApp({ user, on_unauthorized, on_logout, on_
       document.removeEventListener('visibilitychange', refresh_on_resume);
       window.removeEventListener('online', refresh_on_resume);
     };
-  }, [user.user_uuid, language]);
+  }, [user.user_uuid, language, onboarding?.required]);
   useEffect(() => {
     if (!toast_message) return undefined;
     const toast_timer = setTimeout(() => set_toast_message(''), 4500);
@@ -273,6 +274,7 @@ export default function AuthenticatedApp({ user, on_unauthorized, on_logout, on_
     <StatusBar on_open_settings={() => navigate_to('settings')} settings_active={current_view === 'settings'} disabled={pending}
       on_open_notifications={() => set_notifications_open(true)} unread_count={notification_inbox.unread_count} notifications_open={notifications_open} />
     <main className="appContent" aria-busy={pending}>
+      {onboarding?.required && ['today', 'settings'].includes(current_view) && <OnboardingReminder pending={onboarding_pending} error={onboarding_error} on_resume={on_resume_onboarding} />}
       {mutation_error && <div className="requestState" role="alert"><p>{localize_message(mutation_error)}</p><button className="textButton" onClick={() => set_mutation_error('')}>{t("닫기")}</button></div>}
       {(current_view === 'today' || current_view === 'checkin') && <>
         <RequestState loading={today.loading} error={today.error} on_retry={refresh_data} />
@@ -292,7 +294,7 @@ export default function AuthenticatedApp({ user, on_unauthorized, on_logout, on_
         <div className="accountBar"><span>{user.display_name || t("운동 사용자")}{t("님")}</span><button className="quietButton" type="button" disabled={pending} onClick={logout}>{t("전체 기기 로그아웃")}</button></div>
         {(!settings.data || !options.data) && <article className="settingsCard"><LanguageSelector /></article>}
         <RequestState loading={settings.loading || options.loading} error={settings.error || options.error} on_retry={refresh_data} />
-        {settings.data && options.data && <SettingsScreen data={settings.data} options={options.data} pending={pending || settings.loading || options.loading} on_save={(body) => mutate('/settings', 'PUT', body, t("설정을 저장했습니다."))} />}
+        {settings.data && options.data && <SettingsScreen key={JSON.stringify(settings.data)} data={settings.data} options={options.data} user_uuid={user.user_uuid} onboarding_required={onboarding?.required} pending={pending || settings.loading || options.loading} on_save={(body) => mutate('/settings', 'PUT', body, t("설정을 저장했습니다."))} />}
         <SafetySettings on_unauthorized={on_unauthorized} />
         <AccountDeletionForm user_uuid={user.user_uuid} on_deleted={on_account_deleted} />
         <footer><LegalDocuments compact /></footer>

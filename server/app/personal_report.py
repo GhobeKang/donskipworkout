@@ -16,6 +16,7 @@ from .database import (
 )
 from .muscle_activity import muscle_activity_comparison
 from .personal_records import exercise_key, personal_record_achievements
+from .workout_load import workout_volume_kg
 from .workout_times import compare_workout_times, workout_time_days
 
 
@@ -244,8 +245,7 @@ def area_totals(workout_sets):
             'session_count': len({item.workout_date for item in area_sets}),
             'set_count': len(area_sets),
             'rep_count': sum(item.reps for item in area_sets),
-            # Assistance is not negative training volume; bodyweight is not recorded.
-            'volume_kg': round(float(sum(max(item.weight_kg, 0) * item.reps for item in area_sets)), 2),
+            'volume_kg': round(float(sum(workout_volume_kg(item) for item in area_sets)), 2),
         }
         for target_area, area_sets in grouped_sets.items()
     }
@@ -436,6 +436,7 @@ def personal_report_output(
             workoutSet.shared_exercise_id,
             workoutSet.exercise_name,
             workoutSet.weight_kg,
+            workoutSet.body_weight_kg,
             workoutSet.reps,
             workoutSession.workout_date,
             workoutSession.session_status,

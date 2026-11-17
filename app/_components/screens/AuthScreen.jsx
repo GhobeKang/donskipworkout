@@ -25,7 +25,7 @@ export default function AuthScreen({ on_authenticate, pending, error, on_clear_e
     event.preventDefault();
     on_authenticate(auth_mode, {
       email: email.trim(), password,
-      ...(is_register ? { display_name: display_name.trim(), country_code, timezone, accepted_policy_version } : {}),
+      ...(is_register ? { display_name: display_name.trim(), country_code, timezone, accepted_policy_version, onboarding_version: 1 } : {}),
     });
   };
 
@@ -35,7 +35,7 @@ export default function AuthScreen({ on_authenticate, pending, error, on_clear_e
       <h2>{is_register ? t("회원가입") : t("로그인")}</h2>
       <fieldset disabled={pending}>
         {is_register && <label>{t("이름")}<input name="display_name" autoComplete="nickname" required maxLength={100} value={display_name} onChange={(event) => set_display_name(event.target.value)} /></label>}
-        {is_register && <CountryTimezoneFields country_code={country_code} timezone={timezone} on_change={(field_name, value) => {
+        {is_register && <CountryTimezoneFields show_timezone={false} country_code={country_code} timezone={timezone} on_change={(field_name, value) => {
           if (field_name === 'country_code') set_country_code(value);
           else set_timezone(value);
         }} />}

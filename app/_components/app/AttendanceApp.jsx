@@ -14,7 +14,7 @@ import AuthScreen from '../screens/AuthScreen';
 import RequestState from '../ui/RequestState';
 import StatusBar from '../layout/StatusBar';
 import Toast from '../ui/Toast';
-import AuthenticatedApp from './AuthenticatedApp';
+import OnboardingGate from '../onboarding/OnboardingGate';
 
 export default function AttendanceApp() {
   const { t, language } = useLanguage();
@@ -152,7 +152,7 @@ function AttendanceContent() {
     <StatusBar />
     <main className="appContent"><p className="infoText">{t("로그인 상태를 확인하는 중…")}</p></main>
   </div>;
-  if (user) return <AuthenticatedApp key={user.user_uuid} user={user} on_unauthorized={expire_session} on_logout={finish_logout} on_account_deleted={finish_account_deletion} />;
+  if (user) return <OnboardingGate key={user.user_uuid} user={user} on_unauthorized={expire_session} on_logout={finish_logout} on_account_deleted={finish_account_deletion} />;
   if (session_restore_error) return <div className="phoneShell">
     <StatusBar />
     <main className="appContent"><RequestState error={session_restore_error} on_retry={() => set_session_restore_revision((value) => value + 1)} /></main>

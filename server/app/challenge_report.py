@@ -20,6 +20,7 @@ from .database import (
     workoutSet,
 )
 from .personal_report import compare_conditions, exercise_key, performance_summary, period_behavior
+from .workout_load import workout_volume_kg
 from .workout_notifications import scheduled_utc
 from .workout_times import compare_workout_times, workout_time_days
 
@@ -223,7 +224,7 @@ def workout_totals(workout_sets):
         'set_count': len(workout_sets),
         'sets_per_workout': round(len(workout_sets) / days, 2) if days else None,
         'rep_count': sum(item.reps for item in workout_sets),
-        'volume_kg': round(sum(max(float(item.weight_kg), 0) * item.reps for item in workout_sets), 2),
+        'volume_kg': round(float(sum(workout_volume_kg(item) for item in workout_sets)), 2),
         'best_weight_kg': max((float(item.weight_kg) for item in workout_sets), default=None),
     }
 
@@ -517,7 +518,7 @@ def build_round_growth_reports(database, current_round, now):
     sets = database.execute(select(
         workoutSession.session_id, workoutSession.user_id, workoutSession.workout_date,
         workoutSet.exercise_source, workoutSet.exercise_id, workoutSet.shared_exercise_id,
-        workoutSet.exercise_name, workoutSet.weight_kg, workoutSet.reps,
+        workoutSet.exercise_name, workoutSet.weight_kg, workoutSet.body_weight_kg, workoutSet.reps,
     ).join(workoutSession, workoutSession.session_id == workoutSet.session_id).where(
         workoutSession.session_id.in_([item.session_id for item in sessions]),
     ).order_by(workoutSession.workout_date, workoutSet.exercise_order, workoutSet.set_order)).all()

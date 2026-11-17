@@ -17,6 +17,7 @@ from .database import (
     scheduleDay,
     userAccount,
     userCredential,
+    userOnboarding,
     weeklyPromise,
     workoutSession,
 )
@@ -39,6 +40,7 @@ from .schemas import (
     authenticationData,
     loginRequest,
     muscleActivityComparison,
+    onboardingDraft,
     periodReportData,
     recordsData,
     registerRequest,
@@ -108,11 +110,24 @@ def register(
         database.flush()
         credential = userCredential(user_id=user.user_id, password_hash=password_hash)
         database.add(credential)
-        database.add(attendanceSetting(user_id=user.user_id))
-        database.add_all(scheduleDay(user_id=user.user_id, day_of_week=day) for day in [1, 3, 5])
+        requires_onboarding = payload.onboarding_version == 1
+        database.add(attendanceSetting(
+            user_id=user.user_id, notification_workout_enabled=not requires_onboarding,
+            notification_missed_enabled=not requires_onboarding,
+            notification_snooze_enabled=not requires_onboarding,
+        ))
+        if requires_onboarding:
+            database.add(userOnboarding(
+                user_id=user.user_id,
+                draft=onboardingDraft(timezone=payload.timezone).model_dump(mode='json'),
+            ))
+        else:
+            database.add_all(
+                scheduleDay(user_id=user.user_id, day_of_week=day) for day in [1, 3, 5]
+            )
         today = local_today(user.timezone)
         database.add(weeklyPromise(user_id=user.user_id, effective_week=monday_of(today),
-                                   target_count=3, baseline_date=today))
+                                   target_count=0 if requires_onboarding else 3, baseline_date=today))
         release_previous_push_owner(database, payload.installation_uuid, user.user_id)
         database.commit()
     except IntegrityError:
@@ -183,7 +198,12 @@ def replace_settings(payload: settingsData, user: userDependency, database: data
     account = database.scalar(
         select(userAccount).where(userAccount.user_id == user.user_id).with_for_update()
     )
-    values = payload.model_dump(exclude={'schedule_days', 'country_code', 'timezone'})
+    values = payload.model_dump(exclude={
+        'schedule_days', 'country_code', 'timezone', 'body_weight_kg',
+    })
+    if 'body_weight_kg' in payload.model_fields_set and account.body_weight_kg != payload.body_weight_kg:
+        account.body_weight_kg = payload.body_weight_kg
+        account.body_weight_recorded_at = utc_now() if payload.body_weight_kg is not None else None
     if 'country_code' in payload.model_fields_set:
         account.country_code = payload.country_code
     if payload.timezone is not None:

@@ -81,6 +81,7 @@ def settings_output(database, user_id):
     return {
         'country_code': account.country_code,
         'timezone': account.timezone,
+        'body_weight_kg': account.body_weight_kg,
         'schedule_days': list(days),
         'workout_time': settings.workout_time.strftime('%H:%M'),
         'roast_level': roast_level,

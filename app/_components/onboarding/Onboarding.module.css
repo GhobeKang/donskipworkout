@@ -1,0 +1,58 @@
+.shell { min-height: 100dvh; }
+.content { display: flex; flex-direction: column; min-height: calc(100dvh - 72px - env(safe-area-inset-top)); padding: 8px var(--layout-side-gap) calc(24px + env(safe-area-inset-bottom)); }
+.topRow { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
+.topRow > p { margin: 0; }
+.progress { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; list-style: none; padding: 0; margin: 0 0 36px; }
+.progress li { min-width: 0; color: var(--muted); font-size: 11px; }
+.progress li > span:last-child { display: block; margin-top: 8px; white-space: nowrap; }
+.progressTrack { display: block; height: 3px; border-radius: 3px; background: var(--line); }
+.progress .activeStep { color: var(--accent-text); font-weight: 700; }
+.activeStep .progressTrack { background: var(--orange); }
+.heading { margin-bottom: 28px; }
+.heading h1:focus { outline: none; }
+.heading :global(.infoText) { margin-top: 10px; word-break: keep-all; }
+.form, .fields { display: flex; flex: 1; flex-direction: column; }
+.card { margin: 0; padding: 24px; }
+.card :global(.localeFields label) { margin: 0; }
+.card :global(.localeFields select) { max-width: 100%; }
+.card :global(.fieldLabel) { margin-top: 0; }
+.card :global(.weekdayPicker) { margin-top: 0; }
+.card :global(.weekdayButton) { min-height: 44px; padding: 0; }
+.hint { margin: 18px 0 0; color: var(--muted); font-size: 12px; line-height: 1.7; word-break: keep-all; }
+.flexibleChoice { width: 100%; justify-content: center; margin-top: 18px; padding: 9px 12px; border: 1px solid var(--line); border-radius: 10px; }
+.flexibleChoice[aria-pressed='true'] { color: var(--accent-text); background: var(--card-2); font-weight: 700; text-decoration: underline; text-underline-offset: 4px; }
+.weightField { display: flex; align-items: center; gap: 12px; min-width: 0; padding: 10px 16px; border: 1px solid var(--line); border-radius: 14px; background: var(--bg); }
+.weightField input { appearance: textfield; width: 100%; min-width: 0; padding: 6px 0; border: 0; border-radius: 4px; color: var(--white); background: transparent; font-size: 36px; font-weight: 750; font-variant-numeric: tabular-nums; }
+.weightField input::-webkit-inner-spin-button, .weightField input::-webkit-outer-spin-button { appearance: none; margin: 0; }
+.weightField > span { color: var(--muted); }
+.card :global(.toggleRow) { gap: 16px; align-items: center; }
+.card > :global(.toggleRow):first-child { padding-top: 0; border-top: 0; }
+.card :global(.toggleRow > span) { min-width: 0; }
+.card :global(.toggleRow small) { font-size: 12px; }
+.card :global(.toggle) { flex-shrink: 0; }
+.details { margin-top: 6px; border-top: 1px solid var(--line); }
+.details summary { min-height: 44px; padding: 12px 0 0; color: var(--muted); font-size: 13px; cursor: pointer; }
+.details summary:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 3px; }
+.summaryRow { display: flex; align-items: center; justify-content: space-between; gap: 16px; width: 100%; min-height: 76px; padding: 16px 0; border: 0; border-bottom: 1px solid var(--line); color: var(--white); background: transparent; text-align: left; }
+.summaryRow:first-child { padding-top: 0; }
+.summaryRow:last-of-type { padding-bottom: 0; border-bottom: 0; }
+.summaryRow > span:first-child { flex: 1; min-width: 0; }
+.summaryRow small { display: block; margin-bottom: 3px; color: var(--muted); font-size: 12px; }
+.summaryRow strong { display: block; overflow-wrap: anywhere; font-size: 15px; font-weight: 600; }
+.editLabel { color: var(--muted); font-size: 12px; }
+.actions { display: grid; gap: 10px; margin-top: auto; padding-top: 28px; }
+.actions :global(.wideButton) { justify-content: center; padding: 14px 20px; }
+.secondaryActions { display: flex; align-items: center; justify-content: space-between; min-height: 44px; gap: 12px; }
+.secondaryActions:empty { min-height: 0; }
+.secondaryActions :global(.quietButton) { padding: 8px 0; }
+.error { margin-top: 20px; padding: 14px; border: 1px solid var(--red); border-radius: 14px; color: var(--red); }
+.error p { margin: 0 0 8px; font-size: 13px; }
+.reminder { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 16px; padding: 12px 18px; margin-bottom: 24px; border: 1px solid var(--line); border-radius: var(--card-radius); background: var(--card); }
+.reminder strong { font-size: 14px; }
+.reminder :global(.quietButton) { color: var(--accent-text); padding-right: 0; }
+.reminder :global(.errorText) { flex-basis: 100%; margin: 0; }
+@media (max-width: 350px) {
+  .card { padding: 20px 18px; }
+  .progress { gap: 6px; }
+  .progress li { font-size: 10px; }
+}

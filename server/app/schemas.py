@@ -40,6 +40,7 @@ class registerRequest(loginRequest):
     country_code: str | None = Field(default=None, pattern=r'^[A-Z]{2}$')
     timezone: str = Field(default='Asia/Seoul', min_length=1, max_length=64)
     accepted_policy_version: str = Field(min_length=1, max_length=32)
+    onboarding_version: Literal[0, 1] = 0
 
     @field_validator('password')
     @classmethod
@@ -79,6 +80,9 @@ class settingsData(requestModel):
     workout_time: str = Field(pattern=r'^(?:[01]\d|2[0-3]):[0-5]\d$')
     country_code: str | None = Field(default=None, pattern=r'^[A-Z]{2}$')
     timezone: str | None = Field(default=None, min_length=1, max_length=64)
+    body_weight_kg: Decimal | None = Field(
+        default=None, gt=0, le=500, max_digits=5, decimal_places=2,
+    )
     roast_level: Literal['off', 'spicy', 'hot']
     reuse_enabled: StrictBool
     notification_workout_enabled: StrictBool = True
@@ -102,6 +106,47 @@ class settingsData(requestModel):
     @classmethod
     def validate_timezone(cls, value: str | None) -> str | None:
         return registerRequest.validate_timezone(value) if value is not None else None
+
+
+class onboardingDraft(requestModel):
+    timezone: str = Field(default='Asia/Seoul', min_length=1, max_length=64)
+    schedule_days: list[Annotated[int, Field(strict=True, ge=0, le=6)]] = Field(
+        default_factory=lambda: [1, 3, 5], max_length=7,
+    )
+    workout_time: str = Field(default='19:00', pattern=r'^(?:[01]\d|2[0-3]):[0-5]\d$')
+    body_weight_kg: Decimal | None = Field(
+        default=None, gt=0, le=500, max_digits=5, decimal_places=2,
+    )
+    notification_choice: Literal['pending', 'enabled', 'later'] = 'pending'
+    notification_workout_enabled: StrictBool = True
+    notification_free_workout_enabled: StrictBool = False
+    notification_missed_enabled: StrictBool = False
+    notification_snooze_enabled: StrictBool = False
+
+    @field_validator('timezone')
+    @classmethod
+    def validate_timezone(cls, value: str) -> str:
+        return registerRequest.validate_timezone(value)
+
+    @field_validator('schedule_days')
+    @classmethod
+    def validate_days(cls, value: list[int]) -> list[int]:
+        return settingsData.validate_days(value)
+
+
+class onboardingUpdate(requestModel):
+    draft: onboardingDraft
+    current_step: int = Field(ge=0, le=4)
+    revision: int = Field(ge=0)
+    status: Literal['in_progress', 'deferred'] = 'in_progress'
+
+
+class onboardingData(BaseModel):
+    required: bool
+    status: Literal['not_required', 'not_started', 'in_progress', 'deferred', 'completed']
+    current_step: int = 0
+    revision: int = 0
+    draft: onboardingDraft | None = None
 
 
 exercise_target_area = Literal[

@@ -121,11 +121,11 @@ export default function ExerciseProgress({ revision, on_unauthorized, timezone =
       <select id="progress-period" className="progressSelect" value={period_days} onChange={(event) => set_period_days(Number(event.target.value))}>
         <option value={0}>{t('전체 기간')}</option><option value={30}>{t('최근 30일')}</option><option value={90}>{t('최근 90일')}</option>
       </select>
-      <p className="infoText">{t('음수는 보조 중량이며 체중은 포함되지 않습니다. 음수 세트는 총 운동량에서 제외하며, 세트와 반복 수에는 포함합니다.')}</p>
+      <p className="infoText">{t('맨몸·보조 운동량은 기록 당시 체중을 반영해요. 체중이 없는 기록은 제외해요.')}</p>
       {points.length ? <div className="statsChartCard progressChartCard">
         <div className="statsChartHeading"><div><p className="cardKicker">{t('최근 기록')}</p><h3>{format_value(latest_point[selected_metric_key])} <small>{metric_unit}</small><InfoTooltip label={t(selected_metric.label)}>{chart_scope === 'area'
-        ? t('부위별 운동량은 해당 부위 종목들의 세트별 중량 × 반복 수를 날짜별로 합산한 값입니다. 종목 구성에 따라 값이 달라질 수 있으며, 종목 간 중량 기록을 직접 비교하지 않습니다.')
-        : t(selected_metric_key === 'volume' ? '총 운동량 = 각 세트의 중량 × 반복 수의 합. 맨몸 운동은 반복 수로 비교하세요.' : selected_metric_key === 'max_reps' ? '해당 날짜에 한 세트에서 수행한 가장 많은 반복 수입니다.' : '해당 날짜에 기록한 가장 무거운 중량입니다. 반복 수와 운동 자세도 함께 고려하세요.')}</InfoTooltip></h3></div><span>{points.length >= 2 ? `${t('기간 내 변화')} ${change_value > 0 ? '+' : ''}${format_value(change_value)} ${metric_unit}` : t('첫 기록')}</span></div>
+        ? t('부위별 운동량은 해당 부위 종목들의 환산 중량 × 반복 수를 날짜별로 합산합니다. 종목 구성에 따라 값이 달라집니다.')
+        : t(selected_metric_key === 'volume' ? '총 운동량 = 환산 중량 × 반복 수의 합. 0kg은 당시 체중, 보조 중량은 체중에서 보조값을 뺀 중량으로 계산해요.' : selected_metric_key === 'max_reps' ? '해당 날짜에 한 세트에서 수행한 가장 많은 반복 수입니다.' : '해당 날짜에 기록한 가장 무거운 중량입니다. 반복 수와 운동 자세도 함께 고려하세요.')}</InfoTooltip></h3></div><span>{points.length >= 2 ? `${t('기간 내 변화')} ${change_value > 0 ? '+' : ''}${format_value(change_value)} ${metric_unit}` : t('첫 기록')}</span></div>
         <svg className="progressChart" viewBox="0 0 364 218" role="img" aria-label={`${selected_label} · ${t(selected_metric.label)} · ${t('날짜별 수치는 아래 표에서 확인하세요.')}`}>
           {[0, 0.5, 1].map((ratio) => <g key={ratio}><line x1="62" x2="340" y1={180 - ratio * 150} y2={180 - ratio * 150} className="progressGrid" /><text x="54" y={184 - ratio * 150} textAnchor="end">{format_value(chart_min + chart_range * ratio)}</text></g>)}
           <polyline points={chart_points.map((point) => `${point.x},${point.y}`).join(' ')} className="progressLine" />

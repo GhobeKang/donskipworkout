@@ -34,6 +34,7 @@ from .presentation import local_today, session_output, settings_output
 from .schemas import sessionData
 from .security import databaseDependency, userDependency, utc_now
 from .timer_routes import finish_active_workout_timer
+from .workout_load import workout_volume_kg
 
 router = APIRouter(prefix='/api/v1')
 
@@ -80,7 +81,7 @@ def photo_workout_summary(database, session):
             },
         )
         group['set_count'] += 1
-        group['volume_kg'] += max(workout_set.weight_kg, 0) * workout_set.reps
+        group['volume_kg'] += workout_volume_kg(workout_set)
     return [{**group, 'volume_kg': float(group['volume_kg'])} for group in exercise_groups.values()]
 
 

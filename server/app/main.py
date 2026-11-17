@@ -16,6 +16,7 @@ from .exercise_research import router as exercise_research_router
 from .mentorship_routes import router as mentorship_router
 from .middleware import configure_logging, requestSecurityMiddleware
 from .notification_routes import router as notification_router
+from .onboarding_routes import router as onboarding_router
 from .photo_routes import router as photo_router
 from .routes import router
 from .safety_routes import router as safety_router
@@ -84,6 +85,7 @@ def create_app(settings=None, database_engine=None):
     app.state.settings = settings
     app.state.session_factory = create_session_factory(engine)
     app.include_router(router)
+    app.include_router(onboarding_router)
     app.include_router(challenge_router)
     app.include_router(coaching_router)
     app.include_router(photo_router)

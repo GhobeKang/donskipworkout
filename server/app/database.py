@@ -36,18 +36,40 @@ id_type = BigInteger().with_variant(Integer, 'sqlite')
 
 class userAccount(databaseBase):
     __tablename__ = 'users'
+    __table_args__ = (CheckConstraint(
+        'body_weight_kg > 0 AND body_weight_kg <= 500', name='users_body_weight_check',
+    ),)
     user_id: Mapped[int] = mapped_column(id_type, primary_key=True, autoincrement=True)
     user_uuid: Mapped[str] = mapped_column(String(36), unique=True)
     email: Mapped[str | None] = mapped_column(String(255), unique=True)
     display_name: Mapped[str | None] = mapped_column(String(100))
     country_code: Mapped[str | None] = mapped_column(String(2))
     timezone: Mapped[str] = mapped_column(String(64), default='Asia/Seoul')
+    body_weight_kg: Mapped[Decimal | None] = mapped_column(Numeric(5, 2))
+    body_weight_recorded_at: Mapped[datetime | None] = mapped_column(DateTime)
     community_policy_version: Mapped[str | None] = mapped_column(String(32))
     community_policy_accepted_at: Mapped[datetime | None] = mapped_column(DateTime)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.current_timestamp(), onupdate=func.current_timestamp()
     )
+
+
+class userOnboarding(databaseBase):
+    __tablename__ = 'user_onboarding'
+    __table_args__ = (
+        CheckConstraint("status IN ('not_started', 'in_progress', 'deferred', 'completed')"),
+        CheckConstraint('current_step BETWEEN 0 AND 4'),
+    )
+    user_id: Mapped[int] = mapped_column(
+        id_type, ForeignKey('users.user_id', ondelete='CASCADE'), primary_key=True,
+    )
+    version: Mapped[int] = mapped_column(Integer, default=1)
+    status: Mapped[str] = mapped_column(String(20), default='not_started')
+    current_step: Mapped[int] = mapped_column(Integer, default=0)
+    revision: Mapped[int] = mapped_column(Integer, default=0)
+    draft: Mapped[dict] = mapped_column(JSON().with_variant(JSONB(), 'postgresql'))
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime)
 
 
 class userCredential(databaseBase):
@@ -238,7 +260,13 @@ class userSharedExerciseProgress(databaseBase):
 
 class workoutSet(databaseBase):
     __tablename__ = 'workout_sets'
-    __table_args__ = (UniqueConstraint('session_id', 'exercise_order', 'set_order'),)
+    __table_args__ = (
+        UniqueConstraint('session_id', 'exercise_order', 'set_order'),
+        CheckConstraint(
+            'body_weight_kg > 0 AND body_weight_kg <= 500',
+            name='workout_sets_body_weight_check',
+        ),
+    )
     set_id: Mapped[int] = mapped_column(id_type, primary_key=True, autoincrement=True)
     session_id: Mapped[int] = mapped_column(id_type, ForeignKey('workout_sessions.session_id'))
     exercise_id: Mapped[int | None] = mapped_column(
@@ -252,6 +280,7 @@ class workoutSet(databaseBase):
     exercise_order: Mapped[int] = mapped_column(Integer)
     set_order: Mapped[int] = mapped_column(Integer)
     weight_kg: Mapped[Decimal] = mapped_column(Numeric(5, 2))
+    body_weight_kg: Mapped[Decimal | None] = mapped_column(Numeric(5, 2))
     reps: Mapped[int] = mapped_column(Integer)
 
 

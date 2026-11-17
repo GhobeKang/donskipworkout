@@ -23,6 +23,7 @@ from .schemas import (
     exerciseInput,
 )
 from .security import databaseDependency, userDependency
+from .workout_load import snapshot_body_weight_kg, workout_volume_expression
 
 router = APIRouter(prefix='/api/v1')
 
@@ -149,7 +150,9 @@ def exercise_progress(user: userDependency, database: databaseDependency):
             func.max(workoutSet.weight_kg).label('max_weight'),
             func.max(workoutSet.reps).label('max_reps'),
             func.sum(
-                case((workoutSet.weight_kg > 0, workoutSet.weight_kg), else_=0) * workoutSet.reps
+                workout_volume_expression(
+                    workoutSet.weight_kg, workoutSet.body_weight_kg, workoutSet.reps,
+                )
             ).label('volume'),
             func.count(workoutSet.set_id).label('set_count'),
         )
@@ -243,6 +246,10 @@ def workout_groups_output(workout_sets, previous_bests=None):
 
 
 def replace_workout_groups(database, user_id, session, exercise_groups: list[exerciseGroupInput]):
+    account = database.get(userAccount, user_id)
+    body_weight_kg = snapshot_body_weight_kg(
+        session.workout_sets, account, session.workout_date,
+    )
     archived_groups = {}
     for saved_set in session.workout_sets:
         if saved_set.exercise_source != 'custom' or saved_set.exercise_id is not None:
@@ -346,6 +353,7 @@ def replace_workout_groups(database, user_id, session, exercise_groups: list[exe
                     exercise_order=exercise_order,
                     set_order=set_order,
                     weight_kg=workout_set.weight_kg,
+                    body_weight_kg=body_weight_kg,
                     reps=workout_set.reps,
                 )
             )
@@ -371,6 +379,7 @@ def replace_workout_groups(database, user_id, session, exercise_groups: list[exe
                     exercise_order=exercise_order,
                     set_order=set_order,
                     weight_kg=saved_set.weight_kg,
+                    body_weight_kg=saved_set.body_weight_kg,
                     reps=saved_set.reps,
                 )
             )
