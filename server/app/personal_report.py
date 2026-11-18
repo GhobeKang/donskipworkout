@@ -2,6 +2,7 @@
 
 from collections import Counter, defaultdict
 from datetime import date, timedelta
+from types import SimpleNamespace
 
 from sqlalchemy import and_, select
 
@@ -14,6 +15,7 @@ from .database import (
     workoutSession,
     workoutSet,
 )
+from .exercise_subareas import report_area_paths, set_report_area_paths, subareas_by_exercise
 from .muscle_activity import muscle_activity_comparison
 from .personal_records import exercise_key, personal_record_achievements
 from .workout_load import workout_volume_kg
@@ -239,7 +241,8 @@ def empty_area_totals():
 def area_totals(workout_sets):
     grouped_sets = defaultdict(list)
     for workout_set in workout_sets:
-        grouped_sets[workout_set.target_area or '타겟 부위 미설정'].append(workout_set)
+        for target_area in set_report_area_paths(workout_set):
+            grouped_sets[target_area].append(workout_set)
     return {
         target_area: {
             'session_count': len({item.workout_date for item in area_sets}),
@@ -464,7 +467,11 @@ def personal_report_output(
         )
         .order_by(workoutSession.workout_date, workoutSet.set_id)
     ).all()
-    recorded_sets = [item for item in set_rows if exercise_key(item)]
+    targets = subareas_by_exercise(database, user_id)
+    recorded_sets = [SimpleNamespace(
+        **item._mapping,
+        target_areas=report_area_paths(item.target_area, targets.get(exercise_key(item), [])),
+    ) for item in set_rows if exercise_key(item)]
     valid_sets = [item for item in recorded_sets if item.session_status == 'completed']
     previous_start = previous_start or period_start - timedelta(days=7)
     previous_end = previous_end or as_of_date - timedelta(days=7)
@@ -529,12 +536,13 @@ def personal_report_output(
     ]
     area_first_dates = {}
     for item in valid_sets:
-        area_first_dates.setdefault(item.target_area or '타겟 부위 미설정', item.workout_date)
+        for target_area in set_report_area_paths(item):
+            area_first_dates.setdefault(target_area, item.workout_date)
     record_areas = defaultdict(set)
     for item in personal_records:
         identity = (item['exercise_source'], item['exercise_id'])
-        target_area = sets_by_exercise[identity][-1].target_area or '타겟 부위 미설정'
-        record_areas[target_area].add(identity)
+        for target_area in set_report_area_paths(sets_by_exercise[identity][-1]):
+            record_areas[target_area].add(identity)
     challenges = {
         'new_areas': [
             {'target_area': target_area, 'first_date': first_date.isoformat()}
@@ -571,12 +579,12 @@ def personal_report_output(
         current_area_days = {
             item.workout_date
             for item in current_sets
-            if (item.target_area or '타겟 부위 미설정') == target_area
+            if target_area in set_report_area_paths(item)
         }
         previous_area_days = {
             item.workout_date
             for item in previous_sets
-            if (item.target_area or '타겟 부위 미설정') == target_area
+            if target_area in set_report_area_paths(item)
         }
         if not current_area_days and not previous_area_days:
             continue

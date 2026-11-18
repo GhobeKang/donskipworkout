@@ -85,7 +85,7 @@ export default function WorkoutScreen({ on_unauthorized, on_back, on_catalog_cha
     <HelpLink question_id="exercises">{t('종목 추가와 지난 기록 불러오기')}</HelpLink>
     <p className="infoText">{t("운동 세트 기록에서 사용할 종목을 관리합니다. 공용 종목과 직접 등록한 종목을 함께 기록할 수 있습니다.")}</p>
     <button className="wideButton primary" type="button" aria-haspopup="dialog" disabled={pending_id !== null} onClick={() => open_editor()}><MaterialIcon>add</MaterialIcon>{t("운동 종목 추가")}</button>
-    {is_editor_open && <ExerciseEditorModal exercise={editing_exercise} pending={pending_id !== null} error_message={error_message} on_save={save_exercise} on_close={close_editor} />}
+    {is_editor_open && <ExerciseEditorModal exercise={editing_exercise} pending={pending_id !== null} error_message={error_message} on_save={save_exercise} on_close={close_editor} on_unauthorized={on_unauthorized} />}
     {research_exercise && <ExerciseResearchModal key={`${research_exercise.exercise_source}:${research_exercise.exercise_id}`} exercise={research_exercise} on_change={() => {
       set_revision((value) => value + 1);
       on_research_change();

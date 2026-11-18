@@ -69,7 +69,6 @@ from .security import (
     utc_now,
 )
 from .sharing import monday_of, period_report_output, schedule_next_promise, weekly_share_output
-from .timer_routes import finish_active_workout_timer
 from .workout_times import workout_time_days
 from .workouts import replace_workout_groups, workout_groups_output
 
@@ -303,7 +302,6 @@ def act_today(payload: sessionAction, user: userDependency, database: databaseDe
         session.completed_at = now
         session.reusable = settings['reuse_enabled']
         database.flush()
-        finish_active_workout_timer(database, user.user_id, now)
         record_activity_for_challenges(
             database,
             user.user_id,

@@ -19,6 +19,7 @@ const area_rules = {
 };
 const detailed_rules = {
   대흉근: ['pectoralis_major'], 광배근: ['latissimus_dorsi'],
+  '승모근 · 상부': ['trapezius_upper'], '승모근 · 중부': ['trapezius_middle'], '승모근 · 하부': ['trapezius_lower'],
   '전면 삼각근': ['anterior_deltoid'], '측면 삼각근': ['lateral_deltoid'], '후면 삼각근': ['posterior_deltoid'],
   '이두 장두': ['biceps_brachii_caput_longum'], '이두 단두': ['biceps_brachii_caput_breve'], 상완요골근: ['brachioradialis'],
   '삼두 장두': ['triceps_brachii_caput_longum'], '삼두 외측두': ['triceps_brachii_caput_laterale'], '삼두 내측두': ['triceps_brachii_caput_mediale'],
@@ -26,6 +27,9 @@ const detailed_rules = {
 };
 const grouped_rules = {
   승모근: ['trapezius_'], 상완이두근: ['biceps_brachii_'], 상완삼두근: ['triceps_brachii_'],
+  '상부 등': ['trapezius_upper', 'trapezius_middle'], '중부 등': ['trapezius_middle', 'trapezius_lower'],
+  // The atlas has one shape per lat: regional targets stay grouped on the map.
+  '광배근 · 상부': ['latissimus_dorsi'], '광배근 · 하부': ['latissimus_dorsi'],
   윗가슴: ['pectoralis_major'], '가운데 가슴': ['pectoralis_major'], 아랫가슴: ['pectoralis_major'],
   상복부: ['rectus_abdominis'], 하복부: ['rectus_abdominis'], 복사근: ['external_oblique'],
   대퇴사두근: ['rectus_femoris', 'vastus_'], 햄스트링: ['biceps_femoris', 'semitendinosus', 'semimembranosus'],
@@ -33,6 +37,10 @@ const grouped_rules = {
 };
 
 export function target_muscle_rule(target) {
+  if (Array.isArray(target.atlas_muscle_ids)) {
+    return target.atlas_muscle_ids.length ? { muscle_ids: target.atlas_muscle_ids, is_coarse: Boolean(target.is_legacy) } : null;
+  }
+  // Compatibility for older saved report snapshots; current records use reference IDs.
   if (!target.target_subarea) {
     const prefixes = area_rules[target.target_area];
     return prefixes ? { prefixes, is_coarse: true } : null;
@@ -49,11 +57,17 @@ export function activity_color(activity_score) {
 export function activity_for_muscles(summary, muscles) {
   const activity_by_muscle = {};
   for (const muscle of muscles) {
-    const targets = (summary?.targets || []).filter((target) =>
-      target_muscle_rule(target)?.prefixes.some((prefix) => muscle.id.startsWith(prefix)));
+    const targets = (summary?.targets || []).filter((target) => {
+      const rule = target_muscle_rule(target);
+      return rule?.muscle_ids?.includes(muscle.id) || rule?.prefixes?.some((prefix) => muscle.id.startsWith(prefix));
+    });
     if (!targets.length) continue;
-    const exercise_keys = new Set(targets.flatMap((target) => target.exercises.map((exercise) => exercise.exercise_key)));
-    const set_count = targets.reduce((total, target) => total + target.set_count, 0);
+    const sets_by_exercise = new Map();
+    targets.forEach((target) => target.exercises.forEach((exercise) => {
+      sets_by_exercise.set(exercise.exercise_key, Math.max(sets_by_exercise.get(exercise.exercise_key) || 0, exercise.set_count));
+    }));
+    const exercise_keys = new Set(sets_by_exercise.keys());
+    const set_count = [...sets_by_exercise.values()].reduce((total, count) => total + count, 0);
     activity_by_muscle[muscle.id] = {
       targets, set_count, exercise_count: exercise_keys.size,
       activity_score: exercise_keys.size + set_count,

@@ -2,7 +2,7 @@ import { Capacitor } from '@capacitor/core';
 import { Directory, Filesystem } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 import { translate } from './i18n';
-import { report_area_label } from './exerciseClassification';
+import { report_area_label, muscle_target_label } from './exerciseClassification';
 import { comparison_text, personal_report_copy, report_status } from './personalReport';
 import { performance_text } from './reportEvidence';
 import { muscle_activity_value } from './anatomy/muscleActivity';
@@ -20,7 +20,7 @@ export function weekly_share_copy(report, language) {
   const summary_metrics = copy.metrics.filter((metric) => ['performance', 'workout_time', 'muscle_activity', 'consistency', 'recovery'].includes(metric.key));
   const muscle_targets = copy.insights.muscle_activity?.current.targets || [];
   summary_metrics.push(...muscle_targets.slice(0, 6).map((target) => ({
-    label: report_area_label([target.target_area, target.target_subarea].filter(Boolean).join(' · '), language),
+    label: muscle_target_label(target, language),
     value: muscle_activity_value(target, t),
   })));
   if (muscle_targets.length > 6) summary_metrics.push({ label: t('추가 부위 분류'), value: t('{0}개 분류는 상세 리포트에서 확인하세요.', [muscle_targets.length - 6]) });

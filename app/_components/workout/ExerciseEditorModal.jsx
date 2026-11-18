@@ -3,11 +3,15 @@ import { useLanguage } from '../../_hooks/useLanguage';
 import MaterialIcon from '../ui/MaterialIcon';
 import ExerciseClassificationFields from './ExerciseClassificationFields';
 
-export default function ExerciseEditorModal({ exercise, pending, error_message, on_save, on_close }) {
+export default function ExerciseEditorModal({ exercise, pending, error_message, on_save, on_close, on_unauthorized }) {
   const { t, localize_message } = useLanguage();
   const [name, set_name] = useState(exercise?.name || '');
   const [target_area, set_target_area] = useState(exercise?.target_area || '');
-  const [target_subarea, set_target_subarea] = useState(exercise?.target_subarea || '');
+  const [target_subarea_ids, set_target_subarea_ids] = useState(() => {
+    const existing_targets = new Map((exercise?.target_subareas || []).map((target) => [target.subarea_id, target]));
+    return (exercise?.target_subarea_ids || []).filter((subarea_id) => existing_targets.get(subarea_id)?.target_area === exercise?.target_area);
+  });
+  const has_other_area_targets = exercise?.target_subareas?.some((target) => target.target_area !== exercise.target_area);
   const dialog_ref = useRef(null);
   const name_input_ref = useRef(null);
 
@@ -29,7 +33,7 @@ export default function ExerciseEditorModal({ exercise, pending, error_message, 
     event.preventDefault();
     const trimmed_name = name.trim();
     if (!trimmed_name || !target_area || pending) return;
-    on_save({ name: trimmed_name, target_area, target_subarea: target_subarea || null });
+    on_save({ name: trimmed_name, target_area, target_subarea_ids });
   };
 
   return <dialog className="actionModal exerciseEditorModal" ref={dialog_ref} aria-labelledby="exercise-editor-title" aria-busy={pending}
@@ -47,7 +51,8 @@ export default function ExerciseEditorModal({ exercise, pending, error_message, 
     <form onSubmit={save_exercise}>
       <label className="fieldLabel" htmlFor="exercise-name">{t('운동 종목 이름')}</label>
       <input id="exercise-name" className="timeInput" ref={name_input_ref} value={name} maxLength={100} disabled={pending} onChange={(event) => set_name(event.target.value)} placeholder={t('예: 케이블 크런치')} required />
-      <ExerciseClassificationFields target_area={target_area} target_subarea={target_subarea} disabled={pending} on_area_change={set_target_area} on_subarea_change={set_target_subarea} />
+      <ExerciseClassificationFields target_area={target_area} target_subarea_ids={target_subarea_ids} disabled={pending} on_area_change={set_target_area} on_subarea_ids_change={set_target_subarea_ids} on_unauthorized={on_unauthorized} />
+      {has_other_area_targets && <p className="infoText">{t('저장하면 선택한 큰 카테고리에 속하는 세부 부위만 반영됩니다.')}</p>}
       {error_message && <p className="errorText" role="alert">{localize_message(error_message)}</p>}
       <div className="modalActions exerciseEditorActions">
         <button className="textButton" type="button" disabled={pending} onClick={on_close}>{t('취소')}</button>

@@ -7,6 +7,7 @@ from sqlalchemy.exc import IntegrityError
 from .database import (
     exercise_report_area,
     exerciseItem,
+    exerciseSubarea,
     sharedExerciseItem,
     userAccount,
     userSharedExerciseProgress,
@@ -14,6 +15,12 @@ from .database import (
     workoutSet,
 )
 from .exercise_research import latest_research_by_exercise
+from .exercise_subareas import (
+    replace_exercise_subareas,
+    subarea_output,
+    subareas_by_exercise,
+    validate_exercise_subareas,
+)
 from .personal_records import previous_bests_by_exercise
 from .schemas import (
     areaWorkoutImportData,
@@ -21,6 +28,7 @@ from .schemas import (
     exerciseData,
     exerciseGroupInput,
     exerciseInput,
+    exerciseSubareaData,
 )
 from .security import databaseDependency, userDependency
 from .workout_load import snapshot_body_weight_kg, workout_volume_expression
@@ -172,6 +180,7 @@ def exercise_progress(user: userDependency, database: databaseDependency):
         )
         .order_by(workoutSession.workout_date)
     )
+    targets = subareas_by_exercise(database, user.user_id)
     exercises = {}
     for row in rows:
         exercise_id = row.shared_exercise_id if row.exercise_source == 'shared' else row.exercise_id
@@ -183,6 +192,8 @@ def exercise_progress(user: userDependency, database: databaseDependency):
                 'exercise_source': row.exercise_source,
                 'name': row.name,
                 'target_area': row.target_area,
+                'target_subareas': targets.get((row.exercise_source, exercise_id), []),
+                'target_subarea_ids': [item['subarea_id'] for item in targets.get((row.exercise_source, exercise_id), [])],
                 'archived': exercise_id is None,
                 'points': [],
             },
@@ -201,13 +212,17 @@ def exercise_progress(user: userDependency, database: databaseDependency):
     )
 
 
-def exercise_output(exercise, exercise_source='custom', last_sets=None, previous_best=None, latest_research_record=None):
+def exercise_output(exercise, exercise_source='custom', last_sets=None, previous_best=None, latest_research_record=None, target_subareas=None):
+    target_subareas = target_subareas or []
     return {
         'exercise_id': exercise.exercise_id,
         'exercise_source': exercise_source,
         'name': exercise.name,
         'target_area': getattr(exercise, 'target_area', None),
-        'target_subarea': getattr(exercise, 'target_subarea', None),
+        'target_subarea': target_subareas[0]['label_ko']
+        if len(target_subareas) == 1 and target_subareas[0]['is_legacy'] else None,
+        'target_subarea_ids': [item['subarea_id'] for item in target_subareas],
+        'target_subareas': target_subareas,
         'last_sets': (exercise.last_sets if last_sets is None else last_sets) or [],
         'previous_best': previous_best,
         'latest_research_record': latest_research_record,
@@ -385,6 +400,13 @@ def replace_workout_groups(database, user_id, session, exercise_groups: list[exe
             )
 
 
+@router.get('/exercise-subareas', response_model=list[exerciseSubareaData])
+def list_exercise_subareas(user: userDependency, database: databaseDependency):
+    return [subarea_output(item) for item in database.scalars(
+        select(exerciseSubarea).order_by(exerciseSubarea.sort_order, exerciseSubarea.subarea_id),
+    )]
+
+
 @router.get('/exercises', response_model=list[exerciseData])
 def list_exercises(
     user: userDependency, database: databaseDependency, before_date: date | None = None
@@ -396,12 +418,14 @@ def list_exercises(
     previous_sets = latest_sets_by_exercise(database, user.user_id, before_date)
     previous_bests = previous_bests_by_exercise(database, user.user_id, before_date)
     latest_research = latest_research_by_exercise(database, user.user_id)
+    targets = subareas_by_exercise(database, user.user_id)
     exercises = [
         exercise_output(
             exercise,
             last_sets=previous_sets.get(('custom', exercise.exercise_id), []),
             previous_best=previous_bests.get(('custom', exercise.exercise_id)),
             latest_research_record=latest_research.get(('custom', exercise.exercise_id)),
+            target_subareas=targets.get(('custom', exercise.exercise_id), []),
         )
         for exercise in custom_exercises
     ]
@@ -412,6 +436,7 @@ def list_exercises(
             previous_sets.get(('shared', exercise.exercise_id), []),
             previous_bests.get(('shared', exercise.exercise_id)),
             latest_research.get(('shared', exercise.exercise_id)),
+            targets.get(('shared', exercise.exercise_id), []),
         )
         for exercise in shared_exercises
     )
@@ -465,6 +490,7 @@ def latest_sets_by_exercise(database, user_id, before_date=None):
 
 @router.post('/exercises', response_model=exerciseData, status_code=201)
 def create_exercise(payload: exerciseInput, user: userDependency, database: databaseDependency):
+    targets = validate_exercise_subareas(database, payload)
     database.scalar(
         select(userAccount).where(userAccount.user_id == user.user_id).with_for_update()
     )
@@ -483,16 +509,17 @@ def create_exercise(payload: exerciseInput, user: userDependency, database: data
         user_id=user.user_id,
         name=payload.name,
         target_area=payload.target_area,
-        target_subarea=payload.target_subarea,
         last_sets=[],
     )
     database.add(exercise)
     try:
+        database.flush()
+        replace_exercise_subareas(database, exercise.exercise_id, targets)
         database.commit()
     except IntegrityError:
         database.rollback()
         raise HTTPException(409, '이미 등록한 운동 종목입니다.') from None
-    return exercise_output(exercise)
+    return exercise_output(exercise, target_subareas=targets)
 
 
 @router.put('/exercises/custom/{exercise_id}', response_model=exerciseData)
@@ -502,10 +529,15 @@ def rename_exercise(
     exercise = database.scalar(
         select(exerciseItem).where(
             exerciseItem.exercise_id == exercise_id, exerciseItem.user_id == user.user_id
-        )
+        ).with_for_update()
     )
     if exercise is None:
         raise HTTPException(404, '운동 종목을 찾을 수 없습니다.')
+    if 'target_subarea_ids' not in payload.model_fields_set:
+        existing_targets = subareas_by_exercise(database, user.user_id).get(('custom', exercise_id), [])
+        if any(not target['is_legacy'] for target in existing_targets):
+            raise HTTPException(409, '여러 타겟 부위가 설정된 종목은 최신 앱에서 수정해 주세요.')
+    targets = validate_exercise_subareas(database, payload)
     if database.scalar(
         select(sharedExerciseItem.exercise_id).where(
             func.lower(sharedExerciseItem.name) == payload.name.lower()
@@ -514,13 +546,13 @@ def rename_exercise(
         raise HTTPException(409, '기본 운동 종목에 이미 등록되어 있습니다.')
     exercise.name = payload.name
     exercise.target_area = payload.target_area
-    exercise.target_subarea = payload.target_subarea
     try:
+        replace_exercise_subareas(database, exercise.exercise_id, targets)
         database.commit()
     except IntegrityError:
         database.rollback()
         raise HTTPException(409, '이미 등록한 운동 종목입니다.') from None
-    return exercise_output(exercise)
+    return exercise_output(exercise, target_subareas=targets)
 
 
 @router.delete('/exercises/custom/{exercise_id}', status_code=204)

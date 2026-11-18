@@ -3,7 +3,7 @@
 import { lazy, Suspense, useId } from 'react';
 import { useLanguage } from '../../_hooks/useLanguage';
 import { exercise_label } from '../../_lib/i18n';
-import { report_area_label } from '../../_lib/exerciseClassification';
+import { muscle_target_label } from '../../_lib/exerciseClassification';
 import { muscle_activity_method, target_muscle_rule } from '../../_lib/anatomy/muscleActivity';
 import report_styles from './MuscleActivityReport.module.css';
 import InfoTooltip from '../ui/InfoTooltip';
@@ -17,13 +17,14 @@ export default function MuscleActivityReport({ activity, title = '근육 활동 
   const { current, previous } = activity;
   const unmapped_sets = current.targets.filter((target) => !target_muscle_rule(target))
     .reduce((total, target) => total + target.set_count, 0);
-  const target_label = (target) => report_area_label([target.target_area, target.target_subarea].filter(Boolean).join(' · '), language);
+  const target_label = (target) => muscle_target_label(target, language);
 
   return <section className={report_styles.report} aria-labelledby={`${report_id}-title`}>
     <header className={report_styles.heading}>
       <p className={report_styles.kicker}>{t('기록 기반 활동')}</p>
       <h3 id={`${report_id}-title`}>{t(title)}<InfoTooltip label={t(title)}><span className="infoTooltipParagraph">{t(muscle_activity_method)}</span><span className="infoTooltipParagraph">{t('출석 상태와 별개로 저장한 세트를 집계합니다. 색상은 활동지수를 기준으로 자동 표시합니다.')}</span>{unmapped_sets > 0 && <span className="infoTooltipParagraph">{t('분류 미설정 또는 지도에 없는 부위 {0}세트는 총계와 표에 포함하고 지도에는 표시하지 않습니다.', [unmapped_sets])}</span>}</InfoTooltip></h3>
       <p>{current.start_date} — {current.end_date} · {t('세트 기록 {0}일', [current.recorded_day_count])}</p>
+      <p>{t('세트는 선택된 각 부위에 반영되며, 전체 종목·세트 수에서는 한 번만 집계합니다.')}</p>
     </header>
     <dl className={report_styles.totals}>
       {[['exercise_count', '운동 종목'], ['set_count', '총 세트'], ['activity_score', '활동지수']].map(([field, label]) => <div key={field}><dt>{t(label)}</dt><dd>{current[field]}</dd></div>)}

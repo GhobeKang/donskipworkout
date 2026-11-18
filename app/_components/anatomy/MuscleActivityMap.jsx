@@ -5,7 +5,7 @@ import { useMemo, useState } from 'react';
 import { useLanguage } from '../../_hooks/useLanguage';
 import { atlas_muscles, muscle_label, muscles_by_id } from '../../_lib/anatomy/muscleAtlas';
 import { activity_bands, activity_color, activity_for_muscles } from '../../_lib/anatomy/muscleActivity';
-import { report_area_label } from '../../_lib/exerciseClassification';
+import { muscle_target_label } from '../../_lib/exerciseClassification';
 import MaterialIcon from '../ui/MaterialIcon';
 import MuscleMap from './MuscleMap';
 import report_styles from '../reports/MuscleActivityReport.module.css';
@@ -26,7 +26,7 @@ export default function MuscleActivityMap({ summary }) {
       <div className={report_styles.viewSwitch} role="group" aria-label={t('신체 방향')}>
         {['front', 'back'].map((map_view) => <button type="button" key={map_view} aria-pressed={view === map_view} onClick={() => { set_view(map_view); set_zoom_level(1); set_active_muscle_id(null); }}>{t(map_view === 'front' ? '앞면' : '뒷면')}</button>)}
       </div>
-      <InfoTooltip label={t('근육 활동')}><span className="infoTooltipParagraph">{t('점선은 큰 부위·근육군 분류입니다. 좌우 정보가 없어 양쪽에 함께 표시합니다.')}</span><span className="infoTooltipParagraph">{t('부위를 눌러 해당 분류의 종목 수와 세트 수를 확인하세요.')}</span></InfoTooltip>
+      <InfoTooltip label={t('근육 활동')}><span className="infoTooltipParagraph">{t('점선은 이전 큰 부위 분류입니다. 직접 선택한 좌우 부위는 각각 표시합니다.')}</span><span className="infoTooltipParagraph">{t('도형이 없는 이전 세부분류는 표에서 확인할 수 있습니다.')}</span><span className="infoTooltipParagraph">{t('부위를 눌러 해당 분류의 종목 수와 세트 수를 확인하세요.')}</span></InfoTooltip>
       <div className={report_styles.zoomControls} role="group" aria-label={t('지도 확대·축소')}>
         <button type="button" disabled={zoom_level === 1} aria-label={t('지도 축소')} onClick={() => set_zoom_level((current_zoom) => Math.max(1, current_zoom - 0.5))}><MaterialIcon>remove</MaterialIcon></button>
         <output aria-label={t('확대 배율')}>{Math.round(zoom_level * 100)}%</output>
@@ -45,7 +45,7 @@ export default function MuscleActivityMap({ summary }) {
         <strong>{muscle_label(active_muscle, language)}{active_activity?.is_coarse && <InfoTooltip label={muscle_label(active_muscle, language)}>{t('세부 근육별 자극량 분배는 확인할 수 없습니다.')}</InfoTooltip>}</strong>
         {active_activity ? <>
           <p>{t('해당 분류의 기록: {0}종목 · {1}세트 · 활동지수 {2}', [active_activity.exercise_count, active_activity.set_count, active_activity.activity_score])}</p>
-          <small>{active_activity.targets.map((target) => report_area_label([target.target_area, target.target_subarea].filter(Boolean).join(' · '), language)).join(' / ')}</small>
+          <small>{active_activity.targets.map((target) => muscle_target_label(target, language)).join(' / ')}</small>
         </> : <p>{t('이 부위에 연결된 타겟 분류의 기록이 없습니다.')}</p>}
       </>
     </div>}

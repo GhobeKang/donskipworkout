@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { api_request } from '../../_lib/api';
+import { exercise_target_areas } from '../../_lib/exerciseClassification';
 import { useLanguage } from '../../_hooks/useLanguage';
 import MaterialIcon from '../ui/MaterialIcon';
 
-const target_areas = ['가슴', '등', '어깨', '이두', '삼두', '복근', '엉덩이', '허벅지', '종아리', '전신'];
+const target_areas = Object.keys(exercise_target_areas);
 
 export default function AreaWorkoutImportModal({ is_open, workout_date, on_import, on_close, on_unauthorized }) {
   const { t, localize_message } = useLanguage();

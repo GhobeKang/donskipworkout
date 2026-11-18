@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useLanguage } from '../../_hooks/useLanguage';
 import useApiResource from '../../_hooks/useApiResource';
 import { exercise_label, format_workout_date } from '../../_lib/i18n';
-import { report_area_label } from '../../_lib/exerciseClassification';
+import { report_area_label, muscle_target_label } from '../../_lib/exerciseClassification';
 import RequestState from '../ui/RequestState';
 
 const metric_options = [
@@ -13,6 +13,7 @@ const metric_options = [
 ];
 const main_exercise_names = new Set(['스쿼트', '벤치프레스', '오버헤드프레스', '데드리프트']);
 const unset_area_key = '__unset__';
+const area_groups = { 하체: ['엉덩이', '허벅지', '종아리'] };
 const date_value = (workout_date) => Date.parse(`${workout_date}T00:00:00Z`);
 
 function aggregate_area_points(exercises) {
@@ -47,13 +48,33 @@ export default function ExerciseProgress({ revision, on_unauthorized, timezone =
   const main_exercises = exercises.filter((exercise) => main_exercise_names.has(
     exercise.name.replace(/\s+/g, '').replace(/^프리/, ''),
   ));
-  const areas = [...new Set(exercises.map((exercise) => exercise.target_area || unset_area_key))]
-    .sort((first, second) => first.localeCompare(second));
-  const selected_area_key_valid = areas.includes(selected_area_key);
-  const active_area_key = selected_area_key_valid ? selected_area_key : areas[0];
-  const area_exercises = exercises.filter((exercise) => (
-    (exercise.target_area || unset_area_key) === active_area_key
-  ));
+  const area_options = new Map();
+  exercises.forEach((exercise) => {
+    const main_areas = new Set([exercise.target_area?.split(' · ')[0] || unset_area_key,
+      ...(exercise.target_subareas || []).map((target) => target.target_area)]);
+    Object.entries(area_groups).forEach(([group_key, members]) => {
+      if (members.some((area) => main_areas.has(area))) main_areas.add(group_key);
+    });
+    main_areas.forEach((area) => area_options.set(`area:${area}`, {
+      key: `area:${area}`, area, label: report_area_label(area === unset_area_key ? null : area, language),
+    }));
+    (exercise.target_subareas || []).forEach((target) => area_options.set(`subarea:${target.subarea_id}`, {
+      key: `subarea:${target.subarea_id}`, subarea_id: target.subarea_id, label: muscle_target_label(target, language),
+    }));
+    if (!exercise.target_subareas && exercise.target_area?.includes(' · ')) area_options.set(`legacy:${exercise.target_area}`, {
+      key: `legacy:${exercise.target_area}`, legacy_area: exercise.target_area, label: report_area_label(exercise.target_area, language),
+    });
+  });
+  const areas = [...area_options.values()].sort((first, second) => first.label.localeCompare(second.label));
+  const active_area = area_options.get(selected_area_key) || areas[0];
+  const active_area_key = active_area?.key;
+  const area_exercises = exercises.filter((exercise) => {
+    if (active_area?.subarea_id) return exercise.target_subarea_ids?.includes(active_area.subarea_id);
+    if (active_area?.legacy_area) return exercise.target_area === active_area.legacy_area;
+    const main_areas = new Set([exercise.target_area?.split(' · ')[0] || unset_area_key,
+      ...(exercise.target_subareas || []).map((target) => target.target_area)]);
+    return main_areas.has(active_area?.area) || area_groups[active_area?.area]?.some((area) => main_areas.has(area));
+  });
   const selected_exercise = main_exercises.find((exercise) => exercise.exercise_key === exercise_key)
     || main_exercises[0];
   const area_points = aggregate_area_points(area_exercises);
@@ -61,7 +82,7 @@ export default function ExerciseProgress({ revision, on_unauthorized, timezone =
   const selected_metric = metric_options.find((metric) => metric.key === selected_metric_key);
   const selected_chart_points = chart_scope === 'area' ? area_points : selected_exercise?.points || [];
   const selected_label = chart_scope === 'area'
-    ? report_area_label(active_area_key === unset_area_key ? null : active_area_key, language)
+    ? active_area?.label
     : exercise_label(selected_exercise, language);
   const today_date = new Intl.DateTimeFormat('en-CA', {
     timeZone: timezone, year: 'numeric', month: '2-digit', day: '2-digit',
@@ -105,7 +126,7 @@ export default function ExerciseProgress({ revision, on_unauthorized, timezone =
       {chart_scope === 'area' && <>
         <label className="fieldLabel" htmlFor="progress-area">{t('타겟 부위')}</label>
         <select id="progress-area" className="progressSelect" value={active_area_key} onChange={(event) => set_selected_area_key(event.target.value)}>
-          {areas.map((area_key) => <option key={area_key} value={area_key}>{report_area_label(area_key === unset_area_key ? null : area_key, language)}</option>)}
+          {areas.map((area) => <option key={area.key} value={area.key}>{area.label}</option>)}
         </select>
       </>}
       {chart_scope === 'exercise' && <>
@@ -124,7 +145,7 @@ export default function ExerciseProgress({ revision, on_unauthorized, timezone =
       <p className="infoText">{t('맨몸·보조 운동량은 기록 당시 체중을 반영해요. 체중이 없는 기록은 제외해요.')}</p>
       {points.length ? <div className="statsChartCard progressChartCard">
         <div className="statsChartHeading"><div><p className="cardKicker">{t('최근 기록')}</p><h3>{format_value(latest_point[selected_metric_key])} <small>{metric_unit}</small><InfoTooltip label={t(selected_metric.label)}>{chart_scope === 'area'
-        ? t('부위별 운동량은 해당 부위 종목들의 환산 중량 × 반복 수를 날짜별로 합산합니다. 종목 구성에 따라 값이 달라집니다.')
+        ? t('부위별 운동량은 선택한 부위와 하위 부위 전체의 환산 중량 × 반복 수를 날짜별로 합산합니다. 하체는 엉덩이·허벅지·종아리를 포함합니다. 종목 구성에 따라 값이 달라집니다.')
         : t(selected_metric_key === 'volume' ? '총 운동량 = 환산 중량 × 반복 수의 합. 0kg은 당시 체중, 보조 중량은 체중에서 보조값을 뺀 중량으로 계산해요.' : selected_metric_key === 'max_reps' ? '해당 날짜에 한 세트에서 수행한 가장 많은 반복 수입니다.' : '해당 날짜에 기록한 가장 무거운 중량입니다. 반복 수와 운동 자세도 함께 고려하세요.')}</InfoTooltip></h3></div><span>{points.length >= 2 ? `${t('기간 내 변화')} ${change_value > 0 ? '+' : ''}${format_value(change_value)} ${metric_unit}` : t('첫 기록')}</span></div>
         <svg className="progressChart" viewBox="0 0 364 218" role="img" aria-label={`${selected_label} · ${t(selected_metric.label)} · ${t('날짜별 수치는 아래 표에서 확인하세요.')}`}>
           {[0, 0.5, 1].map((ratio) => <g key={ratio}><line x1="62" x2="340" y1={180 - ratio * 150} y2={180 - ratio * 150} className="progressGrid" /><text x="54" y={184 - ratio * 150} textAnchor="end">{format_value(chart_min + chart_range * ratio)}</text></g>)}

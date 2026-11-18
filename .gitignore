@@ -40,6 +40,10 @@ supabase/migrations/*
 !supabase/migrations/20261116094953_challenge_host_timezone.sql
 !supabase/migrations/20261117100519_user_onboarding.sql
 !supabase/migrations/20261117100531_body_weight_workout_load.sql
+!supabase/migrations/20261118111201_back_exercise_variants.sql
+!supabase/migrations/20261118112043_revert_back_exercise_variants.sql
+!supabase/migrations/20261118115056_exercise_subarea_references.sql
+!supabase/migrations/20261118122244_explicit_exercise_target_categories.sql
 .gradle/
 etc/
 out/

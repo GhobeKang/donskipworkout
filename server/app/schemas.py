@@ -150,7 +150,7 @@ class onboardingData(BaseModel):
 
 
 exercise_target_area = Literal[
-    '가슴', '등', '어깨', '이두', '삼두', '복근', '엉덩이', '허벅지', '종아리', '전신'
+    '가슴', '등', '어깨', '이두', '삼두', '전완', '목', '복근', '엉덩이', '허벅지', '종아리', '전신'
 ]
 exercise_target_subareas = json.loads(
     Path(__file__).with_name('exercise_target_areas.json').read_text(encoding='utf-8')
@@ -161,6 +161,16 @@ class exerciseInput(requestModel):
     name: str = Field(min_length=1, max_length=100)
     target_area: exercise_target_area
     target_subarea: str | None = Field(default=None, max_length=30)
+    target_subarea_ids: list[Annotated[str, Field(min_length=1, max_length=100)]] = Field(
+        default_factory=list, max_length=256,
+    )
+
+    @field_validator('target_subarea_ids')
+    @classmethod
+    def validate_subarea_ids(cls, values):
+        if len(values) != len(set(values)):
+            raise ValueError('같은 타겟 부위를 중복 선택할 수 없습니다.')
+        return values
 
     @field_validator('target_subarea', mode='before')
     @classmethod
@@ -171,7 +181,7 @@ class exerciseInput(requestModel):
     def validate_target_subarea(self):
         if (
             self.target_subarea is not None
-            and self.target_subarea not in exercise_target_subareas[self.target_area]
+            and self.target_subarea not in exercise_target_subareas.get(self.target_area, [])
         ):
             raise ValueError('세부분류가 선택한 타겟 부위에 속하지 않습니다.')
         return self
@@ -269,12 +279,27 @@ class exerciseResearchListData(BaseModel):
     has_more: bool
 
 
+class exerciseSubareaData(BaseModel):
+    subarea_id: str
+    target_area: str
+    label_ko: str
+    label_en: str
+    body_group: str
+    side: str
+    views: list[str]
+    atlas_muscle_ids: list[str]
+    is_legacy: bool
+    sort_order: int
+
+
 class exerciseData(BaseModel):
     exercise_source: Literal['shared', 'custom']
     exercise_id: int
     name: str
     target_area: str | None
     target_subarea: str | None = None
+    target_subarea_ids: list[str] = Field(default_factory=list)
+    target_subareas: list[exerciseSubareaData] = Field(default_factory=list)
     last_sets: list[workoutSetData]
     previous_best: exercisePersonalBestData | None = None
     latest_research_record: exerciseResearchData | None = None
@@ -570,6 +595,11 @@ class muscleActivityExercise(BaseModel):
 class muscleActivityTarget(BaseModel):
     target_area: str | None
     target_subarea: str | None
+    subarea_id: str | None = None
+    label_ko: str | None = None
+    label_en: str | None = None
+    atlas_muscle_ids: list[str] | None = None
+    is_legacy: bool = False
     exercise_count: int
     set_count: int
     activity_score: int

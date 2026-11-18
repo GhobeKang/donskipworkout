@@ -154,6 +154,40 @@ class sharedExerciseItem(databaseBase):
     target_subarea: Mapped[str | None] = mapped_column(String(30))
 
 
+class exerciseSubarea(databaseBase):
+    __tablename__ = 'exercise_subareas'
+    subarea_id: Mapped[str] = mapped_column(String(100), primary_key=True)
+    target_area: Mapped[str] = mapped_column(String(20))
+    label_ko: Mapped[str] = mapped_column(String(100))
+    label_en: Mapped[str] = mapped_column(String(150))
+    body_group: Mapped[str] = mapped_column(String(30))
+    side: Mapped[str] = mapped_column(String(10))
+    views: Mapped[list] = mapped_column(JSON().with_variant(JSONB(), 'postgresql'))
+    atlas_muscle_ids: Mapped[list] = mapped_column(JSON().with_variant(JSONB(), 'postgresql'))
+    is_legacy: Mapped[bool] = mapped_column(Boolean, default=False)
+    sort_order: Mapped[int] = mapped_column(Integer, default=0)
+
+
+class exerciseItemSubarea(databaseBase):
+    __tablename__ = 'exercise_item_subareas'
+    exercise_id: Mapped[int] = mapped_column(
+        id_type, ForeignKey('exercise_items.exercise_id', ondelete='CASCADE'), primary_key=True,
+    )
+    subarea_id: Mapped[str] = mapped_column(
+        String(100), ForeignKey('exercise_subareas.subarea_id'), primary_key=True, index=True,
+    )
+
+
+class sharedExerciseItemSubarea(databaseBase):
+    __tablename__ = 'shared_exercise_item_subareas'
+    exercise_id: Mapped[int] = mapped_column(
+        id_type, ForeignKey('shared_exercise_items.exercise_id', ondelete='CASCADE'), primary_key=True,
+    )
+    subarea_id: Mapped[str] = mapped_column(
+        String(100), ForeignKey('exercise_subareas.subarea_id'), primary_key=True, index=True,
+    )
+
+
 class exerciseResearchRecord(databaseBase):
     __tablename__ = 'exercise_research_records'
     __table_args__ = (
@@ -285,24 +319,10 @@ class workoutSet(databaseBase):
 
 
 def exercise_report_area():
+    # Read muscle targets separately: joining their many-to-many rows multiplies sets.
     return case(
-        (
-            workoutSet.exercise_source == 'shared',
-            case(
-                (
-                    sharedExerciseItem.target_subarea.is_not(None),
-                    sharedExerciseItem.target_area + ' · ' + sharedExerciseItem.target_subarea,
-                ),
-                else_=sharedExerciseItem.target_area,
-            ),
-        ),
-        else_=case(
-            (
-                exerciseItem.target_subarea.is_not(None),
-                exerciseItem.target_area + ' · ' + exerciseItem.target_subarea,
-            ),
-            else_=exerciseItem.target_area,
-        ),
+        (workoutSet.exercise_source == 'shared', sharedExerciseItem.target_area),
+        else_=exerciseItem.target_area,
     )
 
 

@@ -21,7 +21,7 @@ const action_content_by_action = {
   },
 };
 
-export default function ActionModal({ action, content = null, confirm_variant = 'primary', initial_focus = 'confirm', pending, on_confirm, on_close }) {
+export default function ActionModal({ action, content = null, confirm_variant = 'primary', initial_focus = 'confirm', pending, confirm_disabled = false, on_confirm, on_close, children }) {
   const { t } = useLanguage();
   const confirm_button_ref = useRef(null);
   const cancel_button_ref = useRef(null);
@@ -49,7 +49,7 @@ export default function ActionModal({ action, content = null, confirm_variant = 
     };
     document.addEventListener('keydown', handle_key_down);
     return () => { document.removeEventListener('keydown', handle_key_down); previously_focused?.focus(); };
-  }, [action_content, initial_focus, pending]);
+  }, [action_content, initial_focus, pending, confirm_disabled]);
 
   if (!action_content) return null;
 
@@ -64,9 +64,10 @@ export default function ActionModal({ action, content = null, confirm_variant = 
       <h2 id="action-modal-title">{t(action_content.title)}</h2>
       <p id="action-modal-message" className="modalMessage">{t(action_content.message)}</p>
       <p className="modalDetail">{t(action_content.detail)}</p>
+      {children}
       <div className="modalActions">
-        <button className="textButton modalCancelButton" type="button" disabled={pending} ref={cancel_button_ref} onClick={on_close}>{t("다음에 결정")}</button>
-        <button className={`wideButton ${confirm_variant} modalConfirmButton`} type="button" disabled={pending} ref={confirm_button_ref} onClick={() => on_confirm(action)}>
+        <button className="textButton modalCancelButton" type="button" disabled={pending} ref={cancel_button_ref} onClick={on_close}>{t(action_content.cancel_label || "다음에 결정")}</button>
+        <button className={`wideButton ${confirm_variant} modalConfirmButton`} type="button" disabled={pending || confirm_disabled} ref={confirm_button_ref} onClick={() => on_confirm(action)}>
           <MaterialIcon>{pending ? 'progress_activity' : action_content.icon}</MaterialIcon>{pending ? t(action_content.pending_label || "기록 중…") : t(action_content.confirm_label)}
         </button>
       </div>

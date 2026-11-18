@@ -1,0 +1,17 @@
+.picker { display: grid; gap: 12px; }
+.toolbar, .zoomControls, .selectionHeading { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.toolbar :global(.tabs) { flex: 1; margin: 0; }
+.zoomControls button { min-width: 44px; min-height: 44px; border: 1px solid var(--line); background: var(--card); color: var(--white); border-radius: 10px; font: inherit; }
+.zoomControls span { min-width: 40px; text-align: center; font-size: 12px; }
+.mapViewport { max-height: 380px; overflow: auto; overscroll-behavior: contain; border-radius: 12px; background: var(--card-2); }
+.mapViewport svg { touch-action: pan-x pan-y pinch-zoom; }
+.activeTarget { min-height: 20px; margin: 0; font-size: 13px; }
+.selectedTargets { display: flex; flex-wrap: wrap; gap: 8px; }
+.selectedTargets button { min-height: 44px; padding: 8px 12px; border: 1px solid var(--orange); border-radius: 12px; background: var(--card); color: var(--white); font: inherit; font-size: 13px; text-align: left; }
+.targetList summary { min-height: 44px; padding: 10px 0; cursor: pointer; }
+.targetList > div { display: grid; max-height: 260px; overflow: auto; }
+.targetList label { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 8px; font-size: 13px; }
+.targetList input { width: 18px; height: 18px; accent-color: var(--orange); }
+.credits { margin: 0; font-size: 11px; color: var(--muted); }
+.credits a { color: inherit; }
+@media (max-width: 380px) { .toolbar { flex-wrap: wrap; } .toolbar :global(.tabs) { flex-basis: 100%; } .zoomControls { margin-left: auto; } }

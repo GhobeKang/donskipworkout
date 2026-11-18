@@ -1,8 +1,11 @@
 """Period activity from saved sets, independent of attendance and external load."""
 
+from types import SimpleNamespace
+
 from sqlalchemy import and_, case, func, select
 
 from .database import exerciseItem, sharedExerciseItem, workoutSession, workoutSet
+from .exercise_subareas import subareas_by_exercise
 
 
 def activity_rows(database, user_id, start_date, end_date):
@@ -14,17 +17,13 @@ def activity_rows(database, user_id, start_date, end_date):
         sharedExerciseItem.name, exerciseItem.name, workoutSet.exercise_name,
     )
     target_area = func.coalesce(sharedExerciseItem.target_area, exerciseItem.target_area)
-    target_subarea = func.coalesce(
-        sharedExerciseItem.target_subarea, exerciseItem.target_subarea,
-    )
-    return database.execute(
+    rows = database.execute(
         select(
             workoutSession.workout_date,
             workoutSet.exercise_source,
             exercise_id.label('exercise_id'),
             exercise_name.label('exercise_name'),
             target_area.label('target_area'),
-            target_subarea.label('target_subarea'),
             func.count(workoutSet.set_id).label('set_count'),
         )
         .join(workoutSession, workoutSession.session_id == workoutSet.session_id)
@@ -44,10 +43,14 @@ def activity_rows(database, user_id, start_date, end_date):
         )
         .group_by(
             workoutSession.workout_date, workoutSet.exercise_source, exercise_id,
-            exercise_name, target_area, target_subarea,
+            exercise_name, target_area,
         )
         .order_by(workoutSession.workout_date, exercise_name)
     ).all()
+    targets = subareas_by_exercise(database, user_id)
+    return [SimpleNamespace(
+        **row._mapping, target_subareas=targets.get((row.exercise_source, row.exercise_id), []),
+    ) for row in rows]
 
 
 def activity_summary(rows, start_date, end_date):
@@ -67,19 +70,28 @@ def activity_summary(rows, start_date, end_date):
         workout_date = row.workout_date.isoformat()
         workout_dates.add(workout_date)
         total_sets += row.set_count
-        target_key = (row.target_area, row.target_subarea)
-        target = targets.setdefault(target_key, {
-            'target_area': row.target_area, 'target_subarea': row.target_subarea,
-            'set_count': 0, 'exercises': {}, 'workout_dates': set(),
-        })
-        target['set_count'] += row.set_count
-        target['workout_dates'].add(workout_date)
-        exercise = target['exercises'].setdefault(exercise_key, {
-            'exercise_key': exercise_key, 'exercise_source': row.exercise_source,
-            'exercise_id': row.exercise_id, 'exercise_name': row.exercise_name,
-            'set_count': 0,
-        })
-        exercise['set_count'] += row.set_count
+        row_targets = row.target_subareas or [{
+            'subarea_id': None, 'target_area': row.target_area, 'label_ko': None,
+            'label_en': None, 'atlas_muscle_ids': None, 'is_legacy': False,
+        }]
+        for subarea in row_targets:
+            target_key = subarea['subarea_id'] or ('area', row.target_area)
+            target = targets.setdefault(target_key, {
+                **{field: subarea[field] for field in (
+                    'subarea_id', 'target_area', 'label_ko', 'label_en',
+                    'atlas_muscle_ids', 'is_legacy',
+                )},
+                'target_subarea': subarea['label_ko'],
+                'set_count': 0, 'exercises': {}, 'workout_dates': set(),
+            })
+            target['set_count'] += row.set_count
+            target['workout_dates'].add(workout_date)
+            exercise = target['exercises'].setdefault(exercise_key, {
+                'exercise_key': exercise_key, 'exercise_source': row.exercise_source,
+                'exercise_id': row.exercise_id, 'exercise_name': row.exercise_name,
+                'set_count': 0,
+            })
+            exercise['set_count'] += row.set_count
     target_rows = []
     for target in targets.values():
         exercise_count = len(target['exercises'])
@@ -98,7 +110,9 @@ def activity_summary(rows, start_date, end_date):
         'activity_score': len(exercise_keys) + total_sets,
         'recorded_day_count': len(workout_dates), 'targets': target_rows,
         'unclassified_set_count': sum(
-            target['set_count'] for target in target_rows if not target['target_area']
+            row.set_count for row in rows
+            if start_date <= row.workout_date <= end_date
+            and not row.target_area and not row.target_subareas
         ),
     }
 

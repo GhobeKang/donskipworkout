@@ -1,5 +1,5 @@
 import { exercise_label, format_workout_date, translate } from './i18n';
-import { report_area_label } from './exerciseClassification';
+import { report_area_label, muscle_target_label } from './exerciseClassification';
 import { personal_report_changes } from './reportVisibility';
 import { evidence_copy, performance_text, performance_value } from './reportEvidence';
 import { workout_time_method, workout_time_report_lines, workout_time_value } from './workoutTime';
@@ -77,7 +77,7 @@ export function create_report_document(report, language) {
       const { current, previous } = insights.muscle_activity;
       lines.push(t('이전 비교 기간 {0} — {1}: {2}종목 · {3}세트 · 활동지수 {4}', [previous.start_date, previous.end_date, previous.exercise_count, previous.set_count, previous.activity_score]));
       for (const target of current.targets) {
-        const target_label = report_area_label([target.target_area, target.target_subarea].filter(Boolean).join(' · '), language);
+        const target_label = muscle_target_label(target, language);
         lines.push(`${target_label} | ${muscle_activity_value(target, t)} | ${target.workout_dates.join(', ')}`);
         for (const exercise of target.exercises) lines.push(`  ${exercise.exercise_name} | ${exercise.set_count}${t('세트')}`);
       }

@@ -3,7 +3,8 @@
 .bodyBase path:not([fill="none"]) { fill: var(--body-neutral); }
 .muscleRegion { cursor: pointer; outline: none; }
 .muscleRegion path { fill: var(--region-color, var(--muscle-neutral)); transition: fill 160ms, stroke 160ms; }
-.muscleRegion:hover path, .muscleRegion:focus-visible path, .isInspected path { stroke: var(--white); stroke-width: 2px; }
+.muscleRegion:not(.isUnavailable):hover path, .muscleRegion:focus-visible path, .isInspected path { stroke: var(--white); stroke-width: 2px; }
+.isUnavailable { cursor: default; opacity: 0.28; }
 .isCoarse path { stroke: var(--white); stroke-width: 2px; stroke-dasharray: 3 3; }
 @media (prefers-color-scheme: dark) { .diagram { --muscle-neutral: #89959b; --body-neutral: #424c52; } }
 @media (prefers-reduced-motion: reduce) { .muscleRegion path { transition: none; } }
