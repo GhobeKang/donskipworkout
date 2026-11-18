@@ -1,0 +1,12 @@
+{
+  "version": "1.0.2",
+  "version_code": 14,
+  "application_id": "com.donskip.attendancecheck",
+  "certificate_sha256": "f0593203935a5c574799631a016f0f62333c7a8ac25ee3545861ae362c06b9f3",
+  "web_asset_count": 63,
+  "apk_and_aab_assets_match": true,
+  "production_api_verified": true,
+  "private_files_absent": true,
+  "aab_sha256": "cdcf4bc045f75df73a140690d50d45f59f1c0afbca6018dfb7f5df6961073848",
+  "apk_sha256": "9475600baf7b17ec6065b5858521daa627be644a809dbba550de34a1c49b6977"
+}

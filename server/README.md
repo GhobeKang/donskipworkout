@@ -4,6 +4,25 @@ Python 3.12+, FastAPI, SQLAlchemy 2, Supabase PostgreSQL 17 기반 서버입니�
 기존 FastAPI API와 HttpOnly 쿠키 세션 인증을 유지하며, 데이터는 전용 `attendance` 스키마에 저장합니다.
 Supabase Auth/Storage로 인증이나 사진 파일 저장을 변경하는 작업은 포함하지 않습니다.
 
+## 2026-11-18 카테고리별 인체도 타겟·출석 타이머 운영 반영
+
+- 큰 카테고리를 직접 지정하고 해당 카테고리의 세부 부위만 여러 개 선택합니다.
+  `exercise_subareas`에 인체도 119개 부위를 등록했으며, 종목의 `target_subarea_ids`는
+  연결 테이블의 참조 ID로 저장합니다. 다른 카테고리의 부위가 섞인 요청은 거부합니다.
+- 큰 부위의 성장추이는 하위 부위 기록을 함께 합산합니다. 사진·수동 출석은 운동 타이머를
+  자동 종료하지 않으며, 새 Android 앱에서 확인 후 명시적인 종료 요청을 보냅니다.
+- 운영 이미지 `ghobekang/donskipworkout-api:muscle-targets-20261118-feb024806b`를
+  2026-11-18 21:38 KST에 배포했습니다. 소스 커밋은 `c733a76`입니다.
+- 실제 DB 읽기 전용 확인과 격리 메모리 DB의 API 검증 65개가 통과했습니다.
+  사용자 종목 31개, 공용 종목 43개, 세트 565개를 확인했으며 검증 과정에서 운영 데이터를 쓰지 않았습니다.
+- Docker `healthy`, HTTPS `/health` 200, 보호 경로 4개의 401, 시작 오류 0건을 확인했습니다.
+  전체 소스 해시, 실행 환경·TLS·마운트와 다른 컨테이너의 상태를 검증했습니다.
+- 이전 이미지·환경 복구 자료는 운영 서버
+  `/home/dontskip/deployments/muscle-targets-20261118-feb024806b`에 보관합니다.
+  이미지는 운영 서버 로컬에 있으며 레지스트리 push는 수행하지 않았습니다.
+- 서버 검증 자료는 `review/muscle_targets_release_20261118/`, Android `1.0.2 (14)` 산출물과
+  배포 상태는 `docs/store-builds/2026-11-18-muscle-targets/`에 보관합니다. iOS 배포는 실행하지 않습니다.
+
 ## 신규 계정 초기 설정
 
 - `20261117100519_user_onboarding.sql` 마이그레이션을 먼저 적용하고 API, 클라이언트 순으로 배포합니다.

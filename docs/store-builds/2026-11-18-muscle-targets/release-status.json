@@ -1,0 +1,51 @@
+{
+  "release_date": "2026-11-18",
+  "source_commit": "c733a76ab0f0e27e634e19ba132bc5132eadc076",
+  "server": {
+    "image": "ghobekang/donskipworkout-api:muscle-targets-20261118-feb024806b",
+    "image_id": "sha256:d6865ae3c118c1af84172dcd582d1bf2502edddcc2ed6992a5f8e394d502bcde",
+    "container_health": "healthy",
+    "https_health": 200,
+    "protected_routes_401": 4,
+    "runtime_preserved": true,
+    "startup_error_count": 0,
+    "deployed_at_utc": "2026-11-18T12:38:56Z",
+    "rollback_directory": "/home/dontskip/deployments/muscle-targets-20261118-feb024806b",
+    "validation_passed": 65,
+    "production_read_only_validation": true,
+    "existing_data_counts": {
+      "custom_exercises": 31,
+      "shared_exercises": 43,
+      "sets": 565
+    }
+  },
+  "android": {
+    "version": "1.0.2",
+    "version_code": 14,
+    "application_id": "com.donskip.attendancecheck",
+    "certificate_sha256": "f0593203935a5c574799631a016f0f62333c7a8ac25ee3545861ae362c06b9f3",
+    "web_asset_count": 63,
+    "apk_and_aab_assets_match": true,
+    "production_api_verified": true,
+    "private_files_absent": true,
+    "aab_sha256": "cdcf4bc045f75df73a140690d50d45f59f1c0afbca6018dfb7f5df6961073848",
+    "apk_sha256": "9475600baf7b17ec6065b5858521daa627be644a809dbba550de34a1c49b6977",
+    "status": "available_to_internal_testers",
+    "internal_release_id": 10,
+    "internal_tester_link": "https://play.google.com/apps/internaltest/4700597736683655910",
+    "internal_release_url": "https://play.google.com/console/u/1/developers/8660717690586839519/app/4973459327468621998/tracks/4700597736683655910/releases/10/details",
+    "alpha_release_id": 12,
+    "alpha_status": "changes_in_review_pre_review_checks_running",
+    "screenshots_available": false,
+    "screenshot_issue": "CDP capture timed out; unrelated personal window access was rejected by automatic privacy review. Browser page state will be saved instead.",
+    "alpha_review_submission_confirmed": true,
+    "alpha_publishing_url": "https://play.google.com/console/u/1/developers/8660717690586839519/app/4973459327468621998/publishing",
+    "internal_ui_evidence": "review/muscle_targets_release_20261118/play-internal-published.txt",
+    "alpha_ui_evidence": "review/muscle_targets_release_20261118/play-alpha-submission.txt",
+    "device_installation_tested": false
+  },
+  "ios": {
+    "deployment_requested": false,
+    "deployment_started": false
+  }
+}
