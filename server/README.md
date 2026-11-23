@@ -4,6 +4,52 @@ Python 3.12+, FastAPI, SQLAlchemy 2, Supabase PostgreSQL 17 기반 서버입니�
 기존 FastAPI API와 HttpOnly 쿠키 세션 인증을 유지하며, 데이터는 전용 `attendance` 스키마에 저장합니다.
 Supabase Auth/Storage로 인증이나 사진 파일 저장을 변경하는 작업은 포함하지 않습니다.
 
+## 앱 업데이트 알림
+
+앱 실행·복귀·네트워크 복구 시와 사용 중 15분마다 설치된 네이티브 버전을
+`GET /api/v1/app-updates/android` 또는 `/api/v1/app-updates/ios`와 비교합니다.
+로그인 없이 확인하며 요청 실패는 로그만 남깁니다. 중복 확인은 1분 간격으로
+제한합니다. 웹 브라우저에서는 설치 앱 업데이트 팝업을 띄우지 않습니다.
+
+`server/release-config/app-releases.json`의 플랫폼별 `latest_version`에 **스토어에서
+실제로 설치 가능한 버전**을 등록하면 알림이 활성화됩니다. `null`은 비활성화입니다.
+2026-11-23 공식 스토어 조회 기준 iOS는 `1.01`, Android는 `1.0.1`을 등록했습니다.
+다음 출시용 네이티브 소스의 표시 버전은 양쪽 모두 `1.1.1`이며, 스토어에 공개되기 전까지
+출시 카탈로그에는 등록하지 않습니다. `latest_build`는
+같은 표시 버전 내 빌드 업데이트가 스토어에 공개되었을 때만 등록하고, 알 수 없으면
+`null`로 둡니다. 버전은 점으로 구분한 숫자를 순서대로 비교합니다. `1.10.0`은 `1.9.0`보다
+크며, `1.01`은 `1.1.0`과 같습니다. 다음 출시용 `1.1.1`은 두 스토어의 현재 공개
+버전보다 높습니다. Android versionCode는 기존 14에서 15로 올렸습니다. iOS 빌드 번호는
+기존 Codemagic 워크플로가 Apple 전체 빌드 번호를 조회한 뒤 증가시킵니다.
+
+`store_url`은 Google Play의 `com.donskip.attendancecheck`와 App Store의
+`id6823856877` 상세 페이지로 연결됩니다. ‘업데이트’ 버튼은 스토어를 열며,
+‘나중에’·닫기·Escape는 해당 버전만 24시간 숨깁니다. 더 최신 버전은 숨김 기간에도
+알립니다. 스토어 열기에 실패하면 팝업에서 재시도할 수 있습니다.
+
+Docker 이미지는 출시 설정을 포함하며 Compose는 `server/release-config`를 읽기 전용으로
+마운트합니다. 파일은 요청마다 다시 읽으므로 운영 파일 교체 후 서버 재시작이 필요하지
+않습니다. 다른 위치를 쓰면 `APP_RELEASE_CATALOG_PATH`를 지정하세요.
+
+처음 적용할 때 API와 앱을 모두 배포해야 합니다. 기능이 없는 기존 설치본에 팝업을
+소급해서 띄울 수는 없습니다. `npm run cap:sync`로 플러그인과 웹 번들을 동기화하고
+Android/iOS 앱을 빌드·출시하세요. iOS CocoaPods 동기화와 실제 스토어 이동은 macOS 및
+실기기에서 최종 확인이 필요합니다.
+
+
+### 2026-11-23 업데이트 알림 서버 배포
+
+- 다음 출시용 표시 버전: Android/iOS `1.1.1`, Android versionCode `15`.
+- 공식 공개 출시 버전 등록: Android `1.0.1`, iOS `1.01`. 공개 빌드 번호는 확인하지 못해 `null`을 유지합니다.
+- 운영 이미지: `ghobekang/donskipworkout-api:app-updates-20261123-bab0f0e0b5`.
+- 기존 운영 이미지를 기반으로 `main.py`, `config.py`, `app_update_routes.py`와 출시 JSON만 반영했습니다.
+- `release-config` 호스트 폴더를 읽기 전용으로 연결했으며, 기존 환경·TLS·포트·데이터 볼륨과 다른 컨테이너는 유지했습니다.
+- 배포 전 후보 컨테이너 검증 11개 통과, 운영 DB 접근 없음, TLS 인증서 읽기 성공.
+- 배포 후 Docker `healthy`, 서버 외부 HTTPS 헬스와 양쪽 출시 API 모두 200, 보호 API 3개 401, 시작 오류 0건을 확인했습니다.
+- 복구 자료: `/home/dontskip/deployments/app-updates-20261123-bab0f0e0b5`.
+- 앱 바이너리 빌드·스토어 업로드는 이번 서버 배포에 포함하지 않습니다. 기존 앱에 팝업 기능이 없으면 새 앱 버전 설치가 필요합니다.
+
+
 ## 2026-11-18 카테고리별 인체도 타겟·출석 타이머 운영 반영
 
 - 큰 카테고리를 직접 지정하고 해당 카테고리의 세부 부위만 여러 개 선택합니다.

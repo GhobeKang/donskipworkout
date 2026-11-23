@@ -8,6 +8,7 @@ from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from .account_deletion import run_photo_cleanup
+from .app_update_routes import router as app_update_router
 from .challenge_routes import router as challenge_router
 from .coaching_routes import router as coaching_router
 from .config import serverSettings
@@ -85,6 +86,7 @@ def create_app(settings=None, database_engine=None):
     app.state.settings = settings
     app.state.session_factory = create_session_factory(engine)
     app.include_router(router)
+    app.include_router(app_update_router)
     app.include_router(onboarding_router)
     app.include_router(challenge_router)
     app.include_router(coaching_router)

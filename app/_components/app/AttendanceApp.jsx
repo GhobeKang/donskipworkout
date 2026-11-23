@@ -15,6 +15,7 @@ import RequestState from '../ui/RequestState';
 import StatusBar from '../layout/StatusBar';
 import Toast from '../ui/Toast';
 import OnboardingGate from '../onboarding/OnboardingGate';
+import AppUpdatePrompt from '../updates/AppUpdatePrompt';
 
 export default function AttendanceApp() {
   const { t, language } = useLanguage();
@@ -25,6 +26,7 @@ export default function AttendanceApp() {
     <title>{t('운동 출석 습관 앱')}</title>
     <meta name="description" content={t('운동 출석 습관을 만드는 로컬 우선 앱')} />
     <AttendanceContent />
+    <AppUpdatePrompt />
   </>;
 }
 

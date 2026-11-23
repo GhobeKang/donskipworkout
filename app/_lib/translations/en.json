@@ -2043,5 +2043,15 @@
   "현재 면에서 선택할 수 있는 부위가 없습니다. 앞면·뒷면을 전환해 주세요.": "No selectable targets on this side. Switch between the front and back views.",
   "이 카테고리는 세부 부위를 선택하지 않고 저장할 수 있습니다.": "This category can be saved without detailed targets.",
   "세부 타겟 부위는 선택한 큰 카테고리에 속해야 합니다.": "Detailed targets must belong to the selected main category.",
-  "저장하면 선택한 큰 카테고리에 속하는 세부 부위만 반영됩니다.": "Saving keeps only detailed targets in the selected main category."
+  "저장하면 선택한 큰 카테고리에 속하는 세부 부위만 반영됩니다.": "Saving keeps only detailed targets in the selected main category.",
+  "새 버전 안내": "New version available",
+  "업데이트가 있어요": "An update is available",
+  "새 버전이 출시되었어요. 스토어에서 업데이트해 주세요.": "A new version is available. Update the app from the store.",
+  "현재 {0} → 최신 {1}": "Current {0} → Latest {1}",
+  "빌드 {0} → {1}": "Build {0} → {1}",
+  "나중에를 선택하면 이 버전의 알림을 하루 동안 숨겨요.": "Choose Later to hide this version's notification for a day.",
+  "스토어를 열지 못했어요. 잠시 후 다시 시도해 주세요.": "Couldn't open the store. Please try again shortly.",
+  "나중에": "Later",
+  "스토어 여는 중…": "Opening store…",
+  "업데이트": "Update"
 }

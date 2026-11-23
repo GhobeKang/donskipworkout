@@ -9,11 +9,13 @@ services:
       LOG_FILE: /app/logs/api.log
       PHOTO_STORAGE_DIR: /app/media/photos
       NOTIFICATION_CATALOG_PATH: /app/notification-config/catalog.json
+      APP_RELEASE_CATALOG_PATH: /app/release-config/app-releases.json
     ports:
       - "127.0.0.1:8000:8000"
     volumes:
       - attendance_photo_storage:/app/media/photos
       - ./server/notification-config:/app/notification-config:ro
+      - ./server/release-config:/app/release-config:ro
       - attendance_api_logs:/app/logs
     secrets:
       - firebase_service_account
