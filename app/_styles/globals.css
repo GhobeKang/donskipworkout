@@ -388,6 +388,7 @@ img { max-width: 100%; }
 .recordMeta { grid-column: 2; grid-row: 1; justify-self: end; color: var(--accent-text); font-size: 11px; white-space: nowrap; }
 .recordOpenLabel { grid-column: 2; grid-row: 2; display: flex; align-items: center; justify-content: end; gap: 3px; color: var(--muted); font-size: 11px; white-space: nowrap; }
 .recordOpenLabel .material-symbols-rounded { font-size: 18px; }
+.recordStatistics { display: grid; gap: 12px; min-width: 0; }
 .statsGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .statsGrid dt { color: var(--muted); font-size: 13px; }
 .statsGrid dd { margin: 8px 0 0; font-size: 28px; font-weight: 800; }
@@ -449,6 +450,9 @@ img { max-width: 100%; }
 .personalReport { display: grid; gap: 12px; min-width: 0; }
 .reportSummary { padding: 22px 18px; border-radius: var(--card-radius); border: 1px solid var(--line); background: var(--card); }
 .reportSummary h3 { margin: 18px 0; font-size: 24px; line-height: 1.4; letter-spacing: -.035em; overflow-wrap: anywhere; }
+.reportVolumeTotal { margin: 16px 0; padding: 16px; border-radius: 14px; background: var(--card-2); }
+.reportVolumeTotal dt { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 13px; }
+.reportVolumeTotal dd { margin: 8px 0 0; color: var(--accent-text); font-size: clamp(24px, 7vw, 34px); font-weight: 800; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 .reportCoverage { color: var(--accent-text); font-size: 13px; }
 .reportEvidence { margin: 18px 0; padding-left: 20px; font-size: 14px; }
 .reportEvidence li + li { margin-top: 8px; }

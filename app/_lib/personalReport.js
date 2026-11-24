@@ -3,7 +3,7 @@ import { report_area_label, muscle_target_label } from './exerciseClassification
 import { personal_report_changes } from './reportVisibility';
 import { evidence_copy, performance_text, performance_value } from './reportEvidence';
 import { workout_time_method, workout_time_report_lines, workout_time_value } from './workoutTime';
-import { muscle_activity_method, muscle_activity_value } from './anatomy/muscleActivity';
+import { activity_calculation_lines, activity_volume_text, muscle_activity_method, muscle_activity_reference_lines, muscle_activity_value } from './anatomy/muscleActivity';
 import { personal_record_method, personal_record_text } from './personalRecords';
 
 const comparison_messages = {
@@ -12,6 +12,8 @@ const comparison_messages = {
   rep_count: '반복 {0} → {1}회',
   volume_kg: '총중량 {0} → {1}kg',
 };
+
+export const total_volume_method = '완료한 운동의 세트별 환산 중량 × 반복 수를 합산합니다. 맨몸·보조 운동은 당시 기록된 체중을 반영하며, 체중 기록이 없으면 해당 세트의 중량은 합산되지 않습니다. 여러 타겟 부위가 있는 세트도 한 번만 집계합니다.';
 
 export function comparison_text(item, language) {
   return item.changed_fields.map((field) => translate(comparison_messages[field], [
@@ -33,6 +35,10 @@ export function personal_report_copy(report, language) {
     challenges.new_areas.length && t('첫 부위 {0}', [challenges.new_areas.length]),
   ].filter(Boolean);
   const metrics = [
+    report.period_type === 'monthly' && Number.isFinite(insights.total_volume_kg) && {
+      key: 'total_volume', label: t('총 중량'),
+      value: t('{0}kg', [new Intl.NumberFormat(language === 'en' ? 'en-US' : 'ko-KR', { maximumFractionDigits: 2 }).format(insights.total_volume_kg)]),
+    },
     performance && (performance.exercise_count > 0 || insights.coverage.completed_count > 0) && { key: 'performance', label: t('동일 조건의 수행 변화'), value: performance_value(performance, language) },
     insights.workout_time && { key: 'workout_time', label: t('운동 시간의 변화'), value: workout_time_value(insights.workout_time, language) },
     insights.muscle_activity && { key: 'muscle_activity', label: t('근육 활동 기록'), value: muscle_activity_value(insights.muscle_activity.current, t) },
@@ -75,11 +81,25 @@ export function create_report_document(report, language) {
       lines.push(...workout_time_report_lines(insights.workout_time, language));
     } else if (metric.key === 'muscle_activity') {
       const { current, previous } = insights.muscle_activity;
-      lines.push(t('이전 비교 기간 {0} — {1}: {2}종목 · {3}세트 · 활동지수 {4}', [previous.start_date, previous.end_date, previous.exercise_count, previous.set_count, previous.activity_score]));
+      lines.push(...muscle_activity_reference_lines(current, t));
+      lines.push(t('이전 비교 기간 {0} — {1}: {2}', [previous.start_date, previous.end_date, muscle_activity_value(previous, t)]));
       for (const target of current.targets) {
         const target_label = muscle_target_label(target, language);
-        lines.push(`${target_label} | ${muscle_activity_value(target, t)} | ${target.workout_dates.join(', ')}`);
-        for (const exercise of target.exercises) lines.push(`  ${exercise.exercise_name} | ${exercise.set_count}${t('세트')}`);
+        lines.push(`${target_label} | ${muscle_activity_value(target, t, current)} | ${target.workout_dates.join(', ')}`);
+        lines.push(...activity_calculation_lines(target, t));
+        for (const exercise of target.exercises) {
+          lines.push(`  ${exercise_label(exercise, language)} | ${exercise.set_count}${t('세트')}`);
+          lines.push(...activity_calculation_lines(exercise, t).map((line) => `  ${line}`));
+          for (const [records, label] of [[exercise.sets, '현재 기간 세트별 부하'], [exercise.baseline_sets, '기준 기간 세트별 부하']]) {
+            if (!records?.length) continue;
+            lines.push(`  ${t(label)}`);
+            for (const record of records) {
+              const calculation = record.effective_weight_kg === null ? t('체중 기록이 없어 부하 제외')
+                : t('{0}kg × {1}회', [record.effective_weight_kg, record.reps]);
+              lines.push(`    ${record.workout_date} | ${calculation} | ${activity_volume_text(record.volume_kg, t)}${record.included_in_reference ? '' : ` | ${t('진행 중인 주와 요일이 달라 이번 기준 계산에서 제외')}`}`);
+            }
+          }
+        }
       }
     } else if (['recent', 'journey'].includes(metric.key)) {
       if (metric.key === 'journey') lines.push(t('첫 기록 기간: {0} — {1}', [insights.journey.baseline_start, insights.journey.baseline_end]));
@@ -115,6 +135,7 @@ export function preference_text(item, language) {
 }
 
 const method_messages = {
+  total_volume: total_volume_method,
   workout_time: workout_time_method,
   muscle_activity: muscle_activity_method,
   performance: '같은 종목·중량에서 최고 반복 수, 같은 종목·반복 수에서 최고 중량을 비교합니다. 같은 날 여러 세트는 반복 확인 1일로 계산합니다.',

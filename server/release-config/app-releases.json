@@ -1,0 +1,12 @@
+{
+  "android": {
+    "latest_version": "1.1.1",
+    "latest_build": null,
+    "store_url": "https://play.google.com/store/apps/details?id=com.donskip.attendancecheck"
+  },
+  "ios": {
+    "latest_version": "1.1.1",
+    "latest_build": null,
+    "store_url": "https://apps.apple.com/us/app/dont-skip/id6823856877"
+  }
+}

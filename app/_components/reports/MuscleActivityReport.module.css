@@ -1,6 +1,4 @@
 .report { min-width: 0; display: grid; gap: 14px; padding: 18px 14px; border: 1px solid var(--line); border-radius: var(--card-radius); background: var(--card); }
-.recordsTabs { flex-wrap: wrap; }
-.recordsTabs button[aria-pressed] { min-width: 0; flex-basis: 28%; }
 .report p, .report h3, .report h4 { margin: 0; }
 .heading { display: grid; gap: 4px; }
 .heading h3 { font-size: 18px; }
@@ -10,6 +8,7 @@
 .totals > div { min-width: 0; padding: 10px 6px; border-radius: 12px; background: var(--bg); text-align: center; }
 .totals dt { color: var(--muted); font-size: 11px; }
 .totals dd { margin: 3px 0 0; font-size: 26px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.totals dd[data-unavailable] { font-size: 13px; line-height: 1.8; overflow-wrap: anywhere; }
 .method, .comparison, .mapNote, .empty { color: var(--muted); font-size: 11px; line-height: 1.7; overflow-wrap: anywhere; }
 .mapBody { display: grid; gap: 12px; min-width: 0; }
 .mapToolbar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; }
@@ -37,12 +36,16 @@
 .evidence summary { min-height: 44px; padding: 10px 0; cursor: pointer; font-size: 13px; font-weight: 600; }
 .evidence section { padding: 12px 0; border-top: 1px solid var(--line); }
 .evidence h4 { font-size: 12px; }
-.evidence p { margin-top: 5px; font-size: 10px; color: var(--muted); overflow-wrap: anywhere; }
+.evidence p { margin-top: 5px; font-size: 12px; line-height: 1.65; color: var(--muted); overflow-wrap: anywhere; }
 .evidence ul { margin: 8px 0 0; padding: 0; list-style: none; }
 .evidence li { display: flex; justify-content: space-between; gap: 8px; margin-top: 7px; font-size: 12px; }
 .evidence li > span { min-width: 0; overflow-wrap: anywhere; }
 .evidence li strong { white-space: nowrap; }
 .evidence li small { display: block; color: var(--muted); font-size: 10px; }
+.evidenceIntro { display: grid; gap: 5px; }
+.exerciseEvidence { margin-top: 8px; padding: 0 0 8px; border-top: 1px solid var(--line); }
+.setEvidence li { align-items: flex-start; }
+.setEvidence li strong { flex-shrink: 0; font-size: 11px; }
 .credits { color: var(--muted); font-size: 10px; overflow-wrap: anywhere; }
 .credits a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
 .weekPicker { display: grid; gap: 12px; margin-bottom: 18px; }

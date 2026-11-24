@@ -18,6 +18,7 @@ RUN python -m pip install --no-cache-dir -r requirements.txt
 
 COPY --chown=attendance:attendance app ./app
 COPY --chown=attendance:attendance notification-config ./notification-config
+COPY --chown=attendance:attendance release-config ./release-config
 
 RUN mkdir -p /app/logs /app/media/photos \
     && chown -R attendance:attendance /app/logs /app/media

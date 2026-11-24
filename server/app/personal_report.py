@@ -609,6 +609,10 @@ def personal_report_output(
         'comparison_start': previous_start.isoformat(),
         'comparison_end': previous_end.isoformat(),
         'history_start': completed_dates[0].isoformat() if completed_dates else None,
+        'total_volume_kg': round(float(sum(
+            workout_volume_kg(item) for item in set_rows
+            if item.workout_date >= period_start and item.session_status == 'completed'
+        )), 2),
         'recent': recent,
         'journey': journey,
         'performance': performance,
@@ -616,6 +620,7 @@ def personal_report_output(
         'workout_time': workout_time,
         'muscle_activity': muscle_activity_comparison(
             database, user_id, period_start, as_of_date, previous_start, previous_end,
+            period_type=period_type,
         ),
         **behavior,
         'challenges': challenges,

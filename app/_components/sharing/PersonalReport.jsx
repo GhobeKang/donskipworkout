@@ -1,7 +1,7 @@
 import InfoTooltip from '../ui/InfoTooltip';
 import { useLanguage } from '../../_hooks/useLanguage';
 import { report_area_label } from '../../_lib/exerciseClassification';
-import { comparison_text, personal_report_copy, preference_text, report_status } from '../../_lib/personalReport';
+import { comparison_text, personal_report_copy, preference_text, report_status, total_volume_method } from '../../_lib/personalReport';
 import PerformanceEvidence from '../reports/PerformanceEvidence';
 import PersonalGrowthOverview from '../reports/PersonalGrowthOverview';
 import WorkoutTimeEvidence from '../reports/WorkoutTimeEvidence';
@@ -22,12 +22,17 @@ export default function PersonalReport({ report }) {
   const copy = personal_report_copy(report, language);
   const insights = copy.insights;
   const { consistency, recovery, challenges, preferences } = insights;
+  const total_volume_metric = copy.metrics.find((metric) => metric.key === 'total_volume');
   const week_labels = { kept: '지킴', missed: '미달' };
   return <article className="personalReport" aria-labelledby="personal-report-heading">
     <header className="reportSummary">
       <p className="cardKicker">{t(report.period_type === 'monthly' ? '월간 변화 리포트' : '주간 변화 리포트')} · {t(report_status(report))}</p>
       <p className="infoText">{report.period_start} — {report.period_end}</p>
       <h3 id="personal-report-heading">{copy.title}</h3>
+      {total_volume_metric && <dl className="reportVolumeTotal"><div>
+        <dt>{total_volume_metric.label}<InfoTooltip label={total_volume_metric.label}>{t(total_volume_method)}</InfoTooltip></dt>
+        <dd>{total_volume_metric.value}</dd>
+      </div></dl>}
       <PersonalGrowthOverview report={report} copy={copy} />
     </header>
     {insights.muscle_activity && <MuscleActivityReport activity={insights.muscle_activity} />}
@@ -38,7 +43,7 @@ export default function PersonalReport({ report }) {
         <p className="infoText">{t('기준일: {0}', [report.as_of_date])}</p>
         {copy.comparison_period && <p className="infoText">{t('최근 비교 기간: {0}', [copy.comparison_period])}</p>}
         {copy.focus && <div className="reportFocus"><strong>{t('다음에 집중할 점')}</strong><p>{copy.focus}</p></div>}
-    {copy.metrics.map((metric) => <details className="reportSection" key={metric.key}>
+    {copy.metrics.filter((metric) => metric.key !== 'total_volume').map((metric) => <details className="reportSection" key={metric.key}>
       <summary><span>{metric.label}</span><strong>{metric.value}</strong><small>{t('측정 근거 보기')}</small></summary>
       <div className="reportSectionBody">
         {metric.key === 'workout_time' && <WorkoutTimeEvidence summary={insights.workout_time} show_days show_info_tooltips />}

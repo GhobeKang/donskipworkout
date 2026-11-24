@@ -467,29 +467,46 @@ def weekly_muscle_activity(
 
 
 @router.get('/stats', response_model=statsData)
-def stats(user: userDependency, database: databaseDependency):
+def stats(
+    user: userDependency,
+    database: databaseDependency,
+    year: int | None = Query(default=None, ge=2000, le=2100),
+    month: int | None = Query(default=None, ge=1, le=12),
+):
+    if (year is None) != (month is None):
+        raise HTTPException(422, '연도와 월을 함께 선택해 주세요.')
     today = local_today(user.timezone)
+    conditions = [workoutSession.user_id == user.user_id]
     account = database.get(userAccount, user.user_id)
     account_created_date = account.created_at.replace(tzinfo=timezone.utc).astimezone(ZoneInfo(user.timezone)).date() if account else today
+    missed_start = account_created_date
+    missed_end = today
+    if year is not None:
+        first_date = date(year, month, 1)
+        next_date = date(year + (month == 12), month % 12 + 1, 1)
+        conditions.extend([
+            workoutSession.workout_date >= first_date,
+            workoutSession.workout_date < next_date,
+        ])
+        missed_start = max(account_created_date, first_date)
+        missed_end = min(today, next_date)
     scheduled_days = database.scalars(
         select(scheduleDay.day_of_week).where(scheduleDay.user_id == user.user_id)
     ).all()
     recorded_dates = database.scalars(
         select(workoutSession.workout_date).where(
-            workoutSession.user_id == user.user_id,
-            workoutSession.workout_date >= account_created_date,
-            workoutSession.workout_date < today,
+            *conditions,
+            workoutSession.workout_date >= missed_start,
+            workoutSession.workout_date < missed_end,
         )
     ).all()
     unrecorded_missed_count = len(
-        scheduled_missed_dates(scheduled_days, account_created_date, today, recorded_dates)
+        scheduled_missed_dates(scheduled_days, missed_start, missed_end, recorded_dates)
     )
     status_counts = dict(
         database.execute(
             select(workoutSession.session_status, func.count())
-            .where(
-                workoutSession.user_id == user.user_id,
-            )
+            .where(*conditions)
             .group_by(workoutSession.session_status)
         ).all()
     )
@@ -497,7 +514,7 @@ def stats(user: userDependency, database: databaseDependency):
         select(func.count())
         .select_from(workoutSession)
         .where(
-            workoutSession.user_id == user.user_id,
+            *conditions,
             workoutSession.workout_date < today,
             workoutSession.session_status.in_(['scheduled', 'started']),
         )

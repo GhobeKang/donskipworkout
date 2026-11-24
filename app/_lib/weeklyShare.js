@@ -17,11 +17,11 @@ export function weekly_share_copy(report, language) {
   const highlight_title = copy.highlight?.exercise_name || (highlight ? report_area_label(highlight.target_area, language) : copy.metrics[0]?.label);
   const highlight_detail = copy.highlight ? performance_text(copy.highlight, language)
     : highlight ? comparison_text(highlight, language) : copy.metrics[0]?.value;
-  const summary_metrics = copy.metrics.filter((metric) => ['performance', 'workout_time', 'muscle_activity', 'consistency', 'recovery'].includes(metric.key));
+  const summary_metrics = copy.metrics.filter((metric) => ['total_volume', 'performance', 'workout_time', 'muscle_activity', 'consistency', 'recovery'].includes(metric.key));
   const muscle_targets = copy.insights.muscle_activity?.current.targets || [];
   summary_metrics.push(...muscle_targets.slice(0, 6).map((target) => ({
     label: muscle_target_label(target, language),
-    value: muscle_activity_value(target, t),
+    value: muscle_activity_value(target, t, copy.insights.muscle_activity.current),
   })));
   if (muscle_targets.length > 6) summary_metrics.push({ label: t('추가 부위 분류'), value: t('{0}개 분류는 상세 리포트에서 확인하세요.', [muscle_targets.length - 6]) });
   const caption = ["DON'T SKIP", t('나의 변화 리포트'), period, status,

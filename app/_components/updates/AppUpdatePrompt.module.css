@@ -1,0 +1,20 @@
+.updateDialog {
+  position: fixed;
+  inset: 0;
+  width: min(calc(100% - 24px), 430px);
+  max-height: calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  margin: auto;
+  padding-top: 28px;
+  overscroll-behavior: contain;
+}
+
+.updateDialog::backdrop { background: #00000080; }
+.versionInfo { margin: 20px 0 0; color: var(--white); font-size: 14px; font-weight: 700; overflow-wrap: anywhere; }
+.buildInfo { margin: 4px 0 0; color: var(--muted); font-size: 12px; }
+.snoozeHint { margin: 12px 0 24px; color: var(--muted); font-size: 12px; }
+.openError { margin: 0 0 16px; color: var(--red); font-size: 13px; overflow-wrap: anywhere; }
+
+@media (max-width: 350px) {
+  .updateDialog { padding-inline: 18px; }
+  .updateDialog h2 { font-size: 23px; }
+}

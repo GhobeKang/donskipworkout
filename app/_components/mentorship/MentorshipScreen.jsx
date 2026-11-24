@@ -77,12 +77,12 @@ export default function MentorshipScreen({ on_unauthorized, on_research_change, 
     relationship_uuid={selected_relationship_uuid} on_unauthorized={on_unauthorized} on_research_change={on_research_change}
     on_back={() => { set_selected_relationship_uuid(''); refresh(); }} />;
   return <section className="viewPanel isVisible">
-    <header className="pageHeader"><div><p className="eyebrow">{t('함께 이어가는 운동')}</p><h1>{t('코치 · 회원')}</h1></div><MaterialIcon>school</MaterialIcon></header>
+    <header className="pageHeader"><div><p className="eyebrow">{t('함께 이어가는 운동')}</p><h1>{t('운동에 진심이라면...')}</h1></div><MaterialIcon>school</MaterialIcon></header>
     <HelpLink question_id="coaching">{t('코치 등록과 공유 범위 알아보기')}</HelpLink>
     <div className={styles.stack}>
       <article className={`${styles.card} ${styles.intro}`}>
         <h2>{t('챌린지 밖에서도, 코칭은 계속')}</h2>
-        <p>{t('연구일지와 운동 리포트를 함께 보고, 궁금한 점은 메시지로 남겨 보세요.')}</p>
+        <p>{t('연구일지와 운동 리포트를 함께 보고, 회원과 깊은 유대관계를 만들어 보세요.')}</p>
         {dashboard.data && <><label className={styles.memberId}>{t('내 회원 ID')}<input aria-label={t('내 회원 ID')} value={dashboard.data.member_uuid} readOnly onFocus={(event) => event.target.select()} /></label>
           <button type="button" className="quietButton" onClick={async () => {
             try { await navigator.clipboard.writeText(dashboard.data.member_uuid); set_copy_notice(t('회원 ID를 복사했습니다.')); }

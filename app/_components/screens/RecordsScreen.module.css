@@ -1,0 +1,6 @@
+.recordsTabs { display: grid; grid-template-columns: repeat(5, minmax(max-content, 1fr)); gap: 4px; min-width: 0; padding: 4px; overflow-x: auto; border-radius: 14px; background: var(--card-2); }
+.recordsTabs > button { position: relative; min-width: 44px; min-height: 44px; padding: 8px 6px; border: 0; border-radius: 11px; background: transparent; color: var(--muted); font-size: 13px; font-weight: 600; line-height: 1.4; white-space: nowrap; }
+.recordsTabs > button::after { content: ''; position: absolute; right: 10px; bottom: 3px; left: 10px; height: 3px; border-radius: 999px; background: var(--orange); opacity: 0; pointer-events: none; }
+.recordsTabs > button[aria-pressed='true'] { color: var(--accent-text); background: var(--card); font-weight: 750; box-shadow: 0 1px 3px #0001; }
+.recordsTabs > button[aria-pressed='true']::after { opacity: 1; }
+.recordsTabs > button:focus-visible { outline-offset: -2px; }

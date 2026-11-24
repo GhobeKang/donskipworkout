@@ -1,4 +1,3 @@
-import InfoTooltip from '../ui/InfoTooltip';
 import HelpLink from '../help/HelpLink';
 import { useLanguage } from '../../_hooks/useLanguage';
 import { useEffect, useState } from 'react';
@@ -9,8 +8,9 @@ import { format_workout_date } from '../../_lib/i18n';
 import ExerciseProgress from '../records/ExerciseProgress';
 import WeeklyMuscleActivity from '../records/WeeklyMuscleActivity';
 import WeeklyShare from '../sharing/WeeklyShare';
+import RecordStatistics from '../records/RecordStatistics';
 import { format_workout_duration } from '../../_lib/workoutTime';
-import records_styles from '../reports/MuscleActivityReport.module.css';
+import records_styles from './RecordsScreen.module.css';
 
 const day_names = ['일', '월', '화', '수', '목', '금', '토'];
 
@@ -36,7 +36,6 @@ export default function RecordsScreen({ revision, on_unauthorized, initial_tab, 
   const [reload_count, set_reload_count] = useState(0);
   const { year, month } = selected_month;
   const records = useApiResource('/records?year=' + year + '&month=' + month + '&limit=100', revision + ':' + reload_count, on_unauthorized);
-  const stats = useApiResource('/stats', revision + ':' + reload_count, on_unauthorized);
   useEffect(() => {
     if (!focus_record_uuid || selected_tab !== 'list' || !records.data?.records.some((record) => record.session_uuid === focus_record_uuid)) return;
     const record_element = document.getElementById(`record-${focus_record_uuid}`);
@@ -48,48 +47,31 @@ export default function RecordsScreen({ revision, on_unauthorized, initial_tab, 
     const next_month = new Date(Date.UTC(year, month - 1 + offset, 1));
     set_selected_month({ year: next_month.getUTCFullYear(), month: next_month.getUTCMonth() + 1 });
   };
-  const active_resource = selected_tab === 'stats' ? stats : records;
   const calendar_data = records.data?.calendar;
-  const stat_labels = { completed_count: t("운동 완료"), rest_count: t("휴식"), missed_count: t("미실행"), pending_count: t("예정 / 출발"), total_count: t("전체 기록") };
-  const stat_chart_fields = [
-    { field_name: 'completed_count', label: t("완료"), color: 'done' },
-    { field_name: 'rest_count', label: t("휴식"), color: 'rest' },
-    { field_name: 'missed_count', label: t("미실행"), color: 'missed' },
-    { field_name: 'pending_count', label: t("예정"), color: 'pending' },
-  ];
-  const stat_chart_max = stats.data
-    ? Math.max(1, ...stat_chart_fields.map(({ field_name }) => stats.data[field_name]))
-    : 1;
 
   return <section className="viewPanel isVisible">
     <header className="pageHeader"><div><p className="eyebrow">{t('이거 봐봐, 너가 이만큼 해냈어.')}</p><h1>{t('보이는 만큼,\n성장했다는 증거.')}</h1></div></header>
     <HelpLink question_id="records">{t('지난 기록 확인 방법 보기')}</HelpLink>
     <div className="infoEntry"><button type="button" className="shareEntry" aria-pressed={selected_tab === 'share'} onClick={() => set_selected_tab('share')}><span><strong>{t('나의 변화 리포트')}</strong><small>{t('변화의 근거를 모아, 나만의 리포트로.')}</small></span><MaterialIcon>ios_share</MaterialIcon></button></div>
-    <div className={`tabs ${records_styles.recordsTabs}`} aria-label={t("기록 보기")}>{[['calendar', t("캘린더")], ['list', t("운동 목록")], ['muscles', t("근육 활동")], ['progress', t("성장 추이")], ['stats', t("통계")]].map(([tab, label]) => <button type="button" key={tab} className={selected_tab === tab ? 'isActive' : ''} aria-pressed={selected_tab === tab} onClick={() => set_selected_tab(tab)}>{label}</button>)}</div>
+    <div className={records_styles.recordsTabs} role="group" aria-label={t('기록 보기')}>
+      {[
+        ['calendar', '캘린더', '캘린더'],
+        ['list', '목록', '운동 목록'],
+        ['muscles', '근육', '근육 활동'],
+        ['progress', '성장', '성장 추이'],
+        ['stats', '통계', '통계'],
+      ].map(([tab_key, tab_label, tab_description]) => <button type="button" key={tab_key} aria-label={t(tab_description)} aria-pressed={selected_tab === tab_key} onClick={() => set_selected_tab(tab_key)}>{t(tab_label)}</button>)}
+    </div>
     {selected_tab === 'share' && <WeeklyShare revision={revision} on_unauthorized={on_unauthorized} timezone={timezone} />}
     {selected_tab === 'progress' && <ExerciseProgress revision={revision} on_unauthorized={on_unauthorized} timezone={timezone} />}
     {selected_tab === 'muscles' && <WeeklyMuscleActivity revision={revision} on_unauthorized={on_unauthorized} timezone={timezone} initial_workout_date={initial_workout_date} />}
+    {selected_tab === 'stats' && <RecordStatistics revision={revision} year={year} month={month} on_change_month={change_month} on_unauthorized={on_unauthorized} />}
     {['calendar', 'list'].includes(selected_tab) && <div className="calendarHeader">
       <button className="textButton" aria-label={t("이전 달")} disabled={year === 2000 && month === 1} onClick={() => change_month(-1)}>‹</button>
       <strong>{format_workout_date(`${year}-${String(month).padStart(2, '0')}-01`, language, { year: 'numeric', month: 'long' })}</strong>
       <button className="textButton" aria-label={t("다음 달")} disabled={year === 2100 && month === 12} onClick={() => change_month(1)}>›</button>
     </div>}
-    {!['progress', 'share', 'muscles'].includes(selected_tab) && <RequestState loading={active_resource.loading} error={active_resource.error} on_retry={() => set_reload_count((value) => value + 1)} />}
-    {selected_tab === 'stats' && stats.data && <>
-      <section className="statsChartCard" aria-labelledby="stats-chart-title">
-        <div className="statsChartHeading"><div><p className="cardKicker">{t("한눈에 보기")}</p><h2 id="stats-chart-title">{t("운동 기록 분포")}<InfoTooltip label={t('운동 기록 분포')}><span className="infoTooltipParagraph">{t("전체 기간 · 실제 저장된 기록 기준")}</span><span className="infoTooltipParagraph">{t("상태별 기록 횟수 비교")}</span></InfoTooltip></h2></div><span>{stats.data.total_count}{t("회")}</span></div>
-        <div className="statsChart" role="img" aria-label={stat_chart_fields.map(({ field_name, label }) => t("{0} {1}회", [label, stats.data[field_name]])).join(', ')}>
-          {stat_chart_fields.map(({ field_name, label, color }) => {
-            const bar_height = stats.data[field_name] ? Math.max(8, Math.round((stats.data[field_name] / stat_chart_max) * 100)) : 0;
-            return <div className="statsChartColumn" key={field_name}>
-              <div className="statsChartTrack"><span className={`statsChartBar is${color}`} style={{ height: `${bar_height}%` }} /></div>
-              <span className="statsChartLabel">{label}</span>
-            </div>;
-          })}
-        </div>
-      </section>
-      <dl className="statsGrid">{Object.entries(stat_labels).map(([field_name, label]) => <div className="settingsCard" key={field_name}><dt>{label}</dt><dd>{stats.data[field_name]}{t("회")}</dd></div>)}</dl>
-    </>}
+    {['calendar', 'list'].includes(selected_tab) && <RequestState loading={records.loading} error={records.error} on_retry={reload_count < 2 ? () => set_reload_count((value) => value + 1) : undefined} />}
     {selected_tab === 'calendar' && calendar_data && <div className="calendarCard">
       <div className="sectionHeading"><h2>{t('출석의 흔적')}</h2><span className="infoText">{t('{0}일 출석', [calendar_data.completed_days.length])}</span></div>
       <div className="calendarWeekdays">{day_names.map((day, day_index) => <span key={day}>{language === 'en' ? ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][day_index] : day}</span>)}</div>

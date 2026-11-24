@@ -43,6 +43,9 @@ class serverSettings(BaseSettings):
     notification_catalog_path: str = str(
         Path(__file__).resolve().parents[1] / 'notification-config' / 'catalog.json'
     )
+    app_release_catalog_path: str = str(
+        Path(__file__).resolve().parents[1] / 'release-config' / 'app-releases.json'
+    )
     rate_limit_per_minute: int = Field(default=120, ge=1, le=10000)
     auth_rate_limit_per_minute: int = Field(default=10, ge=1, le=100)
 

@@ -584,15 +584,43 @@ class workoutTimeReport(BaseModel):
     direction: Literal['insufficient_data', 'increased', 'decreased', 'maintained']
 
 
-class muscleActivityExercise(BaseModel):
+class muscleActivitySet(BaseModel):
+    set_id: int
+    workout_date: str
+    weight_kg: float
+    body_weight_kg: float | None
+    effective_weight_kg: float | None
+    reps: int
+    volume_kg: float | None
+    included_in_reference: bool
+
+
+class muscleActivityLoad(BaseModel):
+    set_count: int
+    volume_kg: float
+    excluded_set_count: int
+    baseline_set_count: int
+    baseline_volume_kg: float
+    baseline_excluded_set_count: int
+    baseline_matched_volume_kg: float
+    baseline_matched_excluded_set_count: int
+    reference_volume_kg: float
+    activity_score: float | None
+    score_status: Literal[
+        'comparable', 'insufficient_history', 'no_baseline', 'incomplete_load_data',
+    ]
+
+
+class muscleActivityExercise(muscleActivityLoad):
     exercise_key: str
     exercise_source: str
     exercise_id: int | None
     exercise_name: str
-    set_count: int
+    sets: list[muscleActivitySet]
+    baseline_sets: list[muscleActivitySet]
 
 
-class muscleActivityTarget(BaseModel):
+class muscleActivityTarget(muscleActivityLoad):
     target_area: str | None
     target_subarea: str | None
     subarea_id: str | None = None
@@ -601,18 +629,24 @@ class muscleActivityTarget(BaseModel):
     atlas_muscle_ids: list[str] | None = None
     is_legacy: bool = False
     exercise_count: int
-    set_count: int
-    activity_score: int
     exercises: list[muscleActivityExercise]
     workout_dates: list[str]
 
 
-class muscleActivitySummary(BaseModel):
+class muscleActivitySummary(muscleActivityLoad):
     start_date: str
     end_date: str
     exercise_count: int
-    set_count: int
-    activity_score: int
+    score_method: Literal['four_week_volume_v1']
+    period_type: Literal['weekly', 'monthly']
+    baseline_start_date: str | None
+    baseline_end_date: str | None
+    baseline_history_complete: bool
+    baseline_day_count: int
+    baseline_sampling_method: Literal['matching_weekdays', 'daily_average']
+    history_start_date: str | None
+    period_day_count: int
+    baseline_sample_day_count: int
     recorded_day_count: int
     unclassified_set_count: int
     targets: list[muscleActivityTarget]
@@ -637,6 +671,7 @@ class personalReportData(BaseModel):
     preferences: list[reportPreferenceData]
     coverage: reportCoverageData
     evaluation: reportEvaluationData
+    total_volume_kg: float | None = Field(default=None, ge=0)
     workout_time: workoutTimeReport | None = None
     muscle_activity: muscleActivityComparison | None = None
     personal_records: list[reportPersonalRecordData] = Field(default_factory=list)
