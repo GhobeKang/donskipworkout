@@ -220,7 +220,7 @@ def exercise_output(exercise, exercise_source='custom', last_sets=None, previous
         'name': exercise.name,
         'target_area': getattr(exercise, 'target_area', None),
         'target_subarea': target_subareas[0]['label_ko']
-        if len(target_subareas) == 1 and target_subareas[0]['is_legacy'] else None,
+        if len(target_subareas) == 1 and target_subareas[0]['subarea_id'].startswith('legacy_') else None,
         'target_subarea_ids': [item['subarea_id'] for item in target_subareas],
         'target_subareas': target_subareas,
         'last_sets': (exercise.last_sets if last_sets is None else last_sets) or [],
@@ -535,7 +535,7 @@ def rename_exercise(
         raise HTTPException(404, '운동 종목을 찾을 수 없습니다.')
     if 'target_subarea_ids' not in payload.model_fields_set:
         existing_targets = subareas_by_exercise(database, user.user_id).get(('custom', exercise_id), [])
-        if any(not target['is_legacy'] for target in existing_targets):
+        if len(existing_targets) > 1 or any(not target['subarea_id'].startswith('legacy_') for target in existing_targets):
             raise HTTPException(409, '여러 타겟 부위가 설정된 종목은 최신 앱에서 수정해 주세요.')
     targets = validate_exercise_subareas(database, payload)
     if database.scalar(

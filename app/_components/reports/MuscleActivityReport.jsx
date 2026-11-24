@@ -39,7 +39,7 @@ export default function MuscleActivityReport({ activity, title = '근육 활동 
       <table className={report_styles.table}>
         <caption>{t('부위 분류별 운동 기록')}</caption>
         <thead><tr><th scope="col">{t('타겟 부위')}</th><th scope="col">{t('종목')}</th><th scope="col">{t('세트')}</th><th scope="col">{t('지수')}</th></tr></thead>
-        <tbody>{current.targets.map((target, target_index) => <tr key={target_index}><th scope="row">{target_label(target)}{!target_muscle_rule(target) ? <small>{t('지도 표시 제외')}</small> : target_muscle_rule(target).is_coarse && <small>{t('큰 부위·근육군 분류')}</small>}</th><td>{target.exercise_count}</td><td>{target.set_count}</td><td>{activity_score_text(target, t)}</td></tr>)}</tbody>
+        <tbody>{current.targets.map((target, target_index) => <tr key={target_index}><th scope="row">{target_label(target)}{!target_muscle_rule(target) ? <small>{t('지도 표시 제외')}</small> : target_muscle_rule(target).is_coarse && <small>{t('근육군·강조 부위 또는 부분 표시')}</small>}</th><td>{target.exercise_count}</td><td>{target.set_count}</td><td>{activity_score_text(target, t)}</td></tr>)}</tbody>
       </table>
     </div>}
     <MuscleActivityEvidence summary={current} />

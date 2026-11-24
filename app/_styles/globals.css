@@ -663,10 +663,19 @@ img { max-width: 100%; }
 .exerciseResearchContent { margin: 8px 0 0; color: var(--white); font-size: 13px; line-height: 1.7; white-space: pre-wrap; overflow-wrap: anywhere; }
 .exerciseResearchLatest { display: inline-block; margin-right: 8px; color: var(--accent-text); font-size: 11px; font-weight: 700; }
 .exerciseResearchHint { margin: 4px 0 0; color: var(--muted); font-size: 12px; }
-.exerciseResearchForm { margin: 20px 0; }
+.actionModal.exerciseResearchModal { position: fixed; inset: calc(var(--research_viewport_top, 0px) + 12px + env(safe-area-inset-top)) 0 auto; width: min(calc(100% - 24px), 430px); height: min(720px, calc(var(--research_viewport_height, 100dvh) - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom))); max-height: calc(var(--research_viewport_height, 100dvh) - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); flex-direction: column; margin: 0 auto; padding: 0; overflow: hidden; overscroll-behavior: contain; }
+.exerciseResearchModal[open] { display: flex; }
+.exerciseResearchHeader { display: flex; flex: none; align-items: center; gap: 10px; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+.exerciseResearchHeader .modalCloseButton { position: static; flex: none; }
+.exerciseResearchTitle { flex: 1; min-width: 0; }
+.actionModal .exerciseResearchTitle h2 { font-size: 18px; }
+.exerciseResearchTitle .modalEyebrow { margin: 4px 0 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
+.exerciseResearchHeader .wideButton { flex: none; width: auto; min-width: 72px; min-height: 44px; padding: 10px 14px; border-radius: 12px; }
+.exerciseResearchBody { flex: 1; min-height: 0; padding: 18px 20px 20px; overflow-y: auto; overscroll-behavior: contain; scroll-padding-block: 18px; }
+.exerciseResearchForm { margin: 0 0 16px; }
+.exerciseResearchForm textarea { height: clamp(112px, calc(var(--research_viewport_height, 100dvh) * .25), 200px); min-height: 112px; max-height: 320px; }
 .exerciseResearchFormActions { display: flex; align-items: center; gap: 12px; margin-top: 12px; }
 .exerciseResearchFormActions > small { margin-right: auto; color: var(--muted); font-size: 12px; }
-.exerciseResearchFormActions .wideButton { width: auto; min-width: 92px; }
 .exerciseResearchListTitle { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 15px; }
 .exerciseResearchListTitle small { color: var(--muted); font-size: 11px; font-weight: 400; }
 .exerciseResearchList { display: grid; gap: 12px; list-style: none; padding: 0; }
@@ -757,7 +766,7 @@ textarea.timeInput { resize: vertical; }
 .exercisePickerBackdrop { align-items: flex-start; padding: 0; }
 .actionModal { width: min(100%, 430px); max-height: calc(100dvh - 24px); overflow: auto; margin: 0 auto; position: relative; padding: 16px 24px calc(24px + env(safe-area-inset-bottom)); border: 1px solid var(--line); border-radius: 26px; color: var(--white); background: var(--card); }
 .actionModal.exerciseEditorModal { position: fixed; inset: 0; width: min(calc(100% - 24px), 430px); max-height: calc(100dvh - 24px - env(safe-area-inset-top)); margin: auto; padding-top: 24px; overscroll-behavior: contain; }
-.exerciseEditorModal::backdrop { background: #00000080; }
+.exerciseEditorModal::backdrop, .exerciseResearchModal::backdrop { background: #00000080; }
 .actionModal.exercisePickerModal { height: 100dvh; max-height: 100dvh; overflow: hidden; padding: calc(16px + env(safe-area-inset-top)) 18px 0; border: 0; border-radius: 0; }
 .exercisePickerModal > .modalHandle { display: none; }
 .exercisePickerModal > .modalCloseButton { top: calc(14px + env(safe-area-inset-top)); }

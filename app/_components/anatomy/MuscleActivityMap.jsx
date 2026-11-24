@@ -26,7 +26,7 @@ export default function MuscleActivityMap({ summary }) {
       <div className={report_styles.viewSwitch} role="group" aria-label={t('신체 방향')}>
         {['front', 'back'].map((map_view) => <button type="button" key={map_view} aria-pressed={view === map_view} onClick={() => { set_view(map_view); set_zoom_level(1); set_active_muscle_id(null); }}>{t(map_view === 'front' ? '앞면' : '뒷면')}</button>)}
       </div>
-      <InfoTooltip label={t('근육 활동')}><span className="infoTooltipParagraph">{t('점선은 이전 큰 부위 분류입니다. 직접 선택한 좌우 부위는 각각 표시합니다.')}</span><span className="infoTooltipParagraph">{t('도형이 없는 이전 세부분류는 표에서 확인할 수 있습니다.')}</span><span className="infoTooltipParagraph">{t('부위를 눌러 해당 분류의 종목 수와 세트 수를 확인하세요.')}</span></InfoTooltip>
+      <InfoTooltip label={t('근육 활동')}><span className="infoTooltipParagraph">{t('점선은 근육군·운동 강조 부위 또는 일부만 표시되는 분류입니다.')}</span><span className="infoTooltipParagraph">{t('도형이 없는 부위는 표에서 확인할 수 있습니다. 지도 색상은 개별 근육의 실제 자극량이 아닙니다.')}</span><span className="infoTooltipParagraph">{t('부위를 눌러 해당 분류의 종목 수와 세트 수를 확인하세요.')}</span></InfoTooltip>
       <div className={report_styles.zoomControls} role="group" aria-label={t('지도 확대·축소')}>
         <button type="button" disabled={zoom_level === 1} aria-label={t('지도 축소')} onClick={() => set_zoom_level((current_zoom) => Math.max(1, current_zoom - 0.5))}><MaterialIcon>remove</MaterialIcon></button>
         <output aria-label={t('확대 배율')}>{Math.round(zoom_level * 100)}%</output>

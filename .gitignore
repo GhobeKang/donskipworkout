@@ -44,6 +44,10 @@ supabase/migrations/*
 !supabase/migrations/20261118112043_revert_back_exercise_variants.sql
 !supabase/migrations/20261118115056_exercise_subarea_references.sql
 !supabase/migrations/20261118122244_explicit_exercise_target_categories.sql
+!supabase/migrations/20261124121529_bodybuilding_training_targets.sql
+!supabase/migrations/20261124125659_dba_worker_coordination.sql
+!supabase/migrations/20261124130223_dba_delete_lookup_indexes.sql
+!supabase/migrations/20261124131332_dba_reference_integrity.sql
 .gradle/
 etc/
 out/

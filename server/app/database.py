@@ -8,7 +8,9 @@ from sqlalchemy import (
     CheckConstraint,
     Date,
     DateTime,
+    FetchedValue,
     ForeignKey,
+    ForeignKeyConstraint,
     Index,
     Integer,
     MetaData,
@@ -88,6 +90,15 @@ class authSession(databaseBase):
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())
 
 
+class workerLease(databaseBase):
+    __tablename__ = 'worker_leases'
+    worker_name: Mapped[str] = mapped_column(String(40), primary_key=True)
+    instance_id: Mapped[str] = mapped_column(String(36))
+    heartbeat_at: Mapped[datetime] = mapped_column(DateTime)
+    lease_expires_at: Mapped[datetime] = mapped_column(DateTime)
+    worker_state: Mapped[dict] = mapped_column(JSON().with_variant(JSONB(), 'postgresql'))
+
+
 class attendanceSetting(databaseBase):
     __tablename__ = 'attendance_settings'
     user_id: Mapped[int] = mapped_column(id_type, ForeignKey('users.user_id'), primary_key=True)
@@ -116,7 +127,10 @@ class weeklyPromise(databaseBase):
 
 class workoutSession(databaseBase):
     __tablename__ = 'workout_sessions'
-    __table_args__ = (UniqueConstraint('user_id', 'workout_date'),)
+    __table_args__ = (
+        UniqueConstraint('user_id', 'workout_date'),
+        UniqueConstraint('session_id', 'user_id', name='workout_sessions_identity_owner_key'),
+    )
     session_id: Mapped[int] = mapped_column(id_type, primary_key=True, autoincrement=True)
     session_uuid: Mapped[str] = mapped_column(String(36), unique=True)
     user_id: Mapped[int] = mapped_column(id_type, ForeignKey('users.user_id'))
@@ -135,6 +149,10 @@ class workoutSession(databaseBase):
 
 class exerciseItem(databaseBase):
     __tablename__ = 'exercise_items'
+    __table_args__ = (
+        UniqueConstraint('exercise_id', 'user_id', name='exercise_items_identity_owner_key'),
+        UniqueConstraint('exercise_id', 'target_area', name='exercise_items_identity_area_key'),
+    )
     exercise_id: Mapped[int] = mapped_column(id_type, primary_key=True, autoincrement=True)
     user_id: Mapped[int] = mapped_column(id_type, ForeignKey('users.user_id'))
     name: Mapped[str] = mapped_column(String(100))
@@ -148,6 +166,9 @@ class exerciseItem(databaseBase):
 
 class sharedExerciseItem(databaseBase):
     __tablename__ = 'shared_exercise_items'
+    __table_args__ = (
+        UniqueConstraint('exercise_id', 'target_area', name='shared_exercise_items_identity_area_key'),
+    )
     exercise_id: Mapped[int] = mapped_column(id_type, primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String(100))
     target_area: Mapped[str | None] = mapped_column(String(20))
@@ -156,6 +177,9 @@ class sharedExerciseItem(databaseBase):
 
 class exerciseSubarea(databaseBase):
     __tablename__ = 'exercise_subareas'
+    __table_args__ = (
+        UniqueConstraint('subarea_id', 'target_area', name='exercise_subareas_identity_area_key'),
+    )
     subarea_id: Mapped[str] = mapped_column(String(100), primary_key=True)
     target_area: Mapped[str] = mapped_column(String(20))
     label_ko: Mapped[str] = mapped_column(String(100))
@@ -170,22 +194,42 @@ class exerciseSubarea(databaseBase):
 
 class exerciseItemSubarea(databaseBase):
     __tablename__ = 'exercise_item_subareas'
-    exercise_id: Mapped[int] = mapped_column(
-        id_type, ForeignKey('exercise_items.exercise_id', ondelete='CASCADE'), primary_key=True,
+    __table_args__ = (
+        Index('exercise_item_subareas_exercise_area_idx', 'exercise_id', 'target_area'),
+        Index('exercise_item_subareas_subarea_idx', 'subarea_id', 'target_area'),
+        ForeignKeyConstraint(
+            ['exercise_id', 'target_area'], ['exercise_items.exercise_id', 'exercise_items.target_area'],
+            name='exercise_item_subareas_exercise_area_fk', ondelete='CASCADE', onupdate='CASCADE',
+            deferrable=True, initially='DEFERRED',
+        ),
+        ForeignKeyConstraint(
+            ['subarea_id', 'target_area'], ['exercise_subareas.subarea_id', 'exercise_subareas.target_area'],
+            name='exercise_item_subareas_target_area_fk', deferrable=True, initially='DEFERRED',
+        ),
     )
-    subarea_id: Mapped[str] = mapped_column(
-        String(100), ForeignKey('exercise_subareas.subarea_id'), primary_key=True, index=True,
-    )
+    exercise_id: Mapped[int] = mapped_column(id_type, primary_key=True)
+    subarea_id: Mapped[str] = mapped_column(String(100), primary_key=True)
+    target_area: Mapped[str] = mapped_column(String(20), server_default=FetchedValue())
 
 
 class sharedExerciseItemSubarea(databaseBase):
     __tablename__ = 'shared_exercise_item_subareas'
-    exercise_id: Mapped[int] = mapped_column(
-        id_type, ForeignKey('shared_exercise_items.exercise_id', ondelete='CASCADE'), primary_key=True,
+    __table_args__ = (
+        Index('shared_exercise_item_subareas_exercise_area_idx', 'exercise_id', 'target_area'),
+        Index('shared_exercise_item_subareas_subarea_idx', 'subarea_id', 'target_area'),
+        ForeignKeyConstraint(
+            ['exercise_id', 'target_area'], ['shared_exercise_items.exercise_id', 'shared_exercise_items.target_area'],
+            name='shared_exercise_item_subareas_exercise_area_fk', ondelete='CASCADE', onupdate='CASCADE',
+            deferrable=True, initially='DEFERRED',
+        ),
+        ForeignKeyConstraint(
+            ['subarea_id', 'target_area'], ['exercise_subareas.subarea_id', 'exercise_subareas.target_area'],
+            name='shared_exercise_item_subareas_target_area_fk', deferrable=True, initially='DEFERRED',
+        ),
     )
-    subarea_id: Mapped[str] = mapped_column(
-        String(100), ForeignKey('exercise_subareas.subarea_id'), primary_key=True, index=True,
-    )
+    exercise_id: Mapped[int] = mapped_column(id_type, primary_key=True)
+    subarea_id: Mapped[str] = mapped_column(String(100), primary_key=True)
+    target_area: Mapped[str] = mapped_column(String(20), server_default=FetchedValue())
 
 
 class exerciseResearchRecord(databaseBase):
@@ -200,6 +244,10 @@ class exerciseResearchRecord(databaseBase):
         Index('exercise_research_records_custom_idx', 'user_id', 'exercise_id', 'created_at', 'record_id'),
         Index('exercise_research_records_shared_idx', 'user_id', 'shared_exercise_id', 'created_at', 'record_id'),
         Index('exercise_research_records_editor_idx', 'updated_by_user_id'),
+        ForeignKeyConstraint(
+            ['exercise_id', 'user_id'], ['exercise_items.exercise_id', 'exercise_items.user_id'],
+            name='exercise_research_records_owner_fk', deferrable=True, initially='DEFERRED',
+        ),
     )
     record_id: Mapped[int] = mapped_column(id_type, primary_key=True, autoincrement=True)
     user_id: Mapped[int] = mapped_column(id_type, ForeignKey('users.user_id', ondelete='CASCADE'))
@@ -295,14 +343,27 @@ class userSharedExerciseProgress(databaseBase):
 class workoutSet(databaseBase):
     __tablename__ = 'workout_sets'
     __table_args__ = (
+        Index('idx_workout_sets_session_id', 'session_id', 'user_id'),
+        Index('idx_workout_sets_exercise_id', 'exercise_id', 'user_id'),
         UniqueConstraint('session_id', 'exercise_order', 'set_order'),
         CheckConstraint(
             'body_weight_kg > 0 AND body_weight_kg <= 500',
             name='workout_sets_body_weight_check',
         ),
+        ForeignKeyConstraint(
+            ['session_id', 'user_id'], ['workout_sessions.session_id', 'workout_sessions.user_id'],
+            name='workout_sets_session_owner_fk', ondelete='CASCADE', onupdate='CASCADE',
+            deferrable=True, initially='DEFERRED',
+        ),
+        # Keep the original exercise_id FK: it archives deleted exercises by nulling only that ID.
+        ForeignKeyConstraint(
+            ['exercise_id', 'user_id'], ['exercise_items.exercise_id', 'exercise_items.user_id'],
+            name='workout_sets_exercise_owner_fk', deferrable=True, initially='DEFERRED',
+        ),
     )
     set_id: Mapped[int] = mapped_column(id_type, primary_key=True, autoincrement=True)
-    session_id: Mapped[int] = mapped_column(id_type, ForeignKey('workout_sessions.session_id'))
+    session_id: Mapped[int] = mapped_column(id_type)
+    user_id: Mapped[int] = mapped_column(id_type, server_default=FetchedValue())
     exercise_id: Mapped[int | None] = mapped_column(
         id_type, ForeignKey('exercise_items.exercise_id', ondelete='SET NULL')
     )

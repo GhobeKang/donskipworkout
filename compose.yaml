@@ -17,10 +17,45 @@ services:
       - ./server/notification-config:/app/notification-config:ro
       - ./server/release-config:/app/release-config:ro
       - attendance_api_logs:/app/logs
+    restart: unless-stopped
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+  attendance_worker:
+    image: ${DOCKER_IMAGE_NAME:?Set DOCKER_IMAGE_NAME to a pushed Docker Hub image}
+    command: ["python", "-m", "app.worker"]
+    env_file:
+      - ./server/.env
+    environment:
+      GOOGLE_APPLICATION_CREDENTIALS: /run/secrets/firebase_service_account
+      APNS_AUTH_KEY_PATH: /run/secrets/apns_auth_key
+      LOG_FILE: /app/logs/worker.log
+      PHOTO_STORAGE_DIR: /app/media/photos
+      NOTIFICATION_CATALOG_PATH: /app/notification-config/catalog.json
+    volumes:
+      - attendance_photo_storage:/app/media/photos
+      - ./server/notification-config:/app/notification-config:ro
+      - attendance_api_logs:/app/logs
     secrets:
       - firebase_service_account
       - apns_auth_key
-    restart: unless-stopped
+    depends_on:
+      attendance_api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-m", "app.worker", "--healthcheck"]
+      interval: 15s
+      timeout: 10s
+      start_period: 150s
+      retries: 2
+    restart: "on-failure:2"
+    stop_grace_period: 45s
     init: true
     read_only: true
     tmpfs:

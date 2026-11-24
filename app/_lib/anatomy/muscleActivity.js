@@ -1,3 +1,5 @@
+import { target_definition } from './exerciseTargets';
+
 export const muscle_activity_method = '활동지수 = 기록한 훈련부하 ÷ 비교 기준 부하 × 100. 기준은 직전 최대 4주의 기록이며, 훈련부하는 세트별 환산 중량 × 반복 수의 합입니다. 실제 근육 활성화나 운동 효과를 측정한 값은 아닙니다.';
 export const activity_bands = [
   { minimum: 0, maximum: 100, color: '#f5c99b', label: '100 미만' },
@@ -114,8 +116,12 @@ const grouped_rules = {
 };
 
 export function target_muscle_rule(target) {
-  if (Array.isArray(target.atlas_muscle_ids)) {
-    return target.atlas_muscle_ids.length ? { muscle_ids: target.atlas_muscle_ids, is_coarse: Boolean(target.is_legacy) } : null;
+  const definition = target_definition(target);
+  if (Array.isArray(definition.atlas_muscle_ids)) {
+    return definition.atlas_muscle_ids.length ? {
+      muscle_ids: definition.atlas_muscle_ids,
+      is_coarse: definition.map_precision !== 'exact' || ['muscle_group', 'training_group', 'focus'].includes(definition.selection_kind),
+    } : null;
   }
   // Compatibility for older saved report snapshots; current records use reference IDs.
   if (!target.target_subarea) {

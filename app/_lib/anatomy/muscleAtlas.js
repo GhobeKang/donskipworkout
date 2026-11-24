@@ -1,7 +1,12 @@
 import muscle_atlas from './muscleAtlas.json';
 
 export const atlas_views = muscle_atlas.views;
-export const atlas_muscles = muscle_atlas.muscles;
+export const atlas_muscles = muscle_atlas.muscles.map((muscle) => ({
+  ...muscle,
+  label_ko: muscle.label_ko.replace(/ · \d+번 조각$/, ''),
+  label_en: muscle.id.startsWith('biceps_brachii_caput_longum')
+    ? 'Biceps (Long Head)' : muscle.label_en.replace(/ \(\d+\)$/, ''),
+}));
 export const muscles_by_id = Object.fromEntries(atlas_muscles.map((muscle) => [muscle.id, muscle]));
 
 export function muscle_label(muscle, language) {

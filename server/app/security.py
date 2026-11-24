@@ -6,8 +6,9 @@ from typing import Annotated
 
 from fastapi import Depends, HTTPException, Request, Response
 from pwdlib import PasswordHash
-from sqlalchemy import delete
+from sqlalchemy import delete, select, update
 from sqlalchemy.orm import Session
+from sqlalchemy.orm.attributes import set_committed_value
 
 from .database import authSession, get_database, userAccount, userCredential
 
@@ -42,6 +43,30 @@ def session_cookie_name(request: Request) -> str:
     return request.app.state.settings.session_cookie_name
 
 
+def refresh_session_expiry(database, stored_session, now, lifetime):
+    renewal_interval = min(timedelta(days=1), lifetime / 2)
+    renewal_cutoff = now + lifetime - renewal_interval
+    if stored_session.expires_at > renewal_cutoff:
+        return stored_session.expires_at
+    renewed_expiry = database.scalar(update(authSession).where(
+        authSession.session_hash == stored_session.session_hash,
+        authSession.expires_at > now,
+        authSession.expires_at <= renewal_cutoff,
+    ).values(expires_at=now + lifetime).returning(authSession.expires_at).execution_options(
+        synchronize_session=False,
+    ))
+    if renewed_expiry is None:
+        # Another request may have renewed or revoked this session while we waited.
+        renewed_expiry = database.scalar(select(authSession.expires_at).where(
+            authSession.session_hash == stored_session.session_hash,
+        ))
+    database.commit()
+    if renewed_expiry is None or renewed_expiry <= now:
+        raise authentication_error('session_revoked_during_renewal')
+    set_committed_value(stored_session, 'expires_at', renewed_expiry)
+    return renewed_expiry
+
+
 def current_session(
     request: Request,
     response: Response,
@@ -66,9 +91,9 @@ def current_session(
     user = database.get(userAccount, stored_session.user_id)
     if not credential or not credential.is_active or user is None:
         raise authentication_error('account_inactive_or_missing')
-    expires_in = request.app.state.settings.session_days * 86400
-    stored_session.expires_at = now + timedelta(seconds=expires_in)
-    database.commit()
+    lifetime = timedelta(days=request.app.state.settings.session_days)
+    expiry = refresh_session_expiry(database, stored_session, now, lifetime)
+    expires_in = max(0, int((expiry - now).total_seconds()))
     set_session_cookie(response, request, raw_session_id, expires_in)
     return stored_session, user
 

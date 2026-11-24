@@ -7,7 +7,7 @@ from types import SimpleNamespace
 from sqlalchemy import and_, case, func, select
 
 from .database import exerciseItem, sharedExerciseItem, workoutSession, workoutSet
-from .exercise_subareas import subareas_by_exercise
+from .exercise_subareas import report_training_subareas, subareas_by_exercise
 from .workout_load import effective_weight_kg
 
 
@@ -158,7 +158,7 @@ def activity_summary(rows, start_date, end_date, period_type='weekly', history_s
             workout_dates.add(workout_date)
             if not row.target_area and not row.target_subareas:
                 unclassified_set_count += 1
-        row_targets = row.target_subareas or [{
+        row_targets = report_training_subareas(row.target_area, row.target_subareas) or [{
             'subarea_id': None, 'target_area': row.target_area, 'label_ko': None,
             'label_en': None, 'atlas_muscle_ids': None, 'is_legacy': False,
         }]

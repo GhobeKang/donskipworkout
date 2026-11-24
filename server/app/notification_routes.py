@@ -390,7 +390,8 @@ def send_challenge_nudges(
 
 @router.get('/notifications/status')
 def read_push_status(request: Request, user: userDependency, database: databaseDependency):
-    worker = getattr(request.app.state, 'notification_worker_state', {})
+    from .worker_status import read_worker_state
+    worker = read_worker_state(database)
     devices = database.scalars(
         select(pushDevice).where(pushDevice.user_id == user.user_id, pushDevice.active.is_(True))
     ).all()
@@ -450,7 +451,8 @@ def queue_push_test(
     ):
         raise HTTPException(422, '조회 조건과 본문의 기기 ID가 일치하지 않습니다.')
     installation_uuid = installation_uuid or payload.installation_uuid
-    worker = getattr(request.app.state, 'notification_worker_state', {})
+    from .worker_status import read_worker_state
+    worker = read_worker_state(database)
     device_query = select(pushDevice).where(
         pushDevice.user_id == user.user_id,
         pushDevice.active.is_(True),

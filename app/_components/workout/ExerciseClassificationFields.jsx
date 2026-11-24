@@ -19,7 +19,7 @@ export default function ExerciseClassificationFields({ target_area, target_subar
       {Object.keys(exercise_target_areas).map((area) => <option key={area} value={area}>{t(area)}</option>)}
     </select>
     {target_area ? <>
-      <p className="fieldLabel" style={{ marginTop: 12 }}>{t('세부 타겟 부위 (여러 개 선택)')}</p>
+      <p className="fieldLabel" style={{ marginTop: 12 }}>{t('운동 타겟 (여러 개 선택)')}</p>
       <ExerciseTargetPicker key={target_area} target_area={target_area} selected_ids={target_subarea_ids} disabled={disabled} on_change={on_subarea_ids_change} on_unauthorized={on_unauthorized} />
     </> : <p className="infoText">{t('큰 카테고리를 먼저 선택해 주세요.')}</p>}
   </fieldset>;

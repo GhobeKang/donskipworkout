@@ -1,5 +1,4 @@
-import asyncio
-from contextlib import asynccontextmanager, suppress
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
@@ -7,7 +6,6 @@ from fastapi.responses import JSONResponse
 from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
-from .account_deletion import run_photo_cleanup
 from .app_update_routes import router as app_update_router
 from .challenge_routes import router as challenge_router
 from .coaching_routes import router as coaching_router
@@ -36,43 +34,9 @@ def create_app(settings=None, database_engine=None):
 
     @asynccontextmanager
     async def lifespan(app):
-        notification_worker = None
-        photo_cleanup_worker = asyncio.create_task(run_photo_cleanup(
-            app.state.session_factory, settings.photo_storage_dir,
-        ))
-        app.state.notification_worker_state = {
-            'running': False,
-            'fcm_initialized': False,
-            'apns_initialized': False,
-            'last_error': 'provider_not_configured',
-        }
-        if settings.firebase_project_id or settings.apns_key_id:
-            from .notification_worker import run_notification_worker
-
-            notification_worker = asyncio.create_task(
-                run_notification_worker(
-                    app.state.session_factory,
-                    settings.firebase_project_id,
-                    settings.firebase_credentials_path,
-                    settings.apns_key_id,
-                    settings.apns_team_id,
-                    settings.apns_auth_key_path,
-                    settings.apns_topic,
-                    settings.apns_environment,
-                    settings.notification_catalog_path,
-                    app.state.notification_worker_state,
-                )
-            )
         try:
             yield
         finally:
-            photo_cleanup_worker.cancel()
-            with suppress(asyncio.CancelledError):
-                await photo_cleanup_worker
-            if notification_worker:
-                notification_worker.cancel()
-                with suppress(asyncio.CancelledError):
-                    await notification_worker
             engine.dispose()
 
     app = FastAPI(

@@ -1,12 +1,14 @@
 import exercise_target_areas from '../../server/app/exercise_target_areas.json';
 import subarea_catalog from '../../server/app/exercise_subareas.json';
 import { translate } from './i18n';
+import { target_definition } from './anatomy/exerciseTargets';
 
 export { exercise_target_areas };
 const subarea_labels = new Map(subarea_catalog.map((subarea) => [subarea.label_ko, subarea.label_en]));
 
 export function subarea_label(subarea, language) {
-  return language === 'en' ? subarea.label_en || subarea.label_ko : subarea.label_ko;
+  const target = target_definition(subarea);
+  return language === 'en' ? target.label_en || target.label_ko : target.label_ko;
 }
 
 export function muscle_target_label(target, language) {

@@ -2,66 +2,94 @@
   {
     "subarea_id": "semimembranosus_2_r",
     "target_area": "허벅지",
-    "label_ko": "오른쪽 반막양근 · 2번 조각",
-    "label_en": "Right Semimembranosus (2)",
+    "label_ko": "오른쪽 반막양근",
+    "label_en": "Right Semimembranosus",
     "body_group": "hamstrings",
     "side": "right",
     "views": [
       "back"
     ],
     "atlas_muscle_ids": [
-      "semimembranosus_2_r"
+      "semimembranosus_2_r",
+      "semimembranosus_1_r"
     ],
     "is_legacy": false,
-    "sort_order": 0
+    "sort_order": 0,
+    "selection_kind": "artwork",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_thigh_medial_hamstrings"
   },
   {
     "subarea_id": "semimembranosus_2_l",
     "target_area": "허벅지",
-    "label_ko": "왼쪽 반막양근 · 2번 조각",
-    "label_en": "Left Semimembranosus (2)",
+    "label_ko": "왼쪽 반막양근",
+    "label_en": "Left Semimembranosus",
     "body_group": "hamstrings",
     "side": "left",
     "views": [
       "back"
     ],
     "atlas_muscle_ids": [
-      "semimembranosus_2_l"
+      "semimembranosus_2_l",
+      "semimembranosus_1_l"
     ],
     "is_legacy": false,
-    "sort_order": 1
+    "sort_order": 1,
+    "selection_kind": "artwork",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_thigh_medial_hamstrings"
   },
   {
     "subarea_id": "semimembranosus_1_r",
     "target_area": "허벅지",
-    "label_ko": "오른쪽 반막양근 · 1번 조각",
-    "label_en": "Right Semimembranosus (1)",
+    "label_ko": "오른쪽 반막양근",
+    "label_en": "Right Semimembranosus",
     "body_group": "hamstrings",
     "side": "right",
     "views": [
       "back"
     ],
     "atlas_muscle_ids": [
+      "semimembranosus_2_r",
       "semimembranosus_1_r"
     ],
     "is_legacy": false,
-    "sort_order": 2
+    "sort_order": 2,
+    "selection_kind": "artwork",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_thigh_medial_hamstrings"
   },
   {
     "subarea_id": "semimembranosus_1_l",
     "target_area": "허벅지",
-    "label_ko": "왼쪽 반막양근 · 1번 조각",
-    "label_en": "Left Semimembranosus (1)",
+    "label_ko": "왼쪽 반막양근",
+    "label_en": "Left Semimembranosus",
     "body_group": "hamstrings",
     "side": "left",
     "views": [
       "back"
     ],
     "atlas_muscle_ids": [
+      "semimembranosus_2_l",
       "semimembranosus_1_l"
     ],
     "is_legacy": false,
-    "sort_order": 3
+    "sort_order": 3,
+    "selection_kind": "artwork",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_thigh_medial_hamstrings"
   },
   {
     "subarea_id": "semitendinosus_r",
@@ -78,7 +106,13 @@
       "semitendinosus_r"
     ],
     "is_legacy": false,
-    "sort_order": 4
+    "sort_order": 4,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_thigh_medial_hamstrings"
   },
   {
     "subarea_id": "semitendinosus_l",
@@ -95,7 +129,13 @@
       "semitendinosus_l"
     ],
     "is_legacy": false,
-    "sort_order": 5
+    "sort_order": 5,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_thigh_medial_hamstrings"
   },
   {
     "subarea_id": "biceps_femoris_r",
@@ -111,7 +151,13 @@
       "biceps_femoris_r"
     ],
     "is_legacy": false,
-    "sort_order": 6
+    "sort_order": 6,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_thigh_biceps"
   },
   {
     "subarea_id": "biceps_femoris_l",
@@ -127,12 +173,18 @@
       "biceps_femoris_l"
     ],
     "is_legacy": false,
-    "sort_order": 7
+    "sort_order": 7,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_thigh_biceps"
   },
   {
     "subarea_id": "iliotibial_tract_r",
     "target_area": "허벅지",
-    "label_ko": "오른쪽 장경인대",
+    "label_ko": "오른쪽 장경인대 (결합조직)",
     "label_en": "Right Iliotibial Tract",
     "body_group": "legs",
     "side": "right",
@@ -144,12 +196,17 @@
       "iliotibial_tract_r"
     ],
     "is_legacy": false,
-    "sort_order": 8
+    "sort_order": 8,
+    "selection_kind": "connective_tissue",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": []
   },
   {
     "subarea_id": "iliotibial_tract_l",
     "target_area": "허벅지",
-    "label_ko": "왼쪽 장경인대",
+    "label_ko": "왼쪽 장경인대 (결합조직)",
     "label_en": "Left Iliotibial Tract",
     "body_group": "legs",
     "side": "left",
@@ -161,7 +218,12 @@
       "iliotibial_tract_l"
     ],
     "is_legacy": false,
-    "sort_order": 9
+    "sort_order": 9,
+    "selection_kind": "connective_tissue",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": []
   },
   {
     "subarea_id": "gastrocnemius_r",
@@ -178,7 +240,13 @@
       "gastrocnemius_r"
     ],
     "is_legacy": false,
-    "sort_order": 10
+    "sort_order": 10,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_calf_gastrocnemius"
   },
   {
     "subarea_id": "gastrocnemius_l",
@@ -195,7 +263,13 @@
       "gastrocnemius_l"
     ],
     "is_legacy": false,
-    "sort_order": 11
+    "sort_order": 11,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_calf_gastrocnemius"
   },
   {
     "subarea_id": "tibialis_anterior_l",
@@ -211,7 +285,13 @@
       "tibialis_anterior_l"
     ],
     "is_legacy": false,
-    "sort_order": 12
+    "sort_order": 12,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_shins"
   },
   {
     "subarea_id": "tibialis_anterior_r",
@@ -227,7 +307,13 @@
       "tibialis_anterior_r"
     ],
     "is_legacy": false,
-    "sort_order": 13
+    "sort_order": 13,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_shins"
   },
   {
     "subarea_id": "extensor_hallucis_longus_l",
@@ -243,7 +329,13 @@
       "extensor_hallucis_longus_l"
     ],
     "is_legacy": false,
-    "sort_order": 14
+    "sort_order": 14,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_shins"
   },
   {
     "subarea_id": "extensor_hallucis_longus_r",
@@ -259,7 +351,13 @@
       "extensor_hallucis_longus_r"
     ],
     "is_legacy": false,
-    "sort_order": 15
+    "sort_order": 15,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_shins"
   },
   {
     "subarea_id": "fibularis_longus_l",
@@ -275,7 +373,13 @@
       "fibularis_longus_l"
     ],
     "is_legacy": false,
-    "sort_order": 16
+    "sort_order": 16,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_calves"
   },
   {
     "subarea_id": "fibularis_longus_r",
@@ -291,7 +395,13 @@
       "fibularis_longus_r"
     ],
     "is_legacy": false,
-    "sort_order": 17
+    "sort_order": 17,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_calves"
   },
   {
     "subarea_id": "extensor_digitorum_longus_l",
@@ -307,7 +417,13 @@
       "extensor_digitorum_longus_l"
     ],
     "is_legacy": false,
-    "sort_order": 18
+    "sort_order": 18,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_shins"
   },
   {
     "subarea_id": "extensor_digitorum_longus_r",
@@ -323,7 +439,13 @@
       "extensor_digitorum_longus_r"
     ],
     "is_legacy": false,
-    "sort_order": 19
+    "sort_order": 19,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_shins"
   },
   {
     "subarea_id": "vastus_lateralis_l",
@@ -339,7 +461,13 @@
       "vastus_lateralis_l"
     ],
     "is_legacy": false,
-    "sort_order": 20
+    "sort_order": 20,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_thigh_lateralis"
   },
   {
     "subarea_id": "vastus_lateralis_r",
@@ -355,7 +483,13 @@
       "vastus_lateralis_r"
     ],
     "is_legacy": false,
-    "sort_order": 21
+    "sort_order": 21,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_thigh_lateralis"
   },
   {
     "subarea_id": "vastus_medialis_l",
@@ -371,7 +505,13 @@
       "vastus_medialis_l"
     ],
     "is_legacy": false,
-    "sort_order": 22
+    "sort_order": 22,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_thigh_medialis"
   },
   {
     "subarea_id": "vastus_medialis_r",
@@ -387,7 +527,13 @@
       "vastus_medialis_r"
     ],
     "is_legacy": false,
-    "sort_order": 23
+    "sort_order": 23,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_thigh_medialis"
   },
   {
     "subarea_id": "sartoris_l",
@@ -403,7 +549,12 @@
       "sartoris_l"
     ],
     "is_legacy": false,
-    "sort_order": 24
+    "sort_order": 24,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": []
   },
   {
     "subarea_id": "sartoris_r",
@@ -419,7 +570,12 @@
       "sartoris_r"
     ],
     "is_legacy": false,
-    "sort_order": 25
+    "sort_order": 25,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": []
   },
   {
     "subarea_id": "gracilis_l",
@@ -435,7 +591,13 @@
       "gracilis_l"
     ],
     "is_legacy": false,
-    "sort_order": 26
+    "sort_order": 26,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_thigh_inner"
   },
   {
     "subarea_id": "gracilis_r",
@@ -451,7 +613,13 @@
       "gracilis_r"
     ],
     "is_legacy": false,
-    "sort_order": 27
+    "sort_order": 27,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_thigh_inner"
   },
   {
     "subarea_id": "rectus_femoris_l",
@@ -467,7 +635,13 @@
       "rectus_femoris_l"
     ],
     "is_legacy": false,
-    "sort_order": 28
+    "sort_order": 28,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_thigh_rectus"
   },
   {
     "subarea_id": "rectus_femoris_r",
@@ -483,7 +657,13 @@
       "rectus_femoris_r"
     ],
     "is_legacy": false,
-    "sort_order": 29
+    "sort_order": 29,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_thigh_rectus"
   },
   {
     "subarea_id": "gluteus_maximus_r",
@@ -499,7 +679,13 @@
       "gluteus_maximus_r"
     ],
     "is_legacy": false,
-    "sort_order": 30
+    "sort_order": 30,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_glutes"
   },
   {
     "subarea_id": "gluteus_maximus_l",
@@ -515,13 +701,19 @@
       "gluteus_maximus_l"
     ],
     "is_legacy": false,
-    "sort_order": 31
+    "sort_order": 31,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_glutes"
   },
   {
     "subarea_id": "gluteus_medius_2_r",
     "target_area": "엉덩이",
-    "label_ko": "오른쪽 중둔근 · 2번 조각",
-    "label_en": "Right Gluteus Medius (2)",
+    "label_ko": "오른쪽 중둔근",
+    "label_en": "Right Gluteus medius",
     "body_group": "glutes",
     "side": "right",
     "views": [
@@ -529,16 +721,23 @@
       "back"
     ],
     "atlas_muscle_ids": [
-      "gluteus_medius_2_r"
+      "gluteus_medius_2_r",
+      "gluteus_medius_1_r"
     ],
     "is_legacy": false,
-    "sort_order": 32
+    "sort_order": 32,
+    "selection_kind": "artwork",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_glutes"
   },
   {
     "subarea_id": "gluteus_medius_2_l",
     "target_area": "엉덩이",
-    "label_ko": "왼쪽 중둔근 · 2번 조각",
-    "label_en": "Left Gluteus Medius (2)",
+    "label_ko": "왼쪽 중둔근",
+    "label_en": "Left Gluteus medius",
     "body_group": "glutes",
     "side": "left",
     "views": [
@@ -546,48 +745,71 @@
       "back"
     ],
     "atlas_muscle_ids": [
-      "gluteus_medius_2_l"
+      "gluteus_medius_2_l",
+      "gluteus_medius_1_l"
     ],
     "is_legacy": false,
-    "sort_order": 33
+    "sort_order": 33,
+    "selection_kind": "artwork",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_glutes"
   },
   {
     "subarea_id": "gluteus_medius_1_r",
     "target_area": "엉덩이",
-    "label_ko": "오른쪽 중둔근 · 1번 조각",
-    "label_en": "Right Gluteus Medius (1)",
+    "label_ko": "오른쪽 중둔근",
+    "label_en": "Right Gluteus medius",
     "body_group": "glutes",
     "side": "right",
     "views": [
+      "front",
       "back"
     ],
     "atlas_muscle_ids": [
+      "gluteus_medius_2_r",
       "gluteus_medius_1_r"
     ],
     "is_legacy": false,
-    "sort_order": 34
+    "sort_order": 34,
+    "selection_kind": "artwork",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_glutes"
   },
   {
     "subarea_id": "gluteus_medius_1_l",
     "target_area": "엉덩이",
-    "label_ko": "왼쪽 중둔근 · 1번 조각",
-    "label_en": "Left Gluteus Medius (1)",
+    "label_ko": "왼쪽 중둔근",
+    "label_en": "Left Gluteus medius",
     "body_group": "glutes",
     "side": "left",
     "views": [
+      "front",
       "back"
     ],
     "atlas_muscle_ids": [
+      "gluteus_medius_2_l",
       "gluteus_medius_1_l"
     ],
     "is_legacy": false,
-    "sort_order": 35
+    "sort_order": 35,
+    "selection_kind": "artwork",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_glutes"
   },
   {
     "subarea_id": "external_oblique_1_l",
     "target_area": "복근",
-    "label_ko": "왼쪽 외복사근 · 1번 조각",
-    "label_en": "Left External Oblique (1)",
+    "label_ko": "왼쪽 외복사근",
+    "label_en": "Left External oblique",
     "body_group": "core",
     "side": "left",
     "views": [
@@ -595,16 +817,29 @@
       "back"
     ],
     "atlas_muscle_ids": [
-      "external_oblique_1_l"
+      "external_oblique_1_l",
+      "external_oblique_2_l",
+      "external_oblique_3_l",
+      "external_oblique_4_l",
+      "external_oblique_5_l",
+      "external_oblique_6_l",
+      "external_oblique_7_l",
+      "external_oblique_8_l"
     ],
     "is_legacy": false,
-    "sort_order": 36
+    "sort_order": 36,
+    "selection_kind": "artwork",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_abs_external_oblique"
   },
   {
     "subarea_id": "external_oblique_1_r",
     "target_area": "복근",
-    "label_ko": "오른쪽 외복사근 · 1번 조각",
-    "label_en": "Right External Oblique (1)",
+    "label_ko": "오른쪽 외복사근",
+    "label_en": "Right External oblique",
     "body_group": "core",
     "side": "right",
     "views": [
@@ -612,346 +847,639 @@
       "back"
     ],
     "atlas_muscle_ids": [
-      "external_oblique_1_r"
+      "external_oblique_1_r",
+      "external_oblique_2_r",
+      "external_oblique_3_r",
+      "external_oblique_4_r",
+      "external_oblique_5_r",
+      "external_oblique_6_r",
+      "external_oblique_7_r",
+      "external_oblique_8_r"
     ],
     "is_legacy": false,
-    "sort_order": 37
+    "sort_order": 37,
+    "selection_kind": "artwork",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_abs_external_oblique"
   },
   {
     "subarea_id": "external_oblique_2_l",
     "target_area": "복근",
-    "label_ko": "왼쪽 외복사근 · 2번 조각",
-    "label_en": "Left External Oblique (2)",
+    "label_ko": "왼쪽 외복사근",
+    "label_en": "Left External oblique",
     "body_group": "core",
     "side": "left",
     "views": [
-      "front"
+      "front",
+      "back"
     ],
     "atlas_muscle_ids": [
-      "external_oblique_2_l"
+      "external_oblique_1_l",
+      "external_oblique_2_l",
+      "external_oblique_3_l",
+      "external_oblique_4_l",
+      "external_oblique_5_l",
+      "external_oblique_6_l",
+      "external_oblique_7_l",
+      "external_oblique_8_l"
     ],
     "is_legacy": false,
-    "sort_order": 38
+    "sort_order": 38,
+    "selection_kind": "artwork",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_abs_external_oblique"
   },
   {
     "subarea_id": "external_oblique_2_r",
     "target_area": "복근",
-    "label_ko": "오른쪽 외복사근 · 2번 조각",
-    "label_en": "Right External Oblique (2)",
+    "label_ko": "오른쪽 외복사근",
+    "label_en": "Right External oblique",
     "body_group": "core",
     "side": "right",
     "views": [
-      "front"
+      "front",
+      "back"
     ],
     "atlas_muscle_ids": [
-      "external_oblique_2_r"
+      "external_oblique_1_r",
+      "external_oblique_2_r",
+      "external_oblique_3_r",
+      "external_oblique_4_r",
+      "external_oblique_5_r",
+      "external_oblique_6_r",
+      "external_oblique_7_r",
+      "external_oblique_8_r"
     ],
     "is_legacy": false,
-    "sort_order": 39
+    "sort_order": 39,
+    "selection_kind": "artwork",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_abs_external_oblique"
   },
   {
     "subarea_id": "external_oblique_3_l",
     "target_area": "복근",
-    "label_ko": "왼쪽 외복사근 · 3번 조각",
-    "label_en": "Left External Oblique (3)",
+    "label_ko": "왼쪽 외복사근",
+    "label_en": "Left External oblique",
     "body_group": "core",
     "side": "left",
     "views": [
-      "front"
+      "front",
+      "back"
     ],
     "atlas_muscle_ids": [
-      "external_oblique_3_l"
+      "external_oblique_1_l",
+      "external_oblique_2_l",
+      "external_oblique_3_l",
+      "external_oblique_4_l",
+      "external_oblique_5_l",
+      "external_oblique_6_l",
+      "external_oblique_7_l",
+      "external_oblique_8_l"
     ],
     "is_legacy": false,
-    "sort_order": 40
+    "sort_order": 40,
+    "selection_kind": "artwork",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_abs_external_oblique"
   },
   {
     "subarea_id": "external_oblique_3_r",
     "target_area": "복근",
-    "label_ko": "오른쪽 외복사근 · 3번 조각",
-    "label_en": "Right External Oblique (3)",
+    "label_ko": "오른쪽 외복사근",
+    "label_en": "Right External oblique",
     "body_group": "core",
     "side": "right",
     "views": [
-      "front"
+      "front",
+      "back"
     ],
     "atlas_muscle_ids": [
-      "external_oblique_3_r"
+      "external_oblique_1_r",
+      "external_oblique_2_r",
+      "external_oblique_3_r",
+      "external_oblique_4_r",
+      "external_oblique_5_r",
+      "external_oblique_6_r",
+      "external_oblique_7_r",
+      "external_oblique_8_r"
     ],
     "is_legacy": false,
-    "sort_order": 41
+    "sort_order": 41,
+    "selection_kind": "artwork",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_abs_external_oblique"
   },
   {
     "subarea_id": "external_oblique_4_l",
     "target_area": "복근",
-    "label_ko": "왼쪽 외복사근 · 4번 조각",
-    "label_en": "Left External Oblique (4)",
+    "label_ko": "왼쪽 외복사근",
+    "label_en": "Left External oblique",
     "body_group": "core",
     "side": "left",
     "views": [
-      "front"
+      "front",
+      "back"
     ],
     "atlas_muscle_ids": [
-      "external_oblique_4_l"
+      "external_oblique_1_l",
+      "external_oblique_2_l",
+      "external_oblique_3_l",
+      "external_oblique_4_l",
+      "external_oblique_5_l",
+      "external_oblique_6_l",
+      "external_oblique_7_l",
+      "external_oblique_8_l"
     ],
     "is_legacy": false,
-    "sort_order": 42
+    "sort_order": 42,
+    "selection_kind": "artwork",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_abs_external_oblique"
   },
   {
     "subarea_id": "external_oblique_4_r",
     "target_area": "복근",
-    "label_ko": "오른쪽 외복사근 · 4번 조각",
-    "label_en": "Right External Oblique (4)",
+    "label_ko": "오른쪽 외복사근",
+    "label_en": "Right External oblique",
     "body_group": "core",
     "side": "right",
     "views": [
-      "front"
+      "front",
+      "back"
     ],
     "atlas_muscle_ids": [
-      "external_oblique_4_r"
+      "external_oblique_1_r",
+      "external_oblique_2_r",
+      "external_oblique_3_r",
+      "external_oblique_4_r",
+      "external_oblique_5_r",
+      "external_oblique_6_r",
+      "external_oblique_7_r",
+      "external_oblique_8_r"
     ],
     "is_legacy": false,
-    "sort_order": 43
+    "sort_order": 43,
+    "selection_kind": "artwork",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_abs_external_oblique"
   },
   {
     "subarea_id": "external_oblique_5_l",
     "target_area": "복근",
-    "label_ko": "왼쪽 외복사근 · 5번 조각",
-    "label_en": "Left External Oblique (5)",
+    "label_ko": "왼쪽 외복사근",
+    "label_en": "Left External oblique",
     "body_group": "core",
     "side": "left",
     "views": [
-      "front"
+      "front",
+      "back"
     ],
     "atlas_muscle_ids": [
-      "external_oblique_5_l"
+      "external_oblique_1_l",
+      "external_oblique_2_l",
+      "external_oblique_3_l",
+      "external_oblique_4_l",
+      "external_oblique_5_l",
+      "external_oblique_6_l",
+      "external_oblique_7_l",
+      "external_oblique_8_l"
     ],
     "is_legacy": false,
-    "sort_order": 44
+    "sort_order": 44,
+    "selection_kind": "artwork",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_abs_external_oblique"
   },
   {
     "subarea_id": "external_oblique_5_r",
     "target_area": "복근",
-    "label_ko": "오른쪽 외복사근 · 5번 조각",
-    "label_en": "Right External Oblique (5)",
+    "label_ko": "오른쪽 외복사근",
+    "label_en": "Right External oblique",
     "body_group": "core",
     "side": "right",
     "views": [
-      "front"
+      "front",
+      "back"
     ],
     "atlas_muscle_ids": [
-      "external_oblique_5_r"
+      "external_oblique_1_r",
+      "external_oblique_2_r",
+      "external_oblique_3_r",
+      "external_oblique_4_r",
+      "external_oblique_5_r",
+      "external_oblique_6_r",
+      "external_oblique_7_r",
+      "external_oblique_8_r"
     ],
     "is_legacy": false,
-    "sort_order": 45
+    "sort_order": 45,
+    "selection_kind": "artwork",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_abs_external_oblique"
   },
   {
     "subarea_id": "external_oblique_6_l",
     "target_area": "복근",
-    "label_ko": "왼쪽 외복사근 · 6번 조각",
-    "label_en": "Left External Oblique (6)",
+    "label_ko": "왼쪽 외복사근",
+    "label_en": "Left External oblique",
     "body_group": "core",
     "side": "left",
     "views": [
-      "front"
+      "front",
+      "back"
     ],
     "atlas_muscle_ids": [
-      "external_oblique_6_l"
+      "external_oblique_1_l",
+      "external_oblique_2_l",
+      "external_oblique_3_l",
+      "external_oblique_4_l",
+      "external_oblique_5_l",
+      "external_oblique_6_l",
+      "external_oblique_7_l",
+      "external_oblique_8_l"
     ],
     "is_legacy": false,
-    "sort_order": 46
+    "sort_order": 46,
+    "selection_kind": "artwork",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_abs_external_oblique"
   },
   {
     "subarea_id": "external_oblique_6_r",
     "target_area": "복근",
-    "label_ko": "오른쪽 외복사근 · 6번 조각",
-    "label_en": "Right External Oblique (6)",
+    "label_ko": "오른쪽 외복사근",
+    "label_en": "Right External oblique",
     "body_group": "core",
     "side": "right",
     "views": [
-      "front"
+      "front",
+      "back"
     ],
     "atlas_muscle_ids": [
-      "external_oblique_6_r"
+      "external_oblique_1_r",
+      "external_oblique_2_r",
+      "external_oblique_3_r",
+      "external_oblique_4_r",
+      "external_oblique_5_r",
+      "external_oblique_6_r",
+      "external_oblique_7_r",
+      "external_oblique_8_r"
     ],
     "is_legacy": false,
-    "sort_order": 47
+    "sort_order": 47,
+    "selection_kind": "artwork",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_abs_external_oblique"
   },
   {
     "subarea_id": "external_oblique_7_l",
     "target_area": "복근",
-    "label_ko": "왼쪽 외복사근 · 7번 조각",
-    "label_en": "Left External Oblique (7)",
+    "label_ko": "왼쪽 외복사근",
+    "label_en": "Left External oblique",
     "body_group": "core",
     "side": "left",
     "views": [
-      "front"
+      "front",
+      "back"
     ],
     "atlas_muscle_ids": [
-      "external_oblique_7_l"
+      "external_oblique_1_l",
+      "external_oblique_2_l",
+      "external_oblique_3_l",
+      "external_oblique_4_l",
+      "external_oblique_5_l",
+      "external_oblique_6_l",
+      "external_oblique_7_l",
+      "external_oblique_8_l"
     ],
     "is_legacy": false,
-    "sort_order": 48
+    "sort_order": 48,
+    "selection_kind": "artwork",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_abs_external_oblique"
   },
   {
     "subarea_id": "external_oblique_7_r",
     "target_area": "복근",
-    "label_ko": "오른쪽 외복사근 · 7번 조각",
-    "label_en": "Right External Oblique (7)",
+    "label_ko": "오른쪽 외복사근",
+    "label_en": "Right External oblique",
     "body_group": "core",
     "side": "right",
     "views": [
-      "front"
+      "front",
+      "back"
     ],
     "atlas_muscle_ids": [
-      "external_oblique_7_r"
+      "external_oblique_1_r",
+      "external_oblique_2_r",
+      "external_oblique_3_r",
+      "external_oblique_4_r",
+      "external_oblique_5_r",
+      "external_oblique_6_r",
+      "external_oblique_7_r",
+      "external_oblique_8_r"
     ],
     "is_legacy": false,
-    "sort_order": 49
+    "sort_order": 49,
+    "selection_kind": "artwork",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_abs_external_oblique"
   },
   {
     "subarea_id": "external_oblique_8_l",
     "target_area": "복근",
-    "label_ko": "왼쪽 외복사근 · 8번 조각",
-    "label_en": "Left External Oblique (8)",
+    "label_ko": "왼쪽 외복사근",
+    "label_en": "Left External oblique",
     "body_group": "core",
     "side": "left",
     "views": [
-      "front"
+      "front",
+      "back"
     ],
     "atlas_muscle_ids": [
+      "external_oblique_1_l",
+      "external_oblique_2_l",
+      "external_oblique_3_l",
+      "external_oblique_4_l",
+      "external_oblique_5_l",
+      "external_oblique_6_l",
+      "external_oblique_7_l",
       "external_oblique_8_l"
     ],
     "is_legacy": false,
-    "sort_order": 50
+    "sort_order": 50,
+    "selection_kind": "artwork",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_abs_external_oblique"
   },
   {
     "subarea_id": "external_oblique_8_r",
     "target_area": "복근",
-    "label_ko": "오른쪽 외복사근 · 8번 조각",
-    "label_en": "Right External Oblique (8)",
+    "label_ko": "오른쪽 외복사근",
+    "label_en": "Right External oblique",
     "body_group": "core",
     "side": "right",
     "views": [
-      "front"
+      "front",
+      "back"
     ],
     "atlas_muscle_ids": [
+      "external_oblique_1_r",
+      "external_oblique_2_r",
+      "external_oblique_3_r",
+      "external_oblique_4_r",
+      "external_oblique_5_r",
+      "external_oblique_6_r",
+      "external_oblique_7_r",
       "external_oblique_8_r"
     ],
     "is_legacy": false,
-    "sort_order": 51
+    "sort_order": 51,
+    "selection_kind": "artwork",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_abs_external_oblique"
   },
   {
     "subarea_id": "rectus_abdominis_1",
     "target_area": "복근",
-    "label_ko": "복직근 · 1번 조각",
-    "label_en": "Rectus Abdominis (1)",
+    "label_ko": "복직근",
+    "label_en": "Rectus abdominis",
     "body_group": "core",
     "side": "center",
     "views": [
       "front"
     ],
     "atlas_muscle_ids": [
-      "rectus_abdominis_1"
+      "rectus_abdominis_1",
+      "rectus_abdominis_2_l",
+      "rectus_abdominis_2_r",
+      "rectus_abdominis_3_l",
+      "rectus_abdominis_3_r",
+      "rectus_abdominis_4_l",
+      "rectus_abdominis_4_r"
     ],
     "is_legacy": false,
-    "sort_order": 52
+    "sort_order": 52,
+    "selection_kind": "artwork",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_abs_front"
   },
   {
     "subarea_id": "rectus_abdominis_2_l",
     "target_area": "복근",
-    "label_ko": "왼쪽 복직근 · 2번 조각",
-    "label_en": "Left Rectus Abdominis (2)",
+    "label_ko": "복직근",
+    "label_en": "Rectus abdominis",
     "body_group": "core",
     "side": "left",
     "views": [
       "front"
     ],
     "atlas_muscle_ids": [
-      "rectus_abdominis_2_l"
+      "rectus_abdominis_1",
+      "rectus_abdominis_2_l",
+      "rectus_abdominis_2_r",
+      "rectus_abdominis_3_l",
+      "rectus_abdominis_3_r",
+      "rectus_abdominis_4_l",
+      "rectus_abdominis_4_r"
     ],
     "is_legacy": false,
-    "sort_order": 53
+    "sort_order": 53,
+    "selection_kind": "artwork",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_abs_front"
   },
   {
     "subarea_id": "rectus_abdominis_2_r",
     "target_area": "복근",
-    "label_ko": "오른쪽 복직근 · 2번 조각",
-    "label_en": "Right Rectus Abdominis (2)",
+    "label_ko": "복직근",
+    "label_en": "Rectus abdominis",
     "body_group": "core",
     "side": "right",
     "views": [
       "front"
     ],
     "atlas_muscle_ids": [
-      "rectus_abdominis_2_r"
+      "rectus_abdominis_1",
+      "rectus_abdominis_2_l",
+      "rectus_abdominis_2_r",
+      "rectus_abdominis_3_l",
+      "rectus_abdominis_3_r",
+      "rectus_abdominis_4_l",
+      "rectus_abdominis_4_r"
     ],
     "is_legacy": false,
-    "sort_order": 54
+    "sort_order": 54,
+    "selection_kind": "artwork",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_abs_front"
   },
   {
     "subarea_id": "rectus_abdominis_3_l",
     "target_area": "복근",
-    "label_ko": "왼쪽 복직근 · 3번 조각",
-    "label_en": "Left Rectus Abdominis (3)",
+    "label_ko": "복직근",
+    "label_en": "Rectus abdominis",
     "body_group": "core",
     "side": "left",
     "views": [
       "front"
     ],
     "atlas_muscle_ids": [
-      "rectus_abdominis_3_l"
+      "rectus_abdominis_1",
+      "rectus_abdominis_2_l",
+      "rectus_abdominis_2_r",
+      "rectus_abdominis_3_l",
+      "rectus_abdominis_3_r",
+      "rectus_abdominis_4_l",
+      "rectus_abdominis_4_r"
     ],
     "is_legacy": false,
-    "sort_order": 55
+    "sort_order": 55,
+    "selection_kind": "artwork",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_abs_front"
   },
   {
     "subarea_id": "rectus_abdominis_3_r",
     "target_area": "복근",
-    "label_ko": "오른쪽 복직근 · 3번 조각",
-    "label_en": "Right Rectus Abdominis (3)",
+    "label_ko": "복직근",
+    "label_en": "Rectus abdominis",
     "body_group": "core",
     "side": "right",
     "views": [
       "front"
     ],
     "atlas_muscle_ids": [
-      "rectus_abdominis_3_r"
+      "rectus_abdominis_1",
+      "rectus_abdominis_2_l",
+      "rectus_abdominis_2_r",
+      "rectus_abdominis_3_l",
+      "rectus_abdominis_3_r",
+      "rectus_abdominis_4_l",
+      "rectus_abdominis_4_r"
     ],
     "is_legacy": false,
-    "sort_order": 56
+    "sort_order": 56,
+    "selection_kind": "artwork",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_abs_front"
   },
   {
     "subarea_id": "rectus_abdominis_4_l",
     "target_area": "복근",
-    "label_ko": "왼쪽 복직근 · 4번 조각",
-    "label_en": "Left Rectus Abdominis (4)",
+    "label_ko": "복직근",
+    "label_en": "Rectus abdominis",
     "body_group": "core",
     "side": "left",
     "views": [
       "front"
     ],
     "atlas_muscle_ids": [
-      "rectus_abdominis_4_l"
+      "rectus_abdominis_1",
+      "rectus_abdominis_2_l",
+      "rectus_abdominis_2_r",
+      "rectus_abdominis_3_l",
+      "rectus_abdominis_3_r",
+      "rectus_abdominis_4_l",
+      "rectus_abdominis_4_r"
     ],
     "is_legacy": false,
-    "sort_order": 57
+    "sort_order": 57,
+    "selection_kind": "artwork",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_abs_front"
   },
   {
     "subarea_id": "rectus_abdominis_4_r",
     "target_area": "복근",
-    "label_ko": "오른쪽 복직근 · 4번 조각",
-    "label_en": "Right Rectus Abdominis (4)",
+    "label_ko": "복직근",
+    "label_en": "Rectus abdominis",
     "body_group": "core",
     "side": "right",
     "views": [
       "front"
     ],
     "atlas_muscle_ids": [
+      "rectus_abdominis_1",
+      "rectus_abdominis_2_l",
+      "rectus_abdominis_2_r",
+      "rectus_abdominis_3_l",
+      "rectus_abdominis_3_r",
+      "rectus_abdominis_4_l",
       "rectus_abdominis_4_r"
     ],
     "is_legacy": false,
-    "sort_order": 58
+    "sort_order": 58,
+    "selection_kind": "artwork",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_abs_front"
   },
   {
     "subarea_id": "extensor_digitorum_r",
@@ -967,7 +1495,13 @@
       "extensor_digitorum_r"
     ],
     "is_legacy": false,
-    "sort_order": 59
+    "sort_order": 59,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_forearm_extensors"
   },
   {
     "subarea_id": "extensor_digitorum_l",
@@ -983,7 +1517,13 @@
       "extensor_digitorum_l"
     ],
     "is_legacy": false,
-    "sort_order": 60
+    "sort_order": 60,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_forearm_extensors"
   },
   {
     "subarea_id": "brachioradialis_r",
@@ -1000,7 +1540,12 @@
       "brachioradialis_r"
     ],
     "is_legacy": false,
-    "sort_order": 61
+    "sort_order": 61,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": []
   },
   {
     "subarea_id": "brachioradialis_l",
@@ -1017,7 +1562,12 @@
       "brachioradialis_l"
     ],
     "is_legacy": false,
-    "sort_order": 62
+    "sort_order": 62,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": []
   },
   {
     "subarea_id": "extensor_carpi_ulnaris_r",
@@ -1033,7 +1583,13 @@
       "extensor_carpi_ulnaris_r"
     ],
     "is_legacy": false,
-    "sort_order": 63
+    "sort_order": 63,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_forearm_extensors"
   },
   {
     "subarea_id": "extensor_carpi_ulnaris_l",
@@ -1049,7 +1605,13 @@
       "extensor_carpi_ulnaris_l"
     ],
     "is_legacy": false,
-    "sort_order": 64
+    "sort_order": 64,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_forearm_extensors"
   },
   {
     "subarea_id": "anconeus_r",
@@ -1065,7 +1627,13 @@
       "anconeus_r"
     ],
     "is_legacy": false,
-    "sort_order": 65
+    "sort_order": 65,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_triceps"
   },
   {
     "subarea_id": "anconeus_l",
@@ -1081,7 +1649,13 @@
       "anconeus_l"
     ],
     "is_legacy": false,
-    "sort_order": 66
+    "sort_order": 66,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_triceps"
   },
   {
     "subarea_id": "flexor_carpi_ulnaris_r",
@@ -1097,7 +1671,13 @@
       "flexor_carpi_ulnaris_r"
     ],
     "is_legacy": false,
-    "sort_order": 67
+    "sort_order": 67,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_forearm_flexors"
   },
   {
     "subarea_id": "flexor_carpi_ulnaris_l",
@@ -1113,7 +1693,13 @@
       "flexor_carpi_ulnaris_l"
     ],
     "is_legacy": false,
-    "sort_order": 68
+    "sort_order": 68,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_forearm_flexors"
   },
   {
     "subarea_id": "triceps_brachii_caput_laterale_r",
@@ -1130,7 +1716,13 @@
       "triceps_brachii_caput_laterale_r"
     ],
     "is_legacy": false,
-    "sort_order": 69
+    "sort_order": 69,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_triceps_lateral"
   },
   {
     "subarea_id": "triceps_brachii_caput_laterale_l",
@@ -1147,7 +1739,13 @@
       "triceps_brachii_caput_laterale_l"
     ],
     "is_legacy": false,
-    "sort_order": 70
+    "sort_order": 70,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_triceps_lateral"
   },
   {
     "subarea_id": "triceps_brachii_caput_longum_r",
@@ -1164,7 +1762,13 @@
       "triceps_brachii_caput_longum_r"
     ],
     "is_legacy": false,
-    "sort_order": 71
+    "sort_order": 71,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_triceps_long"
   },
   {
     "subarea_id": "triceps_brachii_caput_longum_l",
@@ -1181,7 +1785,13 @@
       "triceps_brachii_caput_longum_l"
     ],
     "is_legacy": false,
-    "sort_order": 72
+    "sort_order": 72,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_triceps_long"
   },
   {
     "subarea_id": "triceps_brachii_caput_mediale_r",
@@ -1197,7 +1807,13 @@
       "triceps_brachii_caput_mediale_r"
     ],
     "is_legacy": false,
-    "sort_order": 73
+    "sort_order": 73,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_triceps_medial"
   },
   {
     "subarea_id": "triceps_brachii_caput_mediale_l",
@@ -1213,7 +1829,13 @@
       "triceps_brachii_caput_mediale_l"
     ],
     "is_legacy": false,
-    "sort_order": 74
+    "sort_order": 74,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_triceps_medial"
   },
   {
     "subarea_id": "flexor_digitorum_superficialis_l",
@@ -1229,7 +1851,13 @@
       "flexor_digitorum_superficialis_l"
     ],
     "is_legacy": false,
-    "sort_order": 75
+    "sort_order": 75,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_forearm_flexors"
   },
   {
     "subarea_id": "flexor_digitorum_superficialis_r",
@@ -1245,7 +1873,13 @@
       "flexor_digitorum_superficialis_r"
     ],
     "is_legacy": false,
-    "sort_order": 76
+    "sort_order": 76,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_forearm_flexors"
   },
   {
     "subarea_id": "pronator_quadratus_l",
@@ -1261,7 +1895,13 @@
       "pronator_quadratus_l"
     ],
     "is_legacy": false,
-    "sort_order": 77
+    "sort_order": 77,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_forearm_flexors"
   },
   {
     "subarea_id": "pronator_quadratus_r",
@@ -1277,7 +1917,13 @@
       "pronator_quadratus_r"
     ],
     "is_legacy": false,
-    "sort_order": 78
+    "sort_order": 78,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_forearm_flexors"
   },
   {
     "subarea_id": "extensor_carpi_radialis_longus_l",
@@ -1293,7 +1939,13 @@
       "extensor_carpi_radialis_longus_l"
     ],
     "is_legacy": false,
-    "sort_order": 79
+    "sort_order": 79,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_forearm_extensors"
   },
   {
     "subarea_id": "extensor_carpi_radialis_longus_r",
@@ -1309,7 +1961,13 @@
       "extensor_carpi_radialis_longus_r"
     ],
     "is_legacy": false,
-    "sort_order": 80
+    "sort_order": 80,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_forearm_extensors"
   },
   {
     "subarea_id": "palmaris_longus_l",
@@ -1325,7 +1983,13 @@
       "palmaris_longus_l"
     ],
     "is_legacy": false,
-    "sort_order": 81
+    "sort_order": 81,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_forearm_flexors"
   },
   {
     "subarea_id": "palmaris_longus_r",
@@ -1341,7 +2005,13 @@
       "palmaris_longus_r"
     ],
     "is_legacy": false,
-    "sort_order": 82
+    "sort_order": 82,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_forearm_flexors"
   },
   {
     "subarea_id": "flexor_carpi_radialis_l",
@@ -1357,7 +2027,13 @@
       "flexor_carpi_radialis_l"
     ],
     "is_legacy": false,
-    "sort_order": 83
+    "sort_order": 83,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_forearm_flexors"
   },
   {
     "subarea_id": "flexor_carpi_radialis_r",
@@ -1373,7 +2049,13 @@
       "flexor_carpi_radialis_r"
     ],
     "is_legacy": false,
-    "sort_order": 84
+    "sort_order": 84,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_forearm_flexors"
   },
   {
     "subarea_id": "pronator_teres_l",
@@ -1389,7 +2071,13 @@
       "pronator_teres_l"
     ],
     "is_legacy": false,
-    "sort_order": 85
+    "sort_order": 85,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_forearm_flexors"
   },
   {
     "subarea_id": "pronator_teres_r",
@@ -1405,7 +2093,13 @@
       "pronator_teres_r"
     ],
     "is_legacy": false,
-    "sort_order": 86
+    "sort_order": 86,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_forearm_flexors"
   },
   {
     "subarea_id": "biceps_brachii_caput_breve_l",
@@ -1421,7 +2115,13 @@
       "biceps_brachii_caput_breve_l"
     ],
     "is_legacy": false,
-    "sort_order": 87
+    "sort_order": 87,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_biceps_short"
   },
   {
     "subarea_id": "biceps_brachii_caput_breve_r",
@@ -1437,7 +2137,13 @@
       "biceps_brachii_caput_breve_r"
     ],
     "is_legacy": false,
-    "sort_order": 88
+    "sort_order": 88,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_biceps_short"
   },
   {
     "subarea_id": "biceps_brachii_caput_longum_l",
@@ -1453,7 +2159,13 @@
       "biceps_brachii_caput_longum_l"
     ],
     "is_legacy": false,
-    "sort_order": 89
+    "sort_order": 89,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_biceps_long"
   },
   {
     "subarea_id": "biceps_brachii_caput_longum_r",
@@ -1469,7 +2181,13 @@
       "biceps_brachii_caput_longum_r"
     ],
     "is_legacy": false,
-    "sort_order": 90
+    "sort_order": 90,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_biceps_long"
   },
   {
     "subarea_id": "sternocleidomastoid_r",
@@ -1486,7 +2204,13 @@
       "sternocleidomastoid_r"
     ],
     "is_legacy": false,
-    "sort_order": 91
+    "sort_order": 91,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_neck"
   },
   {
     "subarea_id": "sternocleidomastoid_l",
@@ -1503,7 +2227,13 @@
       "sternocleidomastoid_l"
     ],
     "is_legacy": false,
-    "sort_order": 92
+    "sort_order": 92,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_neck"
   },
   {
     "subarea_id": "platysma",
@@ -1519,7 +2249,13 @@
       "platysma"
     ],
     "is_legacy": false,
-    "sort_order": 93
+    "sort_order": 93,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_neck"
   },
   {
     "subarea_id": "sternohyoid",
@@ -1535,7 +2271,13 @@
       "sternohyoid"
     ],
     "is_legacy": false,
-    "sort_order": 94
+    "sort_order": 94,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_neck"
   },
   {
     "subarea_id": "infraspinatus_r",
@@ -1551,7 +2293,13 @@
       "infraspinatus_r"
     ],
     "is_legacy": false,
-    "sort_order": 95
+    "sort_order": 95,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_back_upper"
   },
   {
     "subarea_id": "infraspinatus_l",
@@ -1567,7 +2315,13 @@
       "infraspinatus_l"
     ],
     "is_legacy": false,
-    "sort_order": 96
+    "sort_order": 96,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_back_upper"
   },
   {
     "subarea_id": "latissimus_dorsi_r",
@@ -1584,7 +2338,13 @@
       "latissimus_dorsi_r"
     ],
     "is_legacy": false,
-    "sort_order": 97
+    "sort_order": 97,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_back_lats"
   },
   {
     "subarea_id": "latissimus_dorsi_l",
@@ -1601,7 +2361,13 @@
       "latissimus_dorsi_l"
     ],
     "is_legacy": false,
-    "sort_order": 98
+    "sort_order": 98,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_back_lats"
   },
   {
     "subarea_id": "lateral_deltoid_r",
@@ -1618,7 +2384,13 @@
       "lateral_deltoid_r"
     ],
     "is_legacy": false,
-    "sort_order": 99
+    "sort_order": 99,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_shoulder_side"
   },
   {
     "subarea_id": "lateral_deltoid_l",
@@ -1635,7 +2407,13 @@
       "lateral_deltoid_l"
     ],
     "is_legacy": false,
-    "sort_order": 100
+    "sort_order": 100,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_shoulder_side"
   },
   {
     "subarea_id": "posterior_deltoid_r",
@@ -1651,7 +2429,13 @@
       "posterior_deltoid_r"
     ],
     "is_legacy": false,
-    "sort_order": 101
+    "sort_order": 101,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_shoulder_rear"
   },
   {
     "subarea_id": "posterior_deltoid_l",
@@ -1667,7 +2451,13 @@
       "posterior_deltoid_l"
     ],
     "is_legacy": false,
-    "sort_order": 102
+    "sort_order": 102,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_shoulder_rear"
   },
   {
     "subarea_id": "trapezius_upper_r",
@@ -1684,7 +2474,13 @@
       "trapezius_upper_r"
     ],
     "is_legacy": false,
-    "sort_order": 103
+    "sort_order": 103,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_back_traps_upper"
   },
   {
     "subarea_id": "trapezius_upper_l",
@@ -1701,7 +2497,13 @@
       "trapezius_upper_l"
     ],
     "is_legacy": false,
-    "sort_order": 104
+    "sort_order": 104,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_back_traps_upper"
   },
   {
     "subarea_id": "trapezius_middle_r",
@@ -1717,7 +2519,13 @@
       "trapezius_middle_r"
     ],
     "is_legacy": false,
-    "sort_order": 105
+    "sort_order": 105,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_back_traps_middle"
   },
   {
     "subarea_id": "trapezius_middle_l",
@@ -1733,7 +2541,13 @@
       "trapezius_middle_l"
     ],
     "is_legacy": false,
-    "sort_order": 106
+    "sort_order": 106,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_back_traps_middle"
   },
   {
     "subarea_id": "trapezius_lower_r",
@@ -1749,7 +2563,13 @@
       "trapezius_lower_r"
     ],
     "is_legacy": false,
-    "sort_order": 107
+    "sort_order": 107,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_back_traps_lower"
   },
   {
     "subarea_id": "trapezius_lower_l",
@@ -1765,7 +2585,13 @@
       "trapezius_lower_l"
     ],
     "is_legacy": false,
-    "sort_order": 108
+    "sort_order": 108,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_back_traps_lower"
   },
   {
     "subarea_id": "anterior_deltoid_l",
@@ -1781,7 +2607,13 @@
       "anterior_deltoid_l"
     ],
     "is_legacy": false,
-    "sort_order": 109
+    "sort_order": 109,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_shoulder_front"
   },
   {
     "subarea_id": "anterior_deltoid_r",
@@ -1797,7 +2629,13 @@
       "anterior_deltoid_r"
     ],
     "is_legacy": false,
-    "sort_order": 110
+    "sort_order": 110,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_shoulder_front"
   },
   {
     "subarea_id": "pectoralis_major_l",
@@ -1813,7 +2651,13 @@
       "pectoralis_major_l"
     ],
     "is_legacy": false,
-    "sort_order": 111
+    "sort_order": 111,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_chest_all"
   },
   {
     "subarea_id": "pectoralis_major_r",
@@ -1829,7 +2673,13 @@
       "pectoralis_major_r"
     ],
     "is_legacy": false,
-    "sort_order": 112
+    "sort_order": 112,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_chest_all"
   },
   {
     "subarea_id": "adductor_magnus_l",
@@ -1845,7 +2695,13 @@
       "adductor_magnus_l"
     ],
     "is_legacy": false,
-    "sort_order": 113
+    "sort_order": 113,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_thigh_inner"
   },
   {
     "subarea_id": "adductor_magnus_r",
@@ -1861,7 +2717,13 @@
       "adductor_magnus_r"
     ],
     "is_legacy": false,
-    "sort_order": 114
+    "sort_order": 114,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_thigh_inner"
   },
   {
     "subarea_id": "adductor_longus_l",
@@ -1877,7 +2739,13 @@
       "adductor_longus_l"
     ],
     "is_legacy": false,
-    "sort_order": 115
+    "sort_order": 115,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_thigh_inner"
   },
   {
     "subarea_id": "adductor_longus_r",
@@ -1893,7 +2761,13 @@
       "adductor_longus_r"
     ],
     "is_legacy": false,
-    "sort_order": 116
+    "sort_order": 116,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_thigh_inner"
   },
   {
     "subarea_id": "pectineus_l",
@@ -1909,7 +2783,13 @@
       "pectineus_l"
     ],
     "is_legacy": false,
-    "sort_order": 117
+    "sort_order": 117,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_thigh_inner"
   },
   {
     "subarea_id": "pectineus_r",
@@ -1925,7 +2805,13 @@
       "pectineus_r"
     ],
     "is_legacy": false,
-    "sort_order": 118
+    "sort_order": 118,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_thigh_inner"
   },
   {
     "subarea_id": "legacy_19b43f0351f31cb5f46cec020283623a",
@@ -1940,7 +2826,13 @@
       "pectoralis_major_r"
     ],
     "is_legacy": true,
-    "sort_order": 119
+    "sort_order": 119,
+    "selection_kind": "muscle_group",
+    "map_precision": "partial",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_chest_all"
   },
   {
     "subarea_id": "legacy_c1f1aab5a2062ff26f917dd9da22b122",
@@ -1952,7 +2844,13 @@
     "views": [],
     "atlas_muscle_ids": [],
     "is_legacy": true,
-    "sort_order": 120
+    "sort_order": 120,
+    "selection_kind": "muscle",
+    "map_precision": "none",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_chest_all"
   },
   {
     "subarea_id": "legacy_85076ba2128783a70863e7c6d643f91a",
@@ -1967,7 +2865,14 @@
       "pectoralis_major_r"
     ],
     "is_legacy": true,
-    "sort_order": 121
+    "sort_order": 121,
+    "selection_kind": "region",
+    "map_precision": "whole_muscle",
+    "selection_group": "chest_regions",
+    "parent_subarea_ids": [],
+    "is_training_target": false,
+    "map_selectable": false,
+    "training_target_id": "training_chest_upper"
   },
   {
     "subarea_id": "legacy_a9c0c429862432e72c3b89114948c1a5",
@@ -1982,7 +2887,14 @@
       "pectoralis_major_r"
     ],
     "is_legacy": true,
-    "sort_order": 122
+    "sort_order": 122,
+    "selection_kind": "region",
+    "map_precision": "whole_muscle",
+    "selection_group": "chest_regions",
+    "parent_subarea_ids": [],
+    "is_training_target": false,
+    "map_selectable": false,
+    "training_target_id": "training_chest_middle"
   },
   {
     "subarea_id": "legacy_2481795132c1cd5a1ed41558eb58d803",
@@ -1997,7 +2909,14 @@
       "pectoralis_major_r"
     ],
     "is_legacy": true,
-    "sort_order": 123
+    "sort_order": 123,
+    "selection_kind": "region",
+    "map_precision": "whole_muscle",
+    "selection_group": "chest_regions",
+    "parent_subarea_ids": [],
+    "is_training_target": false,
+    "map_selectable": false,
+    "training_target_id": "training_chest_lower"
   },
   {
     "subarea_id": "legacy_08bae452eef9fd416a8e46ef9e144b3f",
@@ -2014,7 +2933,14 @@
       "trapezius_middle_l"
     ],
     "is_legacy": true,
-    "sort_order": 124
+    "sort_order": 124,
+    "selection_kind": "focus",
+    "map_precision": "partial",
+    "selection_group": "back_focus",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_back_upper"
   },
   {
     "subarea_id": "legacy_cca34131cbf0d5a60a535450770df683",
@@ -2031,7 +2957,14 @@
       "trapezius_lower_l"
     ],
     "is_legacy": true,
-    "sort_order": 125
+    "sort_order": 125,
+    "selection_kind": "focus",
+    "map_precision": "partial",
+    "selection_group": "back_focus",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_back_upper"
   },
   {
     "subarea_id": "legacy_84f4e4ca21e51e0542c78fe87965dd96",
@@ -2043,7 +2976,14 @@
     "views": [],
     "atlas_muscle_ids": [],
     "is_legacy": true,
-    "sort_order": 126
+    "sort_order": 126,
+    "selection_kind": "focus",
+    "map_precision": "none",
+    "selection_group": "back_focus",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_back_lower"
   },
   {
     "subarea_id": "legacy_85714abbb8fef906e72ddaeaa21219e8",
@@ -2058,7 +2998,13 @@
       "latissimus_dorsi_l"
     ],
     "is_legacy": true,
-    "sort_order": 127
+    "sort_order": 127,
+    "selection_kind": "muscle_group",
+    "map_precision": "partial",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_back_lats"
   },
   {
     "subarea_id": "legacy_3eb716d552fd918ebea2af39c37e728b",
@@ -2073,7 +3019,14 @@
       "latissimus_dorsi_l"
     ],
     "is_legacy": true,
-    "sort_order": 128
+    "sort_order": 128,
+    "selection_kind": "region",
+    "map_precision": "whole_muscle",
+    "selection_group": "lat_regions",
+    "parent_subarea_ids": [],
+    "is_training_target": false,
+    "map_selectable": false,
+    "training_target_id": "training_back_lats_upper"
   },
   {
     "subarea_id": "legacy_7edc87c4ac9e7096be41f31df8d7e720",
@@ -2088,7 +3041,14 @@
       "latissimus_dorsi_l"
     ],
     "is_legacy": true,
-    "sort_order": 129
+    "sort_order": 129,
+    "selection_kind": "region",
+    "map_precision": "whole_muscle",
+    "selection_group": "lat_regions",
+    "parent_subarea_ids": [],
+    "is_training_target": false,
+    "map_selectable": false,
+    "training_target_id": "training_back_lats_lower"
   },
   {
     "subarea_id": "legacy_c030b68c72c07e4c497e92b88f1a20f8",
@@ -2107,7 +3067,13 @@
       "trapezius_lower_l"
     ],
     "is_legacy": true,
-    "sort_order": 130
+    "sort_order": 130,
+    "selection_kind": "muscle_group",
+    "map_precision": "partial",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_back_upper"
   },
   {
     "subarea_id": "legacy_79635616ce6211ce25f1952401b5065e",
@@ -2122,7 +3088,14 @@
       "trapezius_upper_l"
     ],
     "is_legacy": true,
-    "sort_order": 131
+    "sort_order": 131,
+    "selection_kind": "muscle_head",
+    "map_precision": "exact",
+    "selection_group": "trapezius_parts",
+    "parent_subarea_ids": [],
+    "is_training_target": false,
+    "map_selectable": false,
+    "training_target_id": "training_back_traps_upper"
   },
   {
     "subarea_id": "legacy_1bb08332523ec320219a5d70d79987dd",
@@ -2137,7 +3110,14 @@
       "trapezius_middle_l"
     ],
     "is_legacy": true,
-    "sort_order": 132
+    "sort_order": 132,
+    "selection_kind": "muscle_head",
+    "map_precision": "exact",
+    "selection_group": "trapezius_parts",
+    "parent_subarea_ids": [],
+    "is_training_target": false,
+    "map_selectable": false,
+    "training_target_id": "training_back_traps_middle"
   },
   {
     "subarea_id": "legacy_f21bbe94401123d09b443c6c7dc8806f",
@@ -2152,7 +3132,14 @@
       "trapezius_lower_l"
     ],
     "is_legacy": true,
-    "sort_order": 133
+    "sort_order": 133,
+    "selection_kind": "muscle_head",
+    "map_precision": "exact",
+    "selection_group": "trapezius_parts",
+    "parent_subarea_ids": [],
+    "is_training_target": false,
+    "map_selectable": false,
+    "training_target_id": "training_back_traps_lower"
   },
   {
     "subarea_id": "legacy_5e306b1290f360510717ebb590e09d57",
@@ -2164,7 +3151,13 @@
     "views": [],
     "atlas_muscle_ids": [],
     "is_legacy": true,
-    "sort_order": 134
+    "sort_order": 134,
+    "selection_kind": "muscle_group",
+    "map_precision": "none",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_back_rhomboids"
   },
   {
     "subarea_id": "legacy_ea9be4fa4545aca65ff9c61aabc80171",
@@ -2176,7 +3169,13 @@
     "views": [],
     "atlas_muscle_ids": [],
     "is_legacy": true,
-    "sort_order": 135
+    "sort_order": 135,
+    "selection_kind": "muscle_group",
+    "map_precision": "none",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_back_erectors"
   },
   {
     "subarea_id": "legacy_e9c5dab6c4762cdbfc4cc800252ec6f7",
@@ -2188,7 +3187,13 @@
     "views": [],
     "atlas_muscle_ids": [],
     "is_legacy": true,
-    "sort_order": 136
+    "sort_order": 136,
+    "selection_kind": "muscle",
+    "map_precision": "none",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_back_teres"
   },
   {
     "subarea_id": "legacy_ad82e31631dc50bb932dd4482fd5a707",
@@ -2203,7 +3208,14 @@
       "anterior_deltoid_r"
     ],
     "is_legacy": true,
-    "sort_order": 137
+    "sort_order": 137,
+    "selection_kind": "muscle_head",
+    "map_precision": "exact",
+    "selection_group": "deltoid_parts",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_shoulder_front"
   },
   {
     "subarea_id": "legacy_872e112e13904a57bdebf1af19803918",
@@ -2218,7 +3230,14 @@
       "lateral_deltoid_l"
     ],
     "is_legacy": true,
-    "sort_order": 138
+    "sort_order": 138,
+    "selection_kind": "muscle_head",
+    "map_precision": "exact",
+    "selection_group": "deltoid_parts",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_shoulder_side"
   },
   {
     "subarea_id": "legacy_d480f24ae655147a2bba90de46f7ad77",
@@ -2233,7 +3252,14 @@
       "posterior_deltoid_l"
     ],
     "is_legacy": true,
-    "sort_order": 139
+    "sort_order": 139,
+    "selection_kind": "muscle_head",
+    "map_precision": "exact",
+    "selection_group": "deltoid_parts",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_shoulder_rear"
   },
   {
     "subarea_id": "legacy_63ed5b8686083e4cd508d7de77ef6793",
@@ -2242,10 +3268,21 @@
     "label_en": "Rotator cuff",
     "body_group": "legacy",
     "side": "center",
-    "views": [],
-    "atlas_muscle_ids": [],
+    "views": [
+      "back"
+    ],
+    "atlas_muscle_ids": [
+      "infraspinatus_r",
+      "infraspinatus_l"
+    ],
     "is_legacy": true,
-    "sort_order": 140
+    "sort_order": 140,
+    "selection_kind": "muscle_group",
+    "map_precision": "partial",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_shoulder_stability"
   },
   {
     "subarea_id": "legacy_587bb58b4112909459de05ace1aa6d2a",
@@ -2262,7 +3299,13 @@
       "biceps_brachii_caput_longum_r"
     ],
     "is_legacy": true,
-    "sort_order": 141
+    "sort_order": 141,
+    "selection_kind": "muscle_group",
+    "map_precision": "partial",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_biceps"
   },
   {
     "subarea_id": "legacy_a7da71d0de49ee5653645a5b3ecfb388",
@@ -2277,7 +3320,14 @@
       "biceps_brachii_caput_longum_r"
     ],
     "is_legacy": true,
-    "sort_order": 142
+    "sort_order": 142,
+    "selection_kind": "muscle_head",
+    "map_precision": "exact",
+    "selection_group": "biceps_heads",
+    "parent_subarea_ids": [],
+    "is_training_target": false,
+    "map_selectable": false,
+    "training_target_id": "training_biceps_long"
   },
   {
     "subarea_id": "legacy_4d6c678d861af324a34c606c4417715f",
@@ -2292,7 +3342,14 @@
       "biceps_brachii_caput_breve_r"
     ],
     "is_legacy": true,
-    "sort_order": 143
+    "sort_order": 143,
+    "selection_kind": "muscle_head",
+    "map_precision": "exact",
+    "selection_group": "biceps_heads",
+    "parent_subarea_ids": [],
+    "is_training_target": false,
+    "map_selectable": false,
+    "training_target_id": "training_biceps_short"
   },
   {
     "subarea_id": "legacy_40430c0603b063210524f02f23976a1b",
@@ -2304,7 +3361,13 @@
     "views": [],
     "atlas_muscle_ids": [],
     "is_legacy": true,
-    "sort_order": 144
+    "sort_order": 144,
+    "selection_kind": "muscle",
+    "map_precision": "none",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_biceps_brachialis"
   },
   {
     "subarea_id": "legacy_cccaff1d6f39ebdf16f07ed4107b7baf",
@@ -2319,7 +3382,12 @@
       "brachioradialis_l"
     ],
     "is_legacy": true,
-    "sort_order": 145
+    "sort_order": 145,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": []
   },
   {
     "subarea_id": "legacy_62526cd7d6ff58ea7f967b1a115720d1",
@@ -2338,7 +3406,13 @@
       "triceps_brachii_caput_mediale_l"
     ],
     "is_legacy": true,
-    "sort_order": 146
+    "sort_order": 146,
+    "selection_kind": "muscle_group",
+    "map_precision": "partial",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_triceps"
   },
   {
     "subarea_id": "legacy_3b8303d97282a60001e99af682a67389",
@@ -2353,7 +3427,14 @@
       "triceps_brachii_caput_longum_l"
     ],
     "is_legacy": true,
-    "sort_order": 147
+    "sort_order": 147,
+    "selection_kind": "muscle_head",
+    "map_precision": "exact",
+    "selection_group": "triceps_heads",
+    "parent_subarea_ids": [],
+    "is_training_target": false,
+    "map_selectable": false,
+    "training_target_id": "training_triceps_long"
   },
   {
     "subarea_id": "legacy_6139c4564191816fb7518c4a52d76208",
@@ -2368,7 +3449,14 @@
       "triceps_brachii_caput_laterale_l"
     ],
     "is_legacy": true,
-    "sort_order": 148
+    "sort_order": 148,
+    "selection_kind": "muscle_head",
+    "map_precision": "exact",
+    "selection_group": "triceps_heads",
+    "parent_subarea_ids": [],
+    "is_training_target": false,
+    "map_selectable": false,
+    "training_target_id": "training_triceps_lateral"
   },
   {
     "subarea_id": "legacy_f223645da09f5989a270ae9b0a30d501",
@@ -2383,7 +3471,14 @@
       "triceps_brachii_caput_mediale_l"
     ],
     "is_legacy": true,
-    "sort_order": 149
+    "sort_order": 149,
+    "selection_kind": "muscle_head",
+    "map_precision": "exact",
+    "selection_group": "triceps_heads",
+    "parent_subarea_ids": [],
+    "is_training_target": false,
+    "map_selectable": false,
+    "training_target_id": "training_triceps_medial"
   },
   {
     "subarea_id": "legacy_3d79906a35f0c056bb120a410c14aa99",
@@ -2403,7 +3498,14 @@
       "rectus_abdominis_4_r"
     ],
     "is_legacy": true,
-    "sort_order": 150
+    "sort_order": 150,
+    "selection_kind": "region",
+    "map_precision": "whole_muscle",
+    "selection_group": "ab_regions",
+    "parent_subarea_ids": [],
+    "is_training_target": false,
+    "map_selectable": false,
+    "training_target_id": "training_abs_upper"
   },
   {
     "subarea_id": "legacy_c61873ec13c8372a22859d5837c9b5b9",
@@ -2423,7 +3525,14 @@
       "rectus_abdominis_4_r"
     ],
     "is_legacy": true,
-    "sort_order": 151
+    "sort_order": 151,
+    "selection_kind": "region",
+    "map_precision": "whole_muscle",
+    "selection_group": "ab_regions",
+    "parent_subarea_ids": [],
+    "is_training_target": false,
+    "map_selectable": false,
+    "training_target_id": "training_abs_lower"
   },
   {
     "subarea_id": "legacy_f33c204bfbfcb787419f964641457268",
@@ -2452,7 +3561,13 @@
       "external_oblique_8_r"
     ],
     "is_legacy": true,
-    "sort_order": 152
+    "sort_order": 152,
+    "selection_kind": "muscle_group",
+    "map_precision": "partial",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_abs_side"
   },
   {
     "subarea_id": "legacy_394fb5eaaea902767d6e41b74c291faf",
@@ -2464,7 +3579,13 @@
     "views": [],
     "atlas_muscle_ids": [],
     "is_legacy": true,
-    "sort_order": 153
+    "sort_order": 153,
+    "selection_kind": "muscle",
+    "map_precision": "none",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_abs_transverse"
   },
   {
     "subarea_id": "legacy_b014358bc39e1f49325c2787ee25dbb1",
@@ -2479,7 +3600,13 @@
       "gluteus_maximus_l"
     ],
     "is_legacy": true,
-    "sort_order": 154
+    "sort_order": 154,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_glutes"
   },
   {
     "subarea_id": "legacy_fae01a96d3fb8bfd5f4f416f24f09c97",
@@ -2496,7 +3623,13 @@
       "gluteus_medius_1_l"
     ],
     "is_legacy": true,
-    "sort_order": 155
+    "sort_order": 155,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_glutes"
   },
   {
     "subarea_id": "legacy_8d197172a53fe56230ea3d6ad310139d",
@@ -2508,7 +3641,13 @@
     "views": [],
     "atlas_muscle_ids": [],
     "is_legacy": true,
-    "sort_order": 156
+    "sort_order": 156,
+    "selection_kind": "muscle",
+    "map_precision": "none",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_glutes"
   },
   {
     "subarea_id": "legacy_4386c65623e665c879f8bc8a35eefdaf",
@@ -2527,7 +3666,13 @@
       "rectus_femoris_r"
     ],
     "is_legacy": true,
-    "sort_order": 157
+    "sort_order": 157,
+    "selection_kind": "muscle_group",
+    "map_precision": "partial",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_thigh_front"
   },
   {
     "subarea_id": "legacy_1f1f47e91cf43ce2e1503dc2b430f870",
@@ -2548,7 +3693,13 @@
       "biceps_femoris_l"
     ],
     "is_legacy": true,
-    "sort_order": 158
+    "sort_order": 158,
+    "selection_kind": "muscle_group",
+    "map_precision": "partial",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_thigh_rear"
   },
   {
     "subarea_id": "legacy_53d8501e2f9199756f9d8e08ad684e46",
@@ -2569,7 +3720,13 @@
       "pectineus_r"
     ],
     "is_legacy": true,
-    "sort_order": 159
+    "sort_order": 159,
+    "selection_kind": "muscle_group",
+    "map_precision": "partial",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_thigh_inner"
   },
   {
     "subarea_id": "legacy_e60bdce69f4d797ceded292486437690",
@@ -2581,7 +3738,12 @@
     "views": [],
     "atlas_muscle_ids": [],
     "is_legacy": true,
-    "sort_order": 160
+    "sort_order": 160,
+    "selection_kind": "focus",
+    "map_precision": "none",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": []
   },
   {
     "subarea_id": "legacy_d502b981b707a2685dec8a16de75b162",
@@ -2596,7 +3758,13 @@
       "gastrocnemius_l"
     ],
     "is_legacy": true,
-    "sort_order": 161
+    "sort_order": 161,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_calf_gastrocnemius"
   },
   {
     "subarea_id": "legacy_1e567cad0edb852c0cbd20d08f12ba66",
@@ -2608,7 +3776,13 @@
     "views": [],
     "atlas_muscle_ids": [],
     "is_legacy": true,
-    "sort_order": 162
+    "sort_order": 162,
+    "selection_kind": "muscle",
+    "map_precision": "none",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_calf_soleus"
   },
   {
     "subarea_id": "legacy_0c359610b226a1047c5c82b2cfb8aba6",
@@ -2623,7 +3797,13 @@
       "tibialis_anterior_r"
     ],
     "is_legacy": true,
-    "sort_order": 163
+    "sort_order": 163,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_shins"
   },
   {
     "subarea_id": "legacy_4e52efa857e9ab910302109714c01593",
@@ -2635,7 +3815,14 @@
     "views": [],
     "atlas_muscle_ids": [],
     "is_legacy": true,
-    "sort_order": 164
+    "sort_order": 164,
+    "selection_kind": "focus",
+    "map_precision": "none",
+    "selection_group": "whole_body_focus",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_whole_upper"
   },
   {
     "subarea_id": "legacy_6ac4984d2845eb923a7ba863afd215bc",
@@ -2647,7 +3834,14 @@
     "views": [],
     "atlas_muscle_ids": [],
     "is_legacy": true,
-    "sort_order": 165
+    "sort_order": 165,
+    "selection_kind": "focus",
+    "map_precision": "none",
+    "selection_group": "whole_body_focus",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_whole_lower"
   },
   {
     "subarea_id": "legacy_9d82b3f4ed69c78ffa829e817686fd89",
@@ -2659,6 +3853,2283 @@
     "views": [],
     "atlas_muscle_ids": [],
     "is_legacy": true,
-    "sort_order": 166
+    "sort_order": 166,
+    "selection_kind": "focus",
+    "map_precision": "none",
+    "selection_group": "whole_body_focus",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_whole_core"
+  },
+  {
+    "subarea_id": "external_oblique_l",
+    "target_area": "복근",
+    "label_ko": "왼쪽 외복사근",
+    "label_en": "Left External oblique",
+    "body_group": "anatomical",
+    "side": "left",
+    "views": [
+      "front",
+      "back"
+    ],
+    "atlas_muscle_ids": [
+      "external_oblique_1_l",
+      "external_oblique_2_l",
+      "external_oblique_3_l",
+      "external_oblique_4_l",
+      "external_oblique_5_l",
+      "external_oblique_6_l",
+      "external_oblique_7_l",
+      "external_oblique_8_l"
+    ],
+    "is_legacy": true,
+    "sort_order": 167,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_abs_external_oblique"
+  },
+  {
+    "subarea_id": "external_oblique_r",
+    "target_area": "복근",
+    "label_ko": "오른쪽 외복사근",
+    "label_en": "Right External oblique",
+    "body_group": "anatomical",
+    "side": "right",
+    "views": [
+      "front",
+      "back"
+    ],
+    "atlas_muscle_ids": [
+      "external_oblique_1_r",
+      "external_oblique_2_r",
+      "external_oblique_3_r",
+      "external_oblique_4_r",
+      "external_oblique_5_r",
+      "external_oblique_6_r",
+      "external_oblique_7_r",
+      "external_oblique_8_r"
+    ],
+    "is_legacy": true,
+    "sort_order": 168,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_abs_external_oblique"
+  },
+  {
+    "subarea_id": "gluteus_medius_l",
+    "target_area": "엉덩이",
+    "label_ko": "왼쪽 중둔근",
+    "label_en": "Left Gluteus medius",
+    "body_group": "anatomical",
+    "side": "left",
+    "views": [
+      "front",
+      "back"
+    ],
+    "atlas_muscle_ids": [
+      "gluteus_medius_2_l",
+      "gluteus_medius_1_l"
+    ],
+    "is_legacy": true,
+    "sort_order": 169,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_glutes"
+  },
+  {
+    "subarea_id": "gluteus_medius_r",
+    "target_area": "엉덩이",
+    "label_ko": "오른쪽 중둔근",
+    "label_en": "Right Gluteus medius",
+    "body_group": "anatomical",
+    "side": "right",
+    "views": [
+      "front",
+      "back"
+    ],
+    "atlas_muscle_ids": [
+      "gluteus_medius_2_r",
+      "gluteus_medius_1_r"
+    ],
+    "is_legacy": true,
+    "sort_order": 170,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_glutes"
+  },
+  {
+    "subarea_id": "semimembranosus_l",
+    "target_area": "허벅지",
+    "label_ko": "왼쪽 반막양근",
+    "label_en": "Left Semimembranosus",
+    "body_group": "anatomical",
+    "side": "left",
+    "views": [
+      "back"
+    ],
+    "atlas_muscle_ids": [
+      "semimembranosus_2_l",
+      "semimembranosus_1_l"
+    ],
+    "is_legacy": true,
+    "sort_order": 171,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_thigh_medial_hamstrings"
+  },
+  {
+    "subarea_id": "semimembranosus_r",
+    "target_area": "허벅지",
+    "label_ko": "오른쪽 반막양근",
+    "label_en": "Right Semimembranosus",
+    "body_group": "anatomical",
+    "side": "right",
+    "views": [
+      "back"
+    ],
+    "atlas_muscle_ids": [
+      "semimembranosus_2_r",
+      "semimembranosus_1_r"
+    ],
+    "is_legacy": true,
+    "sort_order": 172,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_thigh_medial_hamstrings"
+  },
+  {
+    "subarea_id": "rectus_abdominis",
+    "target_area": "복근",
+    "label_ko": "복직근",
+    "label_en": "Rectus abdominis",
+    "body_group": "anatomical",
+    "side": "center",
+    "views": [
+      "front"
+    ],
+    "atlas_muscle_ids": [
+      "rectus_abdominis_1",
+      "rectus_abdominis_2_l",
+      "rectus_abdominis_2_r",
+      "rectus_abdominis_3_l",
+      "rectus_abdominis_3_r",
+      "rectus_abdominis_4_l",
+      "rectus_abdominis_4_r"
+    ],
+    "is_legacy": true,
+    "sort_order": 173,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_abs_front"
+  },
+  {
+    "subarea_id": "supraspinatus",
+    "target_area": "어깨",
+    "label_ko": "극상근",
+    "label_en": "Supraspinatus",
+    "body_group": "anatomical",
+    "side": "center",
+    "views": [],
+    "atlas_muscle_ids": [],
+    "is_legacy": true,
+    "sort_order": 174,
+    "selection_kind": "muscle",
+    "map_precision": "none",
+    "selection_group": "rotator_cuff",
+    "parent_subarea_ids": [],
+    "is_training_target": false,
+    "map_selectable": false,
+    "training_target_id": "training_shoulder_stability"
+  },
+  {
+    "subarea_id": "infraspinatus",
+    "target_area": "어깨",
+    "label_ko": "극하근",
+    "label_en": "Infraspinatus",
+    "body_group": "anatomical",
+    "side": "center",
+    "views": [
+      "back"
+    ],
+    "atlas_muscle_ids": [
+      "infraspinatus_r",
+      "infraspinatus_l"
+    ],
+    "is_legacy": true,
+    "sort_order": 175,
+    "selection_kind": "muscle",
+    "map_precision": "exact",
+    "selection_group": "rotator_cuff",
+    "parent_subarea_ids": [],
+    "is_training_target": false,
+    "map_selectable": false,
+    "training_target_id": "training_shoulder_stability"
+  },
+  {
+    "subarea_id": "teres_minor",
+    "target_area": "어깨",
+    "label_ko": "소원근",
+    "label_en": "Teres minor",
+    "body_group": "anatomical",
+    "side": "center",
+    "views": [],
+    "atlas_muscle_ids": [],
+    "is_legacy": true,
+    "sort_order": 176,
+    "selection_kind": "muscle",
+    "map_precision": "none",
+    "selection_group": "rotator_cuff",
+    "parent_subarea_ids": [],
+    "is_training_target": false,
+    "map_selectable": false,
+    "training_target_id": "training_shoulder_stability"
+  },
+  {
+    "subarea_id": "subscapularis",
+    "target_area": "어깨",
+    "label_ko": "견갑하근",
+    "label_en": "Subscapularis",
+    "body_group": "anatomical",
+    "side": "center",
+    "views": [],
+    "atlas_muscle_ids": [],
+    "is_legacy": true,
+    "sort_order": 177,
+    "selection_kind": "muscle",
+    "map_precision": "none",
+    "selection_group": "rotator_cuff",
+    "parent_subarea_ids": [],
+    "is_training_target": false,
+    "map_selectable": false,
+    "training_target_id": "training_shoulder_stability"
+  },
+  {
+    "subarea_id": "serratus_anterior",
+    "target_area": "가슴",
+    "label_ko": "전거근",
+    "label_en": "Serratus anterior",
+    "body_group": "anatomical",
+    "side": "center",
+    "views": [],
+    "atlas_muscle_ids": [],
+    "is_legacy": true,
+    "sort_order": 178,
+    "selection_kind": "muscle",
+    "map_precision": "none",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_chest_all"
+  },
+  {
+    "subarea_id": "rhomboid_major",
+    "target_area": "등",
+    "label_ko": "대능형근",
+    "label_en": "Rhomboid major",
+    "body_group": "anatomical",
+    "side": "center",
+    "views": [],
+    "atlas_muscle_ids": [],
+    "is_legacy": true,
+    "sort_order": 179,
+    "selection_kind": "muscle",
+    "map_precision": "none",
+    "parent_subarea_ids": [],
+    "is_training_target": false,
+    "map_selectable": false,
+    "training_target_id": "training_back_rhomboids"
+  },
+  {
+    "subarea_id": "rhomboid_minor",
+    "target_area": "등",
+    "label_ko": "소능형근",
+    "label_en": "Rhomboid minor",
+    "body_group": "anatomical",
+    "side": "center",
+    "views": [],
+    "atlas_muscle_ids": [],
+    "is_legacy": true,
+    "sort_order": 180,
+    "selection_kind": "muscle",
+    "map_precision": "none",
+    "parent_subarea_ids": [],
+    "is_training_target": false,
+    "map_selectable": false,
+    "training_target_id": "training_back_rhomboids"
+  },
+  {
+    "subarea_id": "iliocostalis",
+    "target_area": "등",
+    "label_ko": "장늑근",
+    "label_en": "Iliocostalis",
+    "body_group": "anatomical",
+    "side": "center",
+    "views": [],
+    "atlas_muscle_ids": [],
+    "is_legacy": true,
+    "sort_order": 181,
+    "selection_kind": "muscle",
+    "map_precision": "none",
+    "parent_subarea_ids": [],
+    "is_training_target": false,
+    "map_selectable": false,
+    "training_target_id": "training_back_erectors"
+  },
+  {
+    "subarea_id": "longissimus",
+    "target_area": "등",
+    "label_ko": "최장근",
+    "label_en": "Longissimus",
+    "body_group": "anatomical",
+    "side": "center",
+    "views": [],
+    "atlas_muscle_ids": [],
+    "is_legacy": true,
+    "sort_order": 182,
+    "selection_kind": "muscle",
+    "map_precision": "none",
+    "parent_subarea_ids": [],
+    "is_training_target": false,
+    "map_selectable": false,
+    "training_target_id": "training_back_erectors"
+  },
+  {
+    "subarea_id": "spinalis",
+    "target_area": "등",
+    "label_ko": "극근",
+    "label_en": "Spinalis",
+    "body_group": "anatomical",
+    "side": "center",
+    "views": [],
+    "atlas_muscle_ids": [],
+    "is_legacy": true,
+    "sort_order": 183,
+    "selection_kind": "muscle",
+    "map_precision": "none",
+    "parent_subarea_ids": [],
+    "is_training_target": false,
+    "map_selectable": false,
+    "training_target_id": "training_back_erectors"
+  },
+  {
+    "subarea_id": "levator_scapulae",
+    "target_area": "등",
+    "label_ko": "견갑거근",
+    "label_en": "Levator scapulae",
+    "body_group": "anatomical",
+    "side": "center",
+    "views": [],
+    "atlas_muscle_ids": [],
+    "is_legacy": true,
+    "sort_order": 184,
+    "selection_kind": "muscle",
+    "map_precision": "none",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_back_upper"
+  },
+  {
+    "subarea_id": "internal_oblique",
+    "target_area": "복근",
+    "label_ko": "내복사근",
+    "label_en": "Internal oblique",
+    "body_group": "anatomical",
+    "side": "center",
+    "views": [],
+    "atlas_muscle_ids": [],
+    "is_legacy": true,
+    "sort_order": 185,
+    "selection_kind": "muscle",
+    "map_precision": "none",
+    "parent_subarea_ids": [],
+    "is_training_target": false,
+    "map_selectable": false,
+    "training_target_id": "training_abs_internal_oblique"
+  },
+  {
+    "subarea_id": "vastus_intermedius",
+    "target_area": "허벅지",
+    "label_ko": "중간광근",
+    "label_en": "Vastus intermedius",
+    "body_group": "anatomical",
+    "side": "center",
+    "views": [],
+    "atlas_muscle_ids": [],
+    "is_legacy": true,
+    "sort_order": 186,
+    "selection_kind": "muscle",
+    "map_precision": "none",
+    "parent_subarea_ids": [],
+    "is_training_target": false,
+    "map_selectable": false,
+    "training_target_id": "training_thigh_front"
+  },
+  {
+    "subarea_id": "adductor_brevis",
+    "target_area": "허벅지",
+    "label_ko": "단내전근",
+    "label_en": "Adductor brevis",
+    "body_group": "anatomical",
+    "side": "center",
+    "views": [],
+    "atlas_muscle_ids": [],
+    "is_legacy": true,
+    "sort_order": 187,
+    "selection_kind": "muscle",
+    "map_precision": "none",
+    "parent_subarea_ids": [],
+    "is_training_target": false,
+    "map_selectable": false,
+    "training_target_id": "training_thigh_inner"
+  },
+  {
+    "subarea_id": "tensor_fasciae_latae",
+    "target_area": "허벅지",
+    "label_ko": "대퇴근막장근",
+    "label_en": "Tensor fasciae latae",
+    "body_group": "anatomical",
+    "side": "center",
+    "views": [],
+    "atlas_muscle_ids": [],
+    "is_legacy": true,
+    "sort_order": 188,
+    "selection_kind": "muscle",
+    "map_precision": "none",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": []
+  },
+  {
+    "subarea_id": "flexor_digitorum_profundus",
+    "target_area": "전완",
+    "label_ko": "심지굴근",
+    "label_en": "Flexor digitorum profundus",
+    "body_group": "anatomical",
+    "side": "center",
+    "views": [],
+    "atlas_muscle_ids": [],
+    "is_legacy": true,
+    "sort_order": 189,
+    "selection_kind": "muscle",
+    "map_precision": "none",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_forearm_flexors"
+  },
+  {
+    "subarea_id": "supinator",
+    "target_area": "전완",
+    "label_ko": "회외근",
+    "label_en": "Supinator",
+    "body_group": "anatomical",
+    "side": "center",
+    "views": [],
+    "atlas_muscle_ids": [],
+    "is_legacy": true,
+    "sort_order": 190,
+    "selection_kind": "muscle",
+    "map_precision": "none",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_forearms"
+  },
+  {
+    "subarea_id": "scalenus_anterior",
+    "target_area": "목",
+    "label_ko": "전사각근",
+    "label_en": "Anterior scalene",
+    "body_group": "anatomical",
+    "side": "center",
+    "views": [],
+    "atlas_muscle_ids": [],
+    "is_legacy": true,
+    "sort_order": 191,
+    "selection_kind": "muscle",
+    "map_precision": "none",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_neck"
+  },
+  {
+    "subarea_id": "scalenus_medius",
+    "target_area": "목",
+    "label_ko": "중사각근",
+    "label_en": "Middle scalene",
+    "body_group": "anatomical",
+    "side": "center",
+    "views": [],
+    "atlas_muscle_ids": [],
+    "is_legacy": true,
+    "sort_order": 192,
+    "selection_kind": "muscle",
+    "map_precision": "none",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_neck"
+  },
+  {
+    "subarea_id": "scalenus_posterior",
+    "target_area": "목",
+    "label_ko": "후사각근",
+    "label_en": "Posterior scalene",
+    "body_group": "anatomical",
+    "side": "center",
+    "views": [],
+    "atlas_muscle_ids": [],
+    "is_legacy": true,
+    "sort_order": 193,
+    "selection_kind": "muscle",
+    "map_precision": "none",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_neck"
+  },
+  {
+    "subarea_id": "splenius_capitis",
+    "target_area": "목",
+    "label_ko": "두판상근",
+    "label_en": "Splenius capitis",
+    "body_group": "anatomical",
+    "side": "center",
+    "views": [],
+    "atlas_muscle_ids": [],
+    "is_legacy": true,
+    "sort_order": 194,
+    "selection_kind": "muscle",
+    "map_precision": "none",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_neck"
+  },
+  {
+    "subarea_id": "splenius_cervicis",
+    "target_area": "목",
+    "label_ko": "경판상근",
+    "label_en": "Splenius cervicis",
+    "body_group": "anatomical",
+    "side": "center",
+    "views": [],
+    "atlas_muscle_ids": [],
+    "is_legacy": true,
+    "sort_order": 195,
+    "selection_kind": "muscle",
+    "map_precision": "none",
+    "is_training_target": false,
+    "map_selectable": false,
+    "parent_subarea_ids": [],
+    "training_target_id": "training_neck"
+  },
+  {
+    "subarea_id": "biceps_femoris_long_head",
+    "target_area": "허벅지",
+    "label_ko": "대퇴이두근 · 장두",
+    "label_en": "Biceps femoris · Long head",
+    "body_group": "anatomical",
+    "side": "center",
+    "views": [
+      "back"
+    ],
+    "atlas_muscle_ids": [
+      "biceps_femoris_r",
+      "biceps_femoris_l"
+    ],
+    "is_legacy": true,
+    "sort_order": 196,
+    "selection_kind": "muscle_head",
+    "map_precision": "whole_muscle",
+    "selection_group": "hamstring_heads",
+    "parent_subarea_ids": [],
+    "is_training_target": false,
+    "map_selectable": false,
+    "training_target_id": "training_thigh_biceps_long"
+  },
+  {
+    "subarea_id": "biceps_femoris_short_head",
+    "target_area": "허벅지",
+    "label_ko": "대퇴이두근 · 단두",
+    "label_en": "Biceps femoris · Short head",
+    "body_group": "anatomical",
+    "side": "center",
+    "views": [
+      "back"
+    ],
+    "atlas_muscle_ids": [
+      "biceps_femoris_r",
+      "biceps_femoris_l"
+    ],
+    "is_legacy": true,
+    "sort_order": 197,
+    "selection_kind": "muscle_head",
+    "map_precision": "whole_muscle",
+    "selection_group": "hamstring_heads",
+    "parent_subarea_ids": [],
+    "is_training_target": false,
+    "map_selectable": false,
+    "training_target_id": "training_thigh_biceps_short"
+  },
+  {
+    "subarea_id": "gastrocnemius_medial_head",
+    "target_area": "종아리",
+    "label_ko": "비복근 · 내측두",
+    "label_en": "Gastrocnemius · Medial head",
+    "body_group": "anatomical",
+    "side": "center",
+    "views": [
+      "front",
+      "back"
+    ],
+    "atlas_muscle_ids": [
+      "gastrocnemius_r",
+      "gastrocnemius_l"
+    ],
+    "is_legacy": true,
+    "sort_order": 198,
+    "selection_kind": "muscle_head",
+    "map_precision": "whole_muscle",
+    "selection_group": "calf_heads",
+    "parent_subarea_ids": [],
+    "is_training_target": false,
+    "map_selectable": false,
+    "training_target_id": "training_calf_gastrocnemius"
+  },
+  {
+    "subarea_id": "gastrocnemius_lateral_head",
+    "target_area": "종아리",
+    "label_ko": "비복근 · 외측두",
+    "label_en": "Gastrocnemius · Lateral head",
+    "body_group": "anatomical",
+    "side": "center",
+    "views": [
+      "front",
+      "back"
+    ],
+    "atlas_muscle_ids": [
+      "gastrocnemius_r",
+      "gastrocnemius_l"
+    ],
+    "is_legacy": true,
+    "sort_order": 199,
+    "selection_kind": "muscle_head",
+    "map_precision": "whole_muscle",
+    "selection_group": "calf_heads",
+    "parent_subarea_ids": [],
+    "is_training_target": false,
+    "map_selectable": false,
+    "training_target_id": "training_calf_gastrocnemius"
+  },
+  {
+    "subarea_id": "sternocleidomastoid_sternal_head",
+    "target_area": "목",
+    "label_ko": "흉쇄유돌근 · 흉골두",
+    "label_en": "Sternocleidomastoid · Sternal head",
+    "body_group": "anatomical",
+    "side": "center",
+    "views": [
+      "front",
+      "back"
+    ],
+    "atlas_muscle_ids": [
+      "sternocleidomastoid_r",
+      "sternocleidomastoid_l"
+    ],
+    "is_legacy": true,
+    "sort_order": 200,
+    "selection_kind": "muscle_head",
+    "map_precision": "whole_muscle",
+    "selection_group": "neck_heads",
+    "parent_subarea_ids": [],
+    "is_training_target": false,
+    "map_selectable": false,
+    "training_target_id": "training_neck"
+  },
+  {
+    "subarea_id": "sternocleidomastoid_clavicular_head",
+    "target_area": "목",
+    "label_ko": "흉쇄유돌근 · 쇄골두",
+    "label_en": "Sternocleidomastoid · Clavicular head",
+    "body_group": "anatomical",
+    "side": "center",
+    "views": [
+      "front",
+      "back"
+    ],
+    "atlas_muscle_ids": [
+      "sternocleidomastoid_r",
+      "sternocleidomastoid_l"
+    ],
+    "is_legacy": true,
+    "sort_order": 201,
+    "selection_kind": "muscle_head",
+    "map_precision": "whole_muscle",
+    "selection_group": "neck_heads",
+    "parent_subarea_ids": [],
+    "is_training_target": false,
+    "map_selectable": false,
+    "training_target_id": "training_neck"
+  },
+  {
+    "subarea_id": "training_chest_all",
+    "target_area": "가슴",
+    "label_ko": "가슴 전체",
+    "label_en": "Whole chest",
+    "body_group": "training",
+    "side": "center",
+    "views": [
+      "front"
+    ],
+    "atlas_muscle_ids": [
+      "pectoralis_major_l",
+      "pectoralis_major_r"
+    ],
+    "is_legacy": true,
+    "sort_order": 1000,
+    "selection_kind": "training_group",
+    "map_precision": "partial",
+    "selection_group": "training_targets",
+    "parent_subarea_ids": [],
+    "is_training_target": true,
+    "training_target_id": "training_chest_all",
+    "map_selectable": true
+  },
+  {
+    "subarea_id": "training_chest_upper",
+    "target_area": "가슴",
+    "label_ko": "상부 가슴",
+    "label_en": "Upper chest",
+    "body_group": "training",
+    "side": "center",
+    "views": [
+      "front"
+    ],
+    "atlas_muscle_ids": [
+      "pectoralis_major_l",
+      "pectoralis_major_r"
+    ],
+    "is_legacy": true,
+    "sort_order": 1001,
+    "selection_kind": "region",
+    "map_precision": "whole_muscle",
+    "selection_group": "training_targets",
+    "parent_subarea_ids": [
+      "training_chest_all"
+    ],
+    "is_training_target": true,
+    "training_target_id": "training_chest_upper",
+    "map_selectable": false
+  },
+  {
+    "subarea_id": "training_chest_middle",
+    "target_area": "가슴",
+    "label_ko": "중부 가슴",
+    "label_en": "Middle chest",
+    "body_group": "training",
+    "side": "center",
+    "views": [
+      "front"
+    ],
+    "atlas_muscle_ids": [
+      "pectoralis_major_l",
+      "pectoralis_major_r"
+    ],
+    "is_legacy": true,
+    "sort_order": 1002,
+    "selection_kind": "region",
+    "map_precision": "whole_muscle",
+    "selection_group": "training_targets",
+    "parent_subarea_ids": [
+      "training_chest_all"
+    ],
+    "is_training_target": true,
+    "training_target_id": "training_chest_middle",
+    "map_selectable": false
+  },
+  {
+    "subarea_id": "training_chest_lower",
+    "target_area": "가슴",
+    "label_ko": "하부 가슴",
+    "label_en": "Lower chest",
+    "body_group": "training",
+    "side": "center",
+    "views": [
+      "front"
+    ],
+    "atlas_muscle_ids": [
+      "pectoralis_major_l",
+      "pectoralis_major_r"
+    ],
+    "is_legacy": true,
+    "sort_order": 1003,
+    "selection_kind": "region",
+    "map_precision": "whole_muscle",
+    "selection_group": "training_targets",
+    "parent_subarea_ids": [
+      "training_chest_all"
+    ],
+    "is_training_target": true,
+    "training_target_id": "training_chest_lower",
+    "map_selectable": false
+  },
+  {
+    "subarea_id": "training_back_lats",
+    "target_area": "등",
+    "label_ko": "광배근 전체",
+    "label_en": "Latissimus dorsi overall",
+    "body_group": "training",
+    "side": "center",
+    "views": [
+      "front",
+      "back"
+    ],
+    "atlas_muscle_ids": [
+      "latissimus_dorsi_r",
+      "latissimus_dorsi_l"
+    ],
+    "is_legacy": true,
+    "sort_order": 1004,
+    "selection_kind": "training_group",
+    "map_precision": "partial",
+    "selection_group": "back_lats",
+    "parent_subarea_ids": [],
+    "is_training_target": true,
+    "training_target_id": "training_back_lats",
+    "map_selectable": true
+  },
+  {
+    "subarea_id": "training_back_upper",
+    "target_area": "등",
+    "label_ko": "등 상부·중부 전체",
+    "label_en": "Upper and middle back overall",
+    "body_group": "training",
+    "side": "center",
+    "views": [
+      "front",
+      "back"
+    ],
+    "atlas_muscle_ids": [
+      "trapezius_upper_r",
+      "trapezius_upper_l",
+      "trapezius_middle_r",
+      "trapezius_middle_l",
+      "trapezius_lower_r",
+      "trapezius_lower_l"
+    ],
+    "is_legacy": true,
+    "sort_order": 1005,
+    "selection_kind": "training_group",
+    "map_precision": "partial",
+    "selection_group": "back_upper",
+    "parent_subarea_ids": [],
+    "is_training_target": true,
+    "training_target_id": "training_back_upper",
+    "map_selectable": false
+  },
+  {
+    "subarea_id": "training_back_lower",
+    "target_area": "등",
+    "label_ko": "등 하부 전체",
+    "label_en": "Lower back overall",
+    "body_group": "training",
+    "side": "center",
+    "views": [],
+    "atlas_muscle_ids": [],
+    "is_legacy": true,
+    "sort_order": 1006,
+    "selection_kind": "training_group",
+    "map_precision": "none",
+    "selection_group": "back_lower",
+    "parent_subarea_ids": [],
+    "is_training_target": true,
+    "training_target_id": "training_back_lower",
+    "map_selectable": false
+  },
+  {
+    "subarea_id": "training_shoulder_front",
+    "target_area": "어깨",
+    "label_ko": "전면 어깨",
+    "label_en": "Front shoulders",
+    "body_group": "training",
+    "side": "center",
+    "views": [
+      "front"
+    ],
+    "atlas_muscle_ids": [
+      "anterior_deltoid_l",
+      "anterior_deltoid_r"
+    ],
+    "is_legacy": true,
+    "sort_order": 1007,
+    "selection_kind": "training_group",
+    "map_precision": "partial",
+    "selection_group": "training_targets",
+    "parent_subarea_ids": [],
+    "is_training_target": true,
+    "training_target_id": "training_shoulder_front",
+    "map_selectable": true
+  },
+  {
+    "subarea_id": "training_shoulder_side",
+    "target_area": "어깨",
+    "label_ko": "측면 어깨",
+    "label_en": "Side shoulders",
+    "body_group": "training",
+    "side": "center",
+    "views": [
+      "front",
+      "back"
+    ],
+    "atlas_muscle_ids": [
+      "lateral_deltoid_r",
+      "lateral_deltoid_l"
+    ],
+    "is_legacy": true,
+    "sort_order": 1008,
+    "selection_kind": "training_group",
+    "map_precision": "partial",
+    "selection_group": "training_targets",
+    "parent_subarea_ids": [],
+    "is_training_target": true,
+    "training_target_id": "training_shoulder_side",
+    "map_selectable": true
+  },
+  {
+    "subarea_id": "training_shoulder_rear",
+    "target_area": "어깨",
+    "label_ko": "후면 어깨",
+    "label_en": "Rear shoulders",
+    "body_group": "training",
+    "side": "center",
+    "views": [
+      "back"
+    ],
+    "atlas_muscle_ids": [
+      "posterior_deltoid_r",
+      "posterior_deltoid_l"
+    ],
+    "is_legacy": true,
+    "sort_order": 1009,
+    "selection_kind": "training_group",
+    "map_precision": "partial",
+    "selection_group": "training_targets",
+    "parent_subarea_ids": [],
+    "is_training_target": true,
+    "training_target_id": "training_shoulder_rear",
+    "map_selectable": true
+  },
+  {
+    "subarea_id": "training_shoulder_stability",
+    "target_area": "어깨",
+    "label_ko": "어깨 안정화",
+    "label_en": "Shoulder stability",
+    "body_group": "training",
+    "side": "center",
+    "views": [
+      "back"
+    ],
+    "atlas_muscle_ids": [
+      "infraspinatus_r",
+      "infraspinatus_l"
+    ],
+    "is_legacy": true,
+    "sort_order": 1010,
+    "selection_kind": "training_group",
+    "map_precision": "partial",
+    "selection_group": "training_targets",
+    "parent_subarea_ids": [],
+    "is_training_target": true,
+    "training_target_id": "training_shoulder_stability",
+    "map_selectable": true
+  },
+  {
+    "subarea_id": "training_biceps",
+    "target_area": "이두",
+    "label_ko": "이두 전체",
+    "label_en": "Biceps overall",
+    "body_group": "training",
+    "side": "center",
+    "views": [
+      "front",
+      "back"
+    ],
+    "atlas_muscle_ids": [
+      "biceps_brachii_caput_breve_l",
+      "biceps_brachii_caput_breve_r",
+      "biceps_brachii_caput_longum_l",
+      "biceps_brachii_caput_longum_r"
+    ],
+    "is_legacy": true,
+    "sort_order": 1011,
+    "selection_kind": "training_group",
+    "map_precision": "partial",
+    "selection_group": "biceps_targets",
+    "parent_subarea_ids": [],
+    "is_training_target": true,
+    "training_target_id": "training_biceps",
+    "map_selectable": false
+  },
+  {
+    "subarea_id": "training_triceps",
+    "target_area": "삼두",
+    "label_ko": "삼두 전체",
+    "label_en": "Triceps overall",
+    "body_group": "training",
+    "side": "center",
+    "views": [
+      "back",
+      "front"
+    ],
+    "atlas_muscle_ids": [
+      "triceps_brachii_caput_laterale_r",
+      "triceps_brachii_caput_laterale_l",
+      "triceps_brachii_caput_longum_r",
+      "triceps_brachii_caput_longum_l",
+      "triceps_brachii_caput_mediale_r",
+      "triceps_brachii_caput_mediale_l"
+    ],
+    "is_legacy": true,
+    "sort_order": 1012,
+    "selection_kind": "training_group",
+    "map_precision": "partial",
+    "selection_group": "triceps_targets",
+    "parent_subarea_ids": [],
+    "is_training_target": true,
+    "training_target_id": "training_triceps",
+    "map_selectable": false
+  },
+  {
+    "subarea_id": "training_forearms",
+    "target_area": "전완",
+    "label_ko": "전완 전체",
+    "label_en": "Forearms overall",
+    "body_group": "training",
+    "side": "center",
+    "views": [
+      "back",
+      "front"
+    ],
+    "atlas_muscle_ids": [
+      "extensor_digitorum_r",
+      "extensor_digitorum_l",
+      "extensor_carpi_ulnaris_r",
+      "extensor_carpi_ulnaris_l",
+      "flexor_carpi_ulnaris_r",
+      "flexor_carpi_ulnaris_l",
+      "flexor_digitorum_superficialis_l",
+      "flexor_digitorum_superficialis_r",
+      "pronator_quadratus_l",
+      "pronator_quadratus_r",
+      "extensor_carpi_radialis_longus_l",
+      "extensor_carpi_radialis_longus_r",
+      "palmaris_longus_l",
+      "palmaris_longus_r",
+      "flexor_carpi_radialis_l",
+      "flexor_carpi_radialis_r",
+      "pronator_teres_l",
+      "pronator_teres_r"
+    ],
+    "is_legacy": true,
+    "sort_order": 1013,
+    "selection_kind": "training_group",
+    "map_precision": "partial",
+    "selection_group": "training_targets",
+    "parent_subarea_ids": [],
+    "is_training_target": true,
+    "training_target_id": "training_forearms",
+    "map_selectable": false
+  },
+  {
+    "subarea_id": "training_neck",
+    "target_area": "목",
+    "label_ko": "목",
+    "label_en": "Neck",
+    "body_group": "training",
+    "side": "center",
+    "views": [
+      "front",
+      "back"
+    ],
+    "atlas_muscle_ids": [
+      "sternocleidomastoid_r",
+      "sternocleidomastoid_l",
+      "platysma",
+      "sternohyoid"
+    ],
+    "is_legacy": true,
+    "sort_order": 1014,
+    "selection_kind": "training_group",
+    "map_precision": "partial",
+    "selection_group": "training_targets",
+    "parent_subarea_ids": [],
+    "is_training_target": true,
+    "training_target_id": "training_neck",
+    "map_selectable": true
+  },
+  {
+    "subarea_id": "training_abs_front",
+    "target_area": "복근",
+    "label_ko": "복직근 전체",
+    "label_en": "Rectus abdominis overall",
+    "body_group": "training",
+    "side": "center",
+    "views": [
+      "front"
+    ],
+    "atlas_muscle_ids": [
+      "rectus_abdominis_1",
+      "rectus_abdominis_2_l",
+      "rectus_abdominis_2_r",
+      "rectus_abdominis_3_l",
+      "rectus_abdominis_3_r",
+      "rectus_abdominis_4_l",
+      "rectus_abdominis_4_r"
+    ],
+    "is_legacy": true,
+    "sort_order": 1015,
+    "selection_kind": "training_group",
+    "map_precision": "partial",
+    "selection_group": "abs_front",
+    "parent_subarea_ids": [],
+    "is_training_target": true,
+    "training_target_id": "training_abs_front",
+    "map_selectable": true
+  },
+  {
+    "subarea_id": "training_abs_side",
+    "target_area": "복근",
+    "label_ko": "복사근 전체",
+    "label_en": "Obliques overall",
+    "body_group": "training",
+    "side": "center",
+    "views": [
+      "front",
+      "back"
+    ],
+    "atlas_muscle_ids": [
+      "external_oblique_1_l",
+      "external_oblique_2_l",
+      "external_oblique_3_l",
+      "external_oblique_4_l",
+      "external_oblique_5_l",
+      "external_oblique_6_l",
+      "external_oblique_7_l",
+      "external_oblique_8_l",
+      "external_oblique_1_r",
+      "external_oblique_2_r",
+      "external_oblique_3_r",
+      "external_oblique_4_r",
+      "external_oblique_5_r",
+      "external_oblique_6_r",
+      "external_oblique_7_r",
+      "external_oblique_8_r"
+    ],
+    "is_legacy": true,
+    "sort_order": 1016,
+    "selection_kind": "training_group",
+    "map_precision": "partial",
+    "selection_group": "abs_obliques",
+    "parent_subarea_ids": [],
+    "is_training_target": true,
+    "training_target_id": "training_abs_side",
+    "map_selectable": false
+  },
+  {
+    "subarea_id": "training_core_stability",
+    "target_area": "복근",
+    "label_ko": "코어 안정화",
+    "label_en": "Core stability",
+    "body_group": "training",
+    "side": "center",
+    "views": [],
+    "atlas_muscle_ids": [],
+    "is_legacy": true,
+    "sort_order": 1017,
+    "selection_kind": "training_group",
+    "map_precision": "none",
+    "selection_group": "abs_deep",
+    "parent_subarea_ids": [],
+    "is_training_target": true,
+    "training_target_id": "training_core_stability",
+    "map_selectable": false
+  },
+  {
+    "subarea_id": "training_glutes",
+    "target_area": "엉덩이",
+    "label_ko": "둔근",
+    "label_en": "Glutes",
+    "body_group": "training",
+    "side": "center",
+    "views": [
+      "back",
+      "front"
+    ],
+    "atlas_muscle_ids": [
+      "gluteus_maximus_r",
+      "gluteus_maximus_l",
+      "gluteus_medius_2_r",
+      "gluteus_medius_1_r",
+      "gluteus_medius_2_l",
+      "gluteus_medius_1_l"
+    ],
+    "is_legacy": true,
+    "sort_order": 1018,
+    "selection_kind": "training_group",
+    "map_precision": "partial",
+    "selection_group": "training_targets",
+    "parent_subarea_ids": [],
+    "is_training_target": true,
+    "training_target_id": "training_glutes",
+    "map_selectable": true
+  },
+  {
+    "subarea_id": "training_thigh_front",
+    "target_area": "허벅지",
+    "label_ko": "허벅지 앞쪽 전체",
+    "label_en": "Front thigh overall",
+    "body_group": "training",
+    "side": "center",
+    "views": [
+      "front"
+    ],
+    "atlas_muscle_ids": [
+      "vastus_lateralis_l",
+      "vastus_lateralis_r",
+      "vastus_medialis_l",
+      "vastus_medialis_r",
+      "rectus_femoris_l",
+      "rectus_femoris_r"
+    ],
+    "is_legacy": true,
+    "sort_order": 1019,
+    "selection_kind": "training_group",
+    "map_precision": "partial",
+    "selection_group": "thigh_front",
+    "parent_subarea_ids": [],
+    "is_training_target": true,
+    "training_target_id": "training_thigh_front",
+    "map_selectable": false
+  },
+  {
+    "subarea_id": "training_thigh_rear",
+    "target_area": "허벅지",
+    "label_ko": "햄스트링 전체",
+    "label_en": "Hamstrings overall",
+    "body_group": "training",
+    "side": "center",
+    "views": [
+      "back",
+      "front"
+    ],
+    "atlas_muscle_ids": [
+      "semimembranosus_2_r",
+      "semimembranosus_1_r",
+      "semimembranosus_2_l",
+      "semimembranosus_1_l",
+      "semitendinosus_r",
+      "semitendinosus_l",
+      "biceps_femoris_r",
+      "biceps_femoris_l"
+    ],
+    "is_legacy": true,
+    "sort_order": 1020,
+    "selection_kind": "training_group",
+    "map_precision": "partial",
+    "selection_group": "thigh_rear",
+    "parent_subarea_ids": [],
+    "is_training_target": true,
+    "training_target_id": "training_thigh_rear",
+    "map_selectable": false
+  },
+  {
+    "subarea_id": "training_thigh_inner",
+    "target_area": "허벅지",
+    "label_ko": "내전근",
+    "label_en": "Adductors",
+    "body_group": "training",
+    "side": "center",
+    "views": [
+      "front",
+      "back"
+    ],
+    "atlas_muscle_ids": [
+      "gracilis_l",
+      "gracilis_r",
+      "adductor_magnus_l",
+      "adductor_magnus_r",
+      "adductor_longus_l",
+      "adductor_longus_r",
+      "pectineus_l",
+      "pectineus_r"
+    ],
+    "is_legacy": true,
+    "sort_order": 1021,
+    "selection_kind": "training_group",
+    "map_precision": "partial",
+    "selection_group": "thigh_inner",
+    "parent_subarea_ids": [],
+    "is_training_target": true,
+    "training_target_id": "training_thigh_inner",
+    "map_selectable": true
+  },
+  {
+    "subarea_id": "training_calves",
+    "target_area": "종아리",
+    "label_ko": "종아리 전체",
+    "label_en": "Calves overall",
+    "body_group": "training",
+    "side": "center",
+    "views": [
+      "front",
+      "back"
+    ],
+    "atlas_muscle_ids": [
+      "gastrocnemius_r",
+      "gastrocnemius_l",
+      "fibularis_longus_l",
+      "fibularis_longus_r"
+    ],
+    "is_legacy": true,
+    "sort_order": 1022,
+    "selection_kind": "training_group",
+    "map_precision": "partial",
+    "selection_group": "training_targets",
+    "parent_subarea_ids": [],
+    "is_training_target": true,
+    "training_target_id": "training_calves",
+    "map_selectable": false
+  },
+  {
+    "subarea_id": "training_shins",
+    "target_area": "종아리",
+    "label_ko": "정강이",
+    "label_en": "Shins",
+    "body_group": "training",
+    "side": "center",
+    "views": [
+      "front"
+    ],
+    "atlas_muscle_ids": [
+      "tibialis_anterior_l",
+      "tibialis_anterior_r",
+      "extensor_hallucis_longus_l",
+      "extensor_hallucis_longus_r",
+      "extensor_digitorum_longus_l",
+      "extensor_digitorum_longus_r"
+    ],
+    "is_legacy": true,
+    "sort_order": 1023,
+    "selection_kind": "training_group",
+    "map_precision": "partial",
+    "selection_group": "training_targets",
+    "parent_subarea_ids": [],
+    "is_training_target": true,
+    "training_target_id": "training_shins",
+    "map_selectable": true
+  },
+  {
+    "subarea_id": "training_whole_upper",
+    "target_area": "전신",
+    "label_ko": "상체 중심",
+    "label_en": "Upper-body focus",
+    "body_group": "training",
+    "side": "center",
+    "views": [],
+    "atlas_muscle_ids": [],
+    "is_legacy": true,
+    "sort_order": 1024,
+    "selection_kind": "training_group",
+    "map_precision": "none",
+    "selection_group": "training_targets",
+    "parent_subarea_ids": [],
+    "is_training_target": true,
+    "training_target_id": "training_whole_upper",
+    "map_selectable": false
+  },
+  {
+    "subarea_id": "training_whole_lower",
+    "target_area": "전신",
+    "label_ko": "하체 중심",
+    "label_en": "Lower-body focus",
+    "body_group": "training",
+    "side": "center",
+    "views": [],
+    "atlas_muscle_ids": [],
+    "is_legacy": true,
+    "sort_order": 1025,
+    "selection_kind": "training_group",
+    "map_precision": "none",
+    "selection_group": "training_targets",
+    "parent_subarea_ids": [],
+    "is_training_target": true,
+    "training_target_id": "training_whole_lower",
+    "map_selectable": false
+  },
+  {
+    "subarea_id": "training_whole_core",
+    "target_area": "전신",
+    "label_ko": "코어 중심",
+    "label_en": "Core focus",
+    "body_group": "training",
+    "side": "center",
+    "views": [],
+    "atlas_muscle_ids": [],
+    "is_legacy": true,
+    "sort_order": 1026,
+    "selection_kind": "training_group",
+    "map_precision": "none",
+    "selection_group": "training_targets",
+    "parent_subarea_ids": [],
+    "is_training_target": true,
+    "training_target_id": "training_whole_core",
+    "map_selectable": false
+  },
+  {
+    "subarea_id": "training_back_lats_upper",
+    "target_area": "등",
+    "label_ko": "광배근 상부",
+    "label_en": "Upper lat emphasis",
+    "body_group": "training",
+    "side": "center",
+    "views": [
+      "front",
+      "back"
+    ],
+    "atlas_muscle_ids": [
+      "latissimus_dorsi_r",
+      "latissimus_dorsi_l"
+    ],
+    "is_legacy": true,
+    "sort_order": 1027,
+    "selection_kind": "region",
+    "map_precision": "whole_muscle",
+    "selection_group": "back_lats",
+    "parent_subarea_ids": [
+      "training_back_lats"
+    ],
+    "is_training_target": true,
+    "training_target_id": "training_back_lats_upper",
+    "map_selectable": false
+  },
+  {
+    "subarea_id": "training_back_lats_lower",
+    "target_area": "등",
+    "label_ko": "광배근 하부",
+    "label_en": "Lower lat emphasis",
+    "body_group": "training",
+    "side": "center",
+    "views": [
+      "front",
+      "back"
+    ],
+    "atlas_muscle_ids": [
+      "latissimus_dorsi_r",
+      "latissimus_dorsi_l"
+    ],
+    "is_legacy": true,
+    "sort_order": 1028,
+    "selection_kind": "region",
+    "map_precision": "whole_muscle",
+    "selection_group": "back_lats",
+    "parent_subarea_ids": [
+      "training_back_lats"
+    ],
+    "is_training_target": true,
+    "training_target_id": "training_back_lats_lower",
+    "map_selectable": false
+  },
+  {
+    "subarea_id": "training_back_traps_upper",
+    "target_area": "등",
+    "label_ko": "승모근 상부",
+    "label_en": "Upper trapezius",
+    "body_group": "training",
+    "side": "center",
+    "views": [
+      "front",
+      "back"
+    ],
+    "atlas_muscle_ids": [
+      "trapezius_upper_r",
+      "trapezius_upper_l"
+    ],
+    "is_legacy": true,
+    "sort_order": 1029,
+    "selection_kind": "training_group",
+    "map_precision": "exact",
+    "selection_group": "back_upper",
+    "parent_subarea_ids": [
+      "training_back_upper"
+    ],
+    "is_training_target": true,
+    "training_target_id": "training_back_traps_upper",
+    "map_selectable": true
+  },
+  {
+    "subarea_id": "training_back_traps_middle",
+    "target_area": "등",
+    "label_ko": "승모근 중부",
+    "label_en": "Middle trapezius",
+    "body_group": "training",
+    "side": "center",
+    "views": [
+      "back"
+    ],
+    "atlas_muscle_ids": [
+      "trapezius_middle_r",
+      "trapezius_middle_l"
+    ],
+    "is_legacy": true,
+    "sort_order": 1030,
+    "selection_kind": "training_group",
+    "map_precision": "exact",
+    "selection_group": "back_upper",
+    "parent_subarea_ids": [
+      "training_back_upper"
+    ],
+    "is_training_target": true,
+    "training_target_id": "training_back_traps_middle",
+    "map_selectable": true
+  },
+  {
+    "subarea_id": "training_back_traps_lower",
+    "target_area": "등",
+    "label_ko": "승모근 하부",
+    "label_en": "Lower trapezius",
+    "body_group": "training",
+    "side": "center",
+    "views": [
+      "back"
+    ],
+    "atlas_muscle_ids": [
+      "trapezius_lower_r",
+      "trapezius_lower_l"
+    ],
+    "is_legacy": true,
+    "sort_order": 1031,
+    "selection_kind": "training_group",
+    "map_precision": "exact",
+    "selection_group": "back_upper",
+    "parent_subarea_ids": [
+      "training_back_upper"
+    ],
+    "is_training_target": true,
+    "training_target_id": "training_back_traps_lower",
+    "map_selectable": true
+  },
+  {
+    "subarea_id": "training_back_rhomboids",
+    "target_area": "등",
+    "label_ko": "능형근",
+    "label_en": "Rhomboids",
+    "body_group": "training",
+    "side": "center",
+    "views": [],
+    "atlas_muscle_ids": [],
+    "is_legacy": true,
+    "sort_order": 1032,
+    "selection_kind": "training_group",
+    "map_precision": "none",
+    "selection_group": "back_upper",
+    "parent_subarea_ids": [
+      "training_back_upper"
+    ],
+    "is_training_target": true,
+    "training_target_id": "training_back_rhomboids",
+    "map_selectable": false
+  },
+  {
+    "subarea_id": "training_back_teres",
+    "target_area": "등",
+    "label_ko": "대원근",
+    "label_en": "Teres major",
+    "body_group": "training",
+    "side": "center",
+    "views": [],
+    "atlas_muscle_ids": [],
+    "is_legacy": true,
+    "sort_order": 1033,
+    "selection_kind": "training_group",
+    "map_precision": "none",
+    "selection_group": "back_lats",
+    "parent_subarea_ids": [],
+    "is_training_target": true,
+    "training_target_id": "training_back_teres",
+    "map_selectable": false
+  },
+  {
+    "subarea_id": "training_back_erectors",
+    "target_area": "등",
+    "label_ko": "척추기립근",
+    "label_en": "Erector spinae",
+    "body_group": "training",
+    "side": "center",
+    "views": [],
+    "atlas_muscle_ids": [],
+    "is_legacy": true,
+    "sort_order": 1034,
+    "selection_kind": "training_group",
+    "map_precision": "none",
+    "selection_group": "back_lower",
+    "parent_subarea_ids": [
+      "training_back_lower"
+    ],
+    "is_training_target": true,
+    "training_target_id": "training_back_erectors",
+    "map_selectable": false
+  },
+  {
+    "subarea_id": "training_biceps_long",
+    "target_area": "이두",
+    "label_ko": "이두 장두",
+    "label_en": "Biceps long head",
+    "body_group": "training",
+    "side": "center",
+    "views": [
+      "front"
+    ],
+    "atlas_muscle_ids": [
+      "biceps_brachii_caput_longum_l",
+      "biceps_brachii_caput_longum_r"
+    ],
+    "is_legacy": true,
+    "sort_order": 1035,
+    "selection_kind": "training_group",
+    "map_precision": "exact",
+    "selection_group": "biceps_targets",
+    "parent_subarea_ids": [
+      "training_biceps"
+    ],
+    "is_training_target": true,
+    "training_target_id": "training_biceps_long",
+    "map_selectable": true
+  },
+  {
+    "subarea_id": "training_biceps_short",
+    "target_area": "이두",
+    "label_ko": "이두 단두",
+    "label_en": "Biceps short head",
+    "body_group": "training",
+    "side": "center",
+    "views": [
+      "front"
+    ],
+    "atlas_muscle_ids": [
+      "biceps_brachii_caput_breve_l",
+      "biceps_brachii_caput_breve_r"
+    ],
+    "is_legacy": true,
+    "sort_order": 1036,
+    "selection_kind": "training_group",
+    "map_precision": "exact",
+    "selection_group": "biceps_targets",
+    "parent_subarea_ids": [
+      "training_biceps"
+    ],
+    "is_training_target": true,
+    "training_target_id": "training_biceps_short",
+    "map_selectable": true
+  },
+  {
+    "subarea_id": "training_biceps_brachialis",
+    "target_area": "이두",
+    "label_ko": "상완근",
+    "label_en": "Brachialis",
+    "body_group": "training",
+    "side": "center",
+    "views": [],
+    "atlas_muscle_ids": [],
+    "is_legacy": true,
+    "sort_order": 1037,
+    "selection_kind": "training_group",
+    "map_precision": "none",
+    "selection_group": "biceps_targets",
+    "parent_subarea_ids": [],
+    "is_training_target": true,
+    "training_target_id": "training_biceps_brachialis",
+    "map_selectable": false
+  },
+  {
+    "subarea_id": "training_triceps_long",
+    "target_area": "삼두",
+    "label_ko": "삼두 장두",
+    "label_en": "Triceps long head",
+    "body_group": "training",
+    "side": "center",
+    "views": [
+      "front",
+      "back"
+    ],
+    "atlas_muscle_ids": [
+      "triceps_brachii_caput_longum_r",
+      "triceps_brachii_caput_longum_l"
+    ],
+    "is_legacy": true,
+    "sort_order": 1038,
+    "selection_kind": "training_group",
+    "map_precision": "exact",
+    "selection_group": "triceps_targets",
+    "parent_subarea_ids": [
+      "training_triceps"
+    ],
+    "is_training_target": true,
+    "training_target_id": "training_triceps_long",
+    "map_selectable": true
+  },
+  {
+    "subarea_id": "training_triceps_lateral",
+    "target_area": "삼두",
+    "label_ko": "삼두 외측두",
+    "label_en": "Triceps lateral head",
+    "body_group": "training",
+    "side": "center",
+    "views": [
+      "front",
+      "back"
+    ],
+    "atlas_muscle_ids": [
+      "triceps_brachii_caput_laterale_r",
+      "triceps_brachii_caput_laterale_l"
+    ],
+    "is_legacy": true,
+    "sort_order": 1039,
+    "selection_kind": "training_group",
+    "map_precision": "exact",
+    "selection_group": "triceps_targets",
+    "parent_subarea_ids": [
+      "training_triceps"
+    ],
+    "is_training_target": true,
+    "training_target_id": "training_triceps_lateral",
+    "map_selectable": true
+  },
+  {
+    "subarea_id": "training_triceps_medial",
+    "target_area": "삼두",
+    "label_ko": "삼두 내측두",
+    "label_en": "Triceps medial head",
+    "body_group": "training",
+    "side": "center",
+    "views": [
+      "back"
+    ],
+    "atlas_muscle_ids": [
+      "triceps_brachii_caput_mediale_r",
+      "triceps_brachii_caput_mediale_l"
+    ],
+    "is_legacy": true,
+    "sort_order": 1040,
+    "selection_kind": "training_group",
+    "map_precision": "exact",
+    "selection_group": "triceps_targets",
+    "parent_subarea_ids": [
+      "training_triceps"
+    ],
+    "is_training_target": true,
+    "training_target_id": "training_triceps_medial",
+    "map_selectable": true
+  },
+  {
+    "subarea_id": "training_forearm_flexors",
+    "target_area": "전완",
+    "label_ko": "전완 굴곡근",
+    "label_en": "Forearm flexors",
+    "body_group": "training",
+    "side": "center",
+    "views": [
+      "back",
+      "front"
+    ],
+    "atlas_muscle_ids": [
+      "flexor_carpi_ulnaris_r",
+      "flexor_carpi_ulnaris_l",
+      "flexor_digitorum_superficialis_l",
+      "flexor_digitorum_superficialis_r",
+      "flexor_carpi_radialis_l",
+      "flexor_carpi_radialis_r",
+      "palmaris_longus_l",
+      "palmaris_longus_r",
+      "pronator_quadratus_l",
+      "pronator_quadratus_r",
+      "pronator_teres_l",
+      "pronator_teres_r"
+    ],
+    "is_legacy": true,
+    "sort_order": 1041,
+    "selection_kind": "training_group",
+    "map_precision": "partial",
+    "selection_group": "training_targets",
+    "parent_subarea_ids": [
+      "training_forearms"
+    ],
+    "is_training_target": true,
+    "training_target_id": "training_forearm_flexors",
+    "map_selectable": true
+  },
+  {
+    "subarea_id": "training_forearm_extensors",
+    "target_area": "전완",
+    "label_ko": "전완 신전근",
+    "label_en": "Forearm extensors",
+    "body_group": "training",
+    "side": "center",
+    "views": [
+      "front",
+      "back"
+    ],
+    "atlas_muscle_ids": [
+      "extensor_digitorum_longus_l",
+      "extensor_digitorum_longus_r",
+      "extensor_digitorum_r",
+      "extensor_digitorum_l",
+      "extensor_carpi_ulnaris_r",
+      "extensor_carpi_ulnaris_l",
+      "extensor_carpi_radialis_longus_l",
+      "extensor_carpi_radialis_longus_r"
+    ],
+    "is_legacy": true,
+    "sort_order": 1042,
+    "selection_kind": "training_group",
+    "map_precision": "partial",
+    "selection_group": "training_targets",
+    "parent_subarea_ids": [
+      "training_forearms"
+    ],
+    "is_training_target": true,
+    "training_target_id": "training_forearm_extensors",
+    "map_selectable": true
+  },
+  {
+    "subarea_id": "training_forearm_brachioradialis",
+    "target_area": "전완",
+    "label_ko": "상완요골근",
+    "label_en": "Brachioradialis",
+    "body_group": "training",
+    "side": "center",
+    "views": [
+      "front",
+      "back"
+    ],
+    "atlas_muscle_ids": [
+      "brachioradialis_r",
+      "brachioradialis_l"
+    ],
+    "is_legacy": true,
+    "sort_order": 1043,
+    "selection_kind": "training_group",
+    "map_precision": "exact",
+    "selection_group": "training_targets",
+    "parent_subarea_ids": [
+      "training_forearms"
+    ],
+    "is_training_target": true,
+    "training_target_id": "training_forearm_brachioradialis",
+    "map_selectable": true
+  },
+  {
+    "subarea_id": "training_abs_upper",
+    "target_area": "복근",
+    "label_ko": "상복부",
+    "label_en": "Upper abs emphasis",
+    "body_group": "training",
+    "side": "center",
+    "views": [
+      "front"
+    ],
+    "atlas_muscle_ids": [
+      "rectus_abdominis_1",
+      "rectus_abdominis_2_l",
+      "rectus_abdominis_2_r",
+      "rectus_abdominis_3_l",
+      "rectus_abdominis_3_r",
+      "rectus_abdominis_4_l",
+      "rectus_abdominis_4_r"
+    ],
+    "is_legacy": true,
+    "sort_order": 1044,
+    "selection_kind": "region",
+    "map_precision": "whole_muscle",
+    "selection_group": "abs_front",
+    "parent_subarea_ids": [
+      "training_abs_front"
+    ],
+    "is_training_target": true,
+    "training_target_id": "training_abs_upper",
+    "map_selectable": false
+  },
+  {
+    "subarea_id": "training_abs_lower",
+    "target_area": "복근",
+    "label_ko": "하복부",
+    "label_en": "Lower abs emphasis",
+    "body_group": "training",
+    "side": "center",
+    "views": [
+      "front"
+    ],
+    "atlas_muscle_ids": [
+      "rectus_abdominis_1",
+      "rectus_abdominis_2_l",
+      "rectus_abdominis_2_r",
+      "rectus_abdominis_3_l",
+      "rectus_abdominis_3_r",
+      "rectus_abdominis_4_l",
+      "rectus_abdominis_4_r"
+    ],
+    "is_legacy": true,
+    "sort_order": 1045,
+    "selection_kind": "region",
+    "map_precision": "whole_muscle",
+    "selection_group": "abs_front",
+    "parent_subarea_ids": [
+      "training_abs_front"
+    ],
+    "is_training_target": true,
+    "training_target_id": "training_abs_lower",
+    "map_selectable": false
+  },
+  {
+    "subarea_id": "training_abs_external_oblique",
+    "target_area": "복근",
+    "label_ko": "외복사근",
+    "label_en": "External oblique",
+    "body_group": "training",
+    "side": "center",
+    "views": [
+      "front",
+      "back"
+    ],
+    "atlas_muscle_ids": [
+      "external_oblique_1_l",
+      "external_oblique_2_l",
+      "external_oblique_3_l",
+      "external_oblique_4_l",
+      "external_oblique_5_l",
+      "external_oblique_6_l",
+      "external_oblique_7_l",
+      "external_oblique_8_l",
+      "external_oblique_1_r",
+      "external_oblique_2_r",
+      "external_oblique_3_r",
+      "external_oblique_4_r",
+      "external_oblique_5_r",
+      "external_oblique_6_r",
+      "external_oblique_7_r",
+      "external_oblique_8_r"
+    ],
+    "is_legacy": true,
+    "sort_order": 1046,
+    "selection_kind": "training_group",
+    "map_precision": "exact",
+    "selection_group": "abs_obliques",
+    "parent_subarea_ids": [
+      "training_abs_side"
+    ],
+    "is_training_target": true,
+    "training_target_id": "training_abs_external_oblique",
+    "map_selectable": true
+  },
+  {
+    "subarea_id": "training_abs_internal_oblique",
+    "target_area": "복근",
+    "label_ko": "내복사근",
+    "label_en": "Internal oblique",
+    "body_group": "training",
+    "side": "center",
+    "views": [],
+    "atlas_muscle_ids": [],
+    "is_legacy": true,
+    "sort_order": 1047,
+    "selection_kind": "training_group",
+    "map_precision": "none",
+    "selection_group": "abs_obliques",
+    "parent_subarea_ids": [
+      "training_abs_side"
+    ],
+    "is_training_target": true,
+    "training_target_id": "training_abs_internal_oblique",
+    "map_selectable": false
+  },
+  {
+    "subarea_id": "training_abs_transverse",
+    "target_area": "복근",
+    "label_ko": "복횡근",
+    "label_en": "Transversus abdominis",
+    "body_group": "training",
+    "side": "center",
+    "views": [],
+    "atlas_muscle_ids": [],
+    "is_legacy": true,
+    "sort_order": 1048,
+    "selection_kind": "training_group",
+    "map_precision": "none",
+    "selection_group": "abs_deep",
+    "parent_subarea_ids": [],
+    "is_training_target": true,
+    "training_target_id": "training_abs_transverse",
+    "map_selectable": false
+  },
+  {
+    "subarea_id": "training_thigh_lateralis",
+    "target_area": "허벅지",
+    "label_ko": "외측광근",
+    "label_en": "Vastus lateralis",
+    "body_group": "training",
+    "side": "center",
+    "views": [
+      "front"
+    ],
+    "atlas_muscle_ids": [
+      "vastus_lateralis_l",
+      "vastus_lateralis_r"
+    ],
+    "is_legacy": true,
+    "sort_order": 1049,
+    "selection_kind": "training_group",
+    "map_precision": "exact",
+    "selection_group": "thigh_front",
+    "parent_subarea_ids": [
+      "training_thigh_front"
+    ],
+    "is_training_target": true,
+    "training_target_id": "training_thigh_lateralis",
+    "map_selectable": true
+  },
+  {
+    "subarea_id": "training_thigh_medialis",
+    "target_area": "허벅지",
+    "label_ko": "내측광근",
+    "label_en": "Vastus medialis",
+    "body_group": "training",
+    "side": "center",
+    "views": [
+      "front"
+    ],
+    "atlas_muscle_ids": [
+      "vastus_medialis_l",
+      "vastus_medialis_r"
+    ],
+    "is_legacy": true,
+    "sort_order": 1050,
+    "selection_kind": "training_group",
+    "map_precision": "exact",
+    "selection_group": "thigh_front",
+    "parent_subarea_ids": [
+      "training_thigh_front"
+    ],
+    "is_training_target": true,
+    "training_target_id": "training_thigh_medialis",
+    "map_selectable": true
+  },
+  {
+    "subarea_id": "training_thigh_rectus",
+    "target_area": "허벅지",
+    "label_ko": "대퇴직근",
+    "label_en": "Rectus femoris",
+    "body_group": "training",
+    "side": "center",
+    "views": [
+      "front"
+    ],
+    "atlas_muscle_ids": [
+      "rectus_femoris_l",
+      "rectus_femoris_r"
+    ],
+    "is_legacy": true,
+    "sort_order": 1051,
+    "selection_kind": "training_group",
+    "map_precision": "exact",
+    "selection_group": "thigh_front",
+    "parent_subarea_ids": [
+      "training_thigh_front"
+    ],
+    "is_training_target": true,
+    "training_target_id": "training_thigh_rectus",
+    "map_selectable": true
+  },
+  {
+    "subarea_id": "training_thigh_biceps",
+    "target_area": "허벅지",
+    "label_ko": "대퇴이두근 전체",
+    "label_en": "Biceps femoris overall",
+    "body_group": "training",
+    "side": "center",
+    "views": [
+      "back"
+    ],
+    "atlas_muscle_ids": [
+      "biceps_femoris_r",
+      "biceps_femoris_l"
+    ],
+    "is_legacy": true,
+    "sort_order": 1052,
+    "selection_kind": "training_group",
+    "map_precision": "exact",
+    "selection_group": "thigh_rear",
+    "parent_subarea_ids": [
+      "training_thigh_rear"
+    ],
+    "is_training_target": true,
+    "training_target_id": "training_thigh_biceps",
+    "map_selectable": true
+  },
+  {
+    "subarea_id": "training_thigh_biceps_long",
+    "target_area": "허벅지",
+    "label_ko": "대퇴이두근 장두",
+    "label_en": "Biceps femoris long head",
+    "body_group": "training",
+    "side": "center",
+    "views": [
+      "back"
+    ],
+    "atlas_muscle_ids": [
+      "biceps_femoris_r",
+      "biceps_femoris_l"
+    ],
+    "is_legacy": true,
+    "sort_order": 1053,
+    "selection_kind": "region",
+    "map_precision": "whole_muscle",
+    "selection_group": "thigh_rear",
+    "parent_subarea_ids": [
+      "training_thigh_biceps",
+      "training_thigh_rear"
+    ],
+    "is_training_target": true,
+    "training_target_id": "training_thigh_biceps_long",
+    "map_selectable": false
+  },
+  {
+    "subarea_id": "training_thigh_biceps_short",
+    "target_area": "허벅지",
+    "label_ko": "대퇴이두근 단두",
+    "label_en": "Biceps femoris short head",
+    "body_group": "training",
+    "side": "center",
+    "views": [
+      "back"
+    ],
+    "atlas_muscle_ids": [
+      "biceps_femoris_r",
+      "biceps_femoris_l"
+    ],
+    "is_legacy": true,
+    "sort_order": 1054,
+    "selection_kind": "region",
+    "map_precision": "whole_muscle",
+    "selection_group": "thigh_rear",
+    "parent_subarea_ids": [
+      "training_thigh_biceps",
+      "training_thigh_rear"
+    ],
+    "is_training_target": true,
+    "training_target_id": "training_thigh_biceps_short",
+    "map_selectable": false
+  },
+  {
+    "subarea_id": "training_thigh_medial_hamstrings",
+    "target_area": "허벅지",
+    "label_ko": "내측 햄스트링",
+    "label_en": "Medial hamstrings",
+    "body_group": "training",
+    "side": "center",
+    "views": [
+      "back",
+      "front"
+    ],
+    "atlas_muscle_ids": [
+      "semimembranosus_2_r",
+      "semimembranosus_1_r",
+      "semimembranosus_2_l",
+      "semimembranosus_1_l",
+      "semitendinosus_r",
+      "semitendinosus_l"
+    ],
+    "is_legacy": true,
+    "sort_order": 1055,
+    "selection_kind": "training_group",
+    "map_precision": "exact",
+    "selection_group": "thigh_rear",
+    "parent_subarea_ids": [
+      "training_thigh_rear"
+    ],
+    "is_training_target": true,
+    "training_target_id": "training_thigh_medial_hamstrings",
+    "map_selectable": true
+  },
+  {
+    "subarea_id": "training_calf_gastrocnemius",
+    "target_area": "종아리",
+    "label_ko": "비복근",
+    "label_en": "Gastrocnemius",
+    "body_group": "training",
+    "side": "center",
+    "views": [
+      "front",
+      "back"
+    ],
+    "atlas_muscle_ids": [
+      "gastrocnemius_r",
+      "gastrocnemius_l"
+    ],
+    "is_legacy": true,
+    "sort_order": 1056,
+    "selection_kind": "training_group",
+    "map_precision": "exact",
+    "selection_group": "training_targets",
+    "parent_subarea_ids": [
+      "training_calves"
+    ],
+    "is_training_target": true,
+    "training_target_id": "training_calf_gastrocnemius",
+    "map_selectable": true
+  },
+  {
+    "subarea_id": "training_calf_soleus",
+    "target_area": "종아리",
+    "label_ko": "가자미근",
+    "label_en": "Soleus",
+    "body_group": "training",
+    "side": "center",
+    "views": [],
+    "atlas_muscle_ids": [],
+    "is_legacy": true,
+    "sort_order": 1057,
+    "selection_kind": "training_group",
+    "map_precision": "none",
+    "selection_group": "training_targets",
+    "parent_subarea_ids": [
+      "training_calves"
+    ],
+    "is_training_target": true,
+    "training_target_id": "training_calf_soleus",
+    "map_selectable": false
   }
 ]

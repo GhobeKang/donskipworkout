@@ -4,7 +4,7 @@ import { useId } from 'react';
 import { atlas_views, muscle_label, muscles_by_id } from '../../_lib/anatomy/muscleAtlas';
 import map_styles from './MuscleMap.module.css';
 
-export default function MuscleMap({ view, highlighted_muscles = {}, activity_by_muscle = {}, active_muscle_id, language, on_inspect = () => {}, zoom_level = 1, selected_muscle_ids = null, selectable_muscle_ids = null, on_toggle, disabled = false }) {
+export default function MuscleMap({ view, highlighted_muscles = {}, activity_by_muscle = {}, active_muscle_id, language, on_inspect = () => {}, zoom_level = 1, selected_muscle_ids = null, selectable_muscle_ids = null, selection_labels = {}, on_toggle, disabled = false }) {
   const map_id = useId();
   const view_data = atlas_views[view];
   const selection_mode = Boolean(on_toggle);
@@ -23,7 +23,7 @@ export default function MuscleMap({ view, highlighted_muscles = {}, activity_by_
       const is_interactive = Boolean(muscle && is_selectable && !disabled);
       const is_inspected = Boolean(muscle && (selection_mode ? selected_ids.has(muscle.id) : muscle.id === active_muscle_id));
       const activity = activity_by_muscle[muscle?.id];
-      const label = muscle ? muscle_label(muscle, language) : '';
+      const label = muscle ? selection_mode && selection_labels[muscle.id] || muscle_label(muscle, language) : '';
       return <g key={layer_index}
         id={muscle ? `${map_id}-${view}-${muscle.id}` : undefined}
         className={muscle ? `${map_styles.muscleRegion}${is_inspected ? ` ${map_styles.isInspected}` : ''}${activity?.is_coarse ? ` ${map_styles.isCoarse}` : ''}${!is_selectable ? ` ${map_styles.isUnavailable}` : ''}` : map_styles.bodyBase}

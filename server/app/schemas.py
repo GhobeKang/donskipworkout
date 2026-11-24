@@ -290,6 +290,14 @@ class exerciseSubareaData(BaseModel):
     atlas_muscle_ids: list[str]
     is_legacy: bool
     sort_order: int
+    selection_kind: Literal['muscle', 'muscle_group', 'training_group', 'muscle_head', 'region', 'focus', 'artwork', 'connective_tissue'] = 'muscle'
+    map_precision: Literal['exact', 'whole_muscle', 'partial', 'none'] = 'exact'
+    selection_group: str | None = None
+    canonical_subarea_id: str | None = None
+    parent_subarea_ids: list[str] = Field(default_factory=list)
+    is_training_target: bool = False
+    training_target_id: str | None = None
+    map_selectable: bool = False
 
 
 class exerciseData(BaseModel):

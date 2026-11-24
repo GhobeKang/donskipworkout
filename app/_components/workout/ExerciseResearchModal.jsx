@@ -39,10 +39,21 @@ export default function ExerciseResearchModal({ exercise, on_change, on_close, o
     const dialog_element = dialog_ref.current;
     const previously_focused = document.activeElement;
     const previous_overflow = document.body.style.overflow;
+    const visual_viewport = window.visualViewport;
+    const update_viewport = () => {
+      dialog_element.style.setProperty('--research_viewport_height', `${visual_viewport?.height ?? window.innerHeight}px`);
+      dialog_element.style.setProperty('--research_viewport_top', `${visual_viewport?.offsetTop ?? 0}px`);
+    };
+    update_viewport();
+    window.addEventListener('resize', update_viewport);
+    visual_viewport?.addEventListener('resize', update_viewport);
+    visual_viewport?.addEventListener('scroll', update_viewport);
     dialog_element.showModal();
     document.body.style.overflow = 'hidden';
-    content_ref.current?.focus({ preventScroll: true });
     return () => {
+      window.removeEventListener('resize', update_viewport);
+      visual_viewport?.removeEventListener('resize', update_viewport);
+      visual_viewport?.removeEventListener('scroll', update_viewport);
       more_request_ref.current?.abort();
       dialog_element.close();
       document.body.style.overflow = previous_overflow;
@@ -137,57 +148,61 @@ export default function ExerciseResearchModal({ exercise, on_change, on_close, o
     }
   };
 
-  return <dialog className="actionModal exerciseEditorModal exerciseResearchModal" ref={dialog_ref} aria-labelledby="exercise-research-title" aria-describedby="exercise-research-description" aria-busy={is_busy}
+  return <dialog className="actionModal exerciseResearchModal" ref={dialog_ref} aria-labelledby="exercise-research-title" aria-describedby="exercise-research-description" aria-busy={is_busy}
     onCancel={(event) => { event.preventDefault(); if (!pending) on_close(); }}>
-    <button className="modalCloseButton" type="button" aria-label={t('팝업 닫기')} disabled={pending} onClick={on_close}><MaterialIcon>close</MaterialIcon></button>
-    <header className="exerciseEditorHeader">
-      <p className="modalEyebrow">{exercise_name}</p>
-      <h2 id="exercise-research-title">{t('연구 기록')}</h2>
-    </header>
-    <p id="exercise-research-description" className="infoText">{t('들은 조언이나 자극이 잘 온 방법을 기록해 두세요. 이 종목을 불러오면 최근 작성한 기록 한 개가 표시됩니다. 코치를 등록하면 코치도 조회하고 수정할 수 있습니다.')}</p>
-    <HelpLink question_id="research">{t('연구일지와 코치 공유 안내')}</HelpLink>
-    <form className="exerciseResearchForm" onSubmit={save_record}>
-      <label className="fieldLabel" htmlFor="exercise-research-content">{t(editing_record_id ? '연구 기록 수정' : '새 연구 기록')}</label>
-      <textarea id="exercise-research-content" className="timeInput" ref={content_ref} rows={4} maxLength={2000} value={content} disabled={pending} required
-        placeholder={t('예: 손에 힘을 덜 주고 팔꿈치를 아래로 당기니 등에 자극이 잘 왔다.')}
-        onChange={(event) => { set_content(event.target.value); set_save_message(''); }} />
-      <div className="exerciseResearchFormActions">
-        <small>{content.length} / 2000</small>
-        {editing_record_id && <button className="textButton" type="button" disabled={pending} onClick={reset_editor}>{t('취소')}</button>}
-        <button className="wideButton primary" type="submit" disabled={is_busy || !content.trim()}>{t(pending ? '저장 중…' : '저장')}</button>
+    <header className="exerciseResearchHeader">
+      <button className="modalCloseButton" type="button" aria-label={t('팝업 닫기')} disabled={pending} onClick={on_close}><MaterialIcon>close</MaterialIcon></button>
+      <div className="exerciseResearchTitle">
+        <h2 id="exercise-research-title">{t('연구 기록')}</h2>
+        <p className="modalEyebrow" title={exercise_name}>{exercise_name}</p>
       </div>
-    </form>
-    {save_message && <p className="infoText" role="status">{save_message}</p>}
-    {error_message && <p className="errorText" role="alert">{localize_message(error_message)}</p>}
-    <h3 className="exerciseResearchListTitle">{t('연구 기록 목록')}<small>{t('최근 작성순')}</small></h3>
-    <RequestState loading={resource.loading} error={resource.error} on_retry={retry_count < 2 ? () => {
-      set_retry_count((value) => value + 1);
-      set_revision((value) => value + 1);
-    } : undefined} />
-    {!resource.loading && !resource.error && <>
-      {records.length ? <ol className="exerciseResearchList">
-        {records.map((record, record_index) => <li key={record.record_id}>
-          <div className="exerciseResearchRecordHeading">
-            <time dateTime={record.created_at}>{date_formatter.format(new Date(record.created_at))}</time>
-            {record_index === 0 && <span className="exerciseResearchLatest">{t('최근 작성')}</span>}
-          </div>
-          <ResearchNoteContent record={record} />
-          {record.updated_at && <p className="infoText">{t(record.edited_by_mentor ? '코치가 수정한 기록' : '수정한 기록')} · {record.updated_by_name || t('탈퇴한 사용자')} · {date_formatter.format(new Date(record.updated_at))}</p>}
-          <div className="exerciseResearchRecordActions">
-            <button className="textButton" type="button" aria-label={t('{0} 연구 기록 수정', [record_index + 1])} disabled={is_busy} onClick={() => {
-              set_editing_record_id(record.record_id);
-              set_editing_revision(record.revision);
-              set_content(record.content);
-              set_error_message('');
-              set_save_message('');
-              content_ref.current?.focus();
-            }}>{t('수정')}</button>
-            <button className="textButton" type="button" aria-label={t('{0} 연구 기록 삭제', [record_index + 1])} disabled={is_busy} onClick={() => delete_record(record)}>{t('삭제')}</button>
-          </div>
-          {record.revision > 1 && <ResearchRevisionHistory path={`${request_path}/${record.record_id}/revisions`} revision={record.revision} on_unauthorized={on_unauthorized} />}
-        </li>)}
-      </ol> : <p className="emptyState">{t('아직 연구 기록이 없습니다. 이 종목의 첫 요령을 남겨 보세요.')}</p>}
-      {has_more && more_retry_count < 3 && <button className="textButton" type="button" disabled={is_busy} onClick={load_more}>{t(loading_more ? '불러오는 중…' : '더 보기')}</button>}
-    </>}
+      <button className="wideButton primary" type="submit" form="exercise-research-form" disabled={is_busy || !content.trim()}>{t(pending ? '저장 중…' : '저장')}</button>
+    </header>
+    <div className="exerciseResearchBody">
+      <form id="exercise-research-form" className="exerciseResearchForm" onSubmit={save_record}>
+        <label className="fieldLabel" htmlFor="exercise-research-content">{t(editing_record_id ? '연구 기록 수정' : '새 연구 기록')}</label>
+        <textarea id="exercise-research-content" className="timeInput" ref={content_ref} rows={4} maxLength={2000} value={content} disabled={pending} required
+          placeholder={t('예: 손에 힘을 덜 주고 팔꿈치를 아래로 당기니 등에 자극이 잘 왔다.')}
+          onChange={(event) => { set_content(event.target.value); set_save_message(''); }} />
+        <div className="exerciseResearchFormActions">
+          <small>{content.length} / 2000</small>
+          {editing_record_id && <button className="textButton" type="button" disabled={pending} onClick={reset_editor}>{t('취소')}</button>}
+        </div>
+      </form>
+      {save_message && <p className="infoText" role="status">{save_message}</p>}
+      {error_message && <p className="errorText" role="alert">{localize_message(error_message)}</p>}
+      <p id="exercise-research-description" className="infoText">{t('들은 조언이나 자극이 잘 온 방법을 기록해 두세요. 이 종목을 불러오면 최근 작성한 기록 한 개가 표시됩니다. 코치를 등록하면 코치도 조회하고 수정할 수 있습니다.')}</p>
+      <HelpLink question_id="research">{t('연구일지와 코치 공유 안내')}</HelpLink>
+      <h3 className="exerciseResearchListTitle">{t('연구 기록 목록')}<small>{t('최근 작성순')}</small></h3>
+      <RequestState loading={resource.loading} error={resource.error} on_retry={retry_count < 2 ? () => {
+        set_retry_count((value) => value + 1);
+        set_revision((value) => value + 1);
+      } : undefined} />
+      {!resource.loading && !resource.error && <>
+        {records.length ? <ol className="exerciseResearchList">
+          {records.map((record, record_index) => <li key={record.record_id}>
+            <div className="exerciseResearchRecordHeading">
+              <time dateTime={record.created_at}>{date_formatter.format(new Date(record.created_at))}</time>
+              {record_index === 0 && <span className="exerciseResearchLatest">{t('최근 작성')}</span>}
+            </div>
+            <ResearchNoteContent record={record} />
+            {record.updated_at && <p className="infoText">{t(record.edited_by_mentor ? '코치가 수정한 기록' : '수정한 기록')} · {record.updated_by_name || t('탈퇴한 사용자')} · {date_formatter.format(new Date(record.updated_at))}</p>}
+            <div className="exerciseResearchRecordActions">
+              <button className="textButton" type="button" aria-label={t('{0} 연구 기록 수정', [record_index + 1])} disabled={is_busy} onClick={() => {
+                set_editing_record_id(record.record_id);
+                set_editing_revision(record.revision);
+                set_content(record.content);
+                set_error_message('');
+                set_save_message('');
+                content_ref.current?.focus();
+              }}>{t('수정')}</button>
+              <button className="textButton" type="button" aria-label={t('{0} 연구 기록 삭제', [record_index + 1])} disabled={is_busy} onClick={() => delete_record(record)}>{t('삭제')}</button>
+            </div>
+            {record.revision > 1 && <ResearchRevisionHistory path={`${request_path}/${record.record_id}/revisions`} revision={record.revision} on_unauthorized={on_unauthorized} />}
+          </li>)}
+        </ol> : <p className="emptyState">{t('아직 연구 기록이 없습니다. 이 종목의 첫 요령을 남겨 보세요.')}</p>}
+        {has_more && more_retry_count < 3 && <button className="textButton" type="button" disabled={is_busy} onClick={load_more}>{t(loading_more ? '불러오는 중…' : '더 보기')}</button>}
+      </>}
+    </div>
   </dialog>;
 }

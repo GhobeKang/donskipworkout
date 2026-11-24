@@ -6,7 +6,7 @@ from datetime import datetime, timedelta, timezone
 import firebase_admin
 from firebase_admin import credentials, messaging
 from firebase_admin.exceptions import FirebaseError
-from sqlalchemy import select
+from sqlalchemy import exists, func, select
 
 from .apns import apnsSender
 from .database import (
@@ -15,6 +15,7 @@ from .database import (
     notificationPreference,
     pushDevice,
     userAccount,
+    workerLease,
 )
 from .notification_catalog import read_notification_catalog
 from .notification_service import next_allowed_send_at
@@ -85,8 +86,12 @@ def build_fcm_message(event: notificationEvent, device: pushDevice, now=None):
     )
 
 
-def claim_due_notification(session_factory, enabled_providers, now):
+def claim_due_notification(session_factory, enabled_providers, now, *, instance_id):
     with session_factory() as database:
+        lease_check = exists(select(workerLease.worker_name).where(
+            workerLease.worker_name == 'maintenance', workerLease.instance_id == instance_id,
+            workerLease.lease_expires_at > func.timezone('UTC', func.clock_timestamp()),
+        ))
         row = database.execute(
             select(notificationOutbox, notificationEvent, pushDevice)
             .join(notificationEvent, notificationEvent.event_id == notificationOutbox.event_id)
@@ -95,6 +100,7 @@ def claim_due_notification(session_factory, enabled_providers, now):
                 notificationOutbox.status.in_(['queued', 'processing']),
                 notificationOutbox.next_attempt_at <= now,
                 pushDevice.provider.in_(enabled_providers),
+                lease_check,
             )
             .order_by(notificationOutbox.next_attempt_at, notificationOutbox.outbox_id)
             .limit(1)
@@ -174,7 +180,7 @@ def finish_delivery(
         database.commit()
 
 
-def deliver_due_notifications(session_factory, firebase_app, apns_sender) -> int:
+def deliver_due_notifications(session_factory, firebase_app, apns_sender, *, instance_id) -> int:
     enabled_providers = []
     if firebase_app is not None:
         enabled_providers.append('fcm')
@@ -186,7 +192,7 @@ def deliver_due_notifications(session_factory, firebase_app, apns_sender) -> int
     batch_started_at = time.monotonic()
     for _ in range(worker_batch_size):
         now = datetime.now(timezone.utc).replace(tzinfo=None)
-        claim = claim_due_notification(session_factory, enabled_providers, now)
+        claim = claim_due_notification(session_factory, enabled_providers, now, instance_id=instance_id)
         if claim is None:
             break
         processed_count += 1
@@ -257,6 +263,7 @@ async def run_notification_worker(
     apns_environment: str = 'production',
     catalog_path=None,
     worker_state=None,
+    *, instance_id,
 ):
     worker_state = worker_state if worker_state is not None else {}
     worker_state.update(
@@ -305,7 +312,7 @@ async def run_notification_worker(
             except Exception as error:
                 batch_error = 'workout_schedule_failed'
                 logger.error('Workout scheduler failed: %s', type(error).__name__)
-        count = deliver_due_notifications(session_factory, firebase_app, apns_sender)
+        count = deliver_due_notifications(session_factory, firebase_app, apns_sender, instance_id=instance_id)
         worker_state['last_delivery_at'] = datetime.now(timezone.utc).isoformat()
         worker_state['last_error'] = batch_error
         return count
