@@ -6,14 +6,17 @@ from decimal import Decimal
 from types import SimpleNamespace
 from zoneinfo import ZoneInfo
 
-from sqlalchemy import and_, or_, select
+from sqlalchemy import and_, func, or_, select
 
 from .database import (
     challengeCheckin,
     challengeRoundMember,
     challengeRulebook,
     challengeVerificationEvent,
+    exercise_report_area,
+    exerciseItem,
     scheduleDay,
+    sharedExerciseItem,
     userAccount,
     weeklyPromise,
     workoutSession,
@@ -518,8 +521,24 @@ def build_round_growth_reports(database, current_round, now):
     sets = database.execute(select(
         workoutSession.session_id, workoutSession.user_id, workoutSession.workout_date,
         workoutSet.exercise_source, workoutSet.exercise_id, workoutSet.shared_exercise_id,
-        workoutSet.exercise_name, workoutSet.weight_kg, workoutSet.body_weight_kg, workoutSet.reps,
-    ).join(workoutSession, workoutSession.session_id == workoutSet.session_id).where(
+        workoutSet.exercise_name, workoutSet.weight_kg,
+        func.coalesce(workoutSet.body_weight_kg, userAccount.body_weight_kg).label('body_weight_kg'),
+        workoutSet.reps,
+        exercise_report_area().label('target_area'),
+    ).join(workoutSession, workoutSession.session_id == workoutSet.session_id).join(
+        userAccount, userAccount.user_id == workoutSession.user_id,
+    ).outerjoin(
+        exerciseItem, and_(
+            workoutSet.exercise_source == 'custom',
+            exerciseItem.exercise_id == workoutSet.exercise_id,
+            exerciseItem.user_id == workoutSession.user_id,
+        ),
+    ).outerjoin(
+        sharedExerciseItem, and_(
+            workoutSet.exercise_source == 'shared',
+            sharedExerciseItem.exercise_id == workoutSet.shared_exercise_id,
+        ),
+    ).where(
         workoutSession.session_id.in_([item.session_id for item in sessions]),
     ).order_by(workoutSession.workout_date, workoutSet.exercise_order, workoutSet.set_order)).all()
     sessions_by_member = defaultdict(list)

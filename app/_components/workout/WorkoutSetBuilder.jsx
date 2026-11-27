@@ -72,7 +72,7 @@ export default function WorkoutSetBuilder({
               </div>
             </fieldset>
             <p className="infoText" id={weight_hint_id}>{t('딥스·풀업에서 머신이 덜어 주는 중량입니다. 선택한 세트는 음수로 기록됩니다. 예: 20kg 보조 → -20kg.')}</p>
-            <p className="infoText">{t('0kg은 당시 체중, 보조 중량은 체중에서 뺀 값으로 운동량을 계산해요. 체중이 없는 기록은 제외해요.')}</p>
+            <p className="infoText">{t('복근 0kg 세트는 계산 기준 1kg을 적용하고, 다른 부위의 0kg은 총중량에서 제외해요. 음수는 체중에서 보조중량을 빼서 계산해요.')}</p>
           </details>
         </div>
       </article>;

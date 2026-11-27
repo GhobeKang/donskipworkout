@@ -15,7 +15,7 @@ const action_content_by_action = {
     icon: 'self_improvement',
     eyebrow: '회복도 실력.',
     title: '쉴 땐 제대로 쉬어.',
-    message: '오늘을 휴식으로 기록합니다. 출석 횟수에는 포함하지 않으며, 오늘의 상태는 바꿀 수 없습니다.',
+    message: '오늘을 휴식으로 기록합니다. 휴식은 출석 횟수에 포함되지 않아요. 오늘 운동하게 되면 출석 인증을 할 수 있어요.',
     detail: '오늘을 휴식으로 기록할까요?',
     confirm_label: '오늘은 휴식하기',
   },

@@ -5,12 +5,13 @@ import { api_request } from '../_lib/api';
 import { localize_data } from '../_lib/i18n';
 import { useLanguage } from './useLanguage';
 
-export default function useApiResource(path, revision, on_unauthorized) {
+export default function useApiResource(path, revision, on_unauthorized, { localize_response = true } = {}) {
   const { language, localize_message } = useLanguage();
   const [resource, set_resource] = useState({
     path: null, data: null, loading: true, error: '', loaded_revision: null,
   });
-  const localized_data = useMemo(() => localize_data(resource.data, language), [resource.data, language]);
+  const display_data = useMemo(() => localize_response ? localize_data(resource.data, language) : resource.data,
+    [resource.data, language, localize_response]);
   useEffect(() => {
     const controller = new AbortController();
     set_resource((current) => ({
@@ -33,5 +34,5 @@ export default function useApiResource(path, revision, on_unauthorized) {
       });
     return () => controller.abort();
   }, [path, revision, on_unauthorized]);
-  return resource.path === path ? { ...resource, data: localized_data, error: localize_message(resource.error) } : { path, data: null, loading: true, error: '' };
+  return resource.path === path ? { ...resource, data: display_data, error: localize_message(resource.error) } : { path, data: null, loading: true, error: '' };
 }

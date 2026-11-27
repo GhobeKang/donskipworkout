@@ -1,0 +1,136 @@
+.dashboard {
+  --dashboard-gap: 16px;
+  --panel-padding: 20px;
+  color: var(--white);
+}
+
+.pageHeader, .sessionActions, .scheduleOptions, .toolRow, .memoryRow {
+  display: flex;
+  align-items: center;
+}
+
+.pageHeader { justify-content: space-between; gap: 16px; margin: 3px 0 19px; }
+.pageHeader h1 { margin: 0; font-size: 32px; font-weight: 850; letter-spacing: -.06em; line-height: 1.2; }
+.pageHeader time { display: block; margin-top: 4px; color: var(--muted); font-size: 14px; }
+.refreshButton {
+  display: grid; place-items: center; width: 44px; height: 44px;
+  border: 1px solid var(--line); border-radius: 50%; background: var(--card); color: var(--muted);
+}
+.refreshButton > span { font-size: 20px; }
+.columns, .column { display: grid; align-items: start; gap: var(--dashboard-gap); }
+.column { align-content: start; min-width: 0; }
+.column > button { justify-self: start; }
+
+.sessionCard {
+  --session-surface: #242624;
+  --session-line: #474946;
+  min-width: 0;
+  border: 1px solid var(--session-line);
+  border-radius: var(--card-radius);
+  background: var(--session-surface);
+  color: #faf9f4;
+}
+.sessionContent { padding: var(--panel-padding); }
+.sessionTitle { min-width: 0; }
+.sessionTitle p { display: flex; align-items: center; gap: 6px; margin: 0 0 8px; color: #ffb389; font-size: 13px; font-weight: 650; }
+.sessionTitle p > span { font-size: 17px; }
+.sessionTitle h2 {
+  margin: 0; font-size: clamp(28px, 8vw, 38px); font-weight: 800;
+  line-height: 1.1; letter-spacing: -.055em; overflow-wrap: anywhere;
+}
+.sessionTitle .scheduledTime { font-size: clamp(46px, 13vw, 64px); font-variant-numeric: tabular-nums; }
+.coachMessage { margin: 12px 0 0; font-size: 14px; line-height: 1.55; color: #dadbd4; overflow-wrap: anywhere; }
+.sessionActions { gap: 8px; flex-wrap: wrap; margin-top: 18px; }
+.sessionActions button {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  min-height: 48px; padding: 9px 12px; border-radius: 12px; font-weight: 750; font-size: 15px; line-height: 1.35;
+}
+.sessionActions button > span { font-size: 20px; }
+.primaryAction { flex: 1.45 1 auto; border: 1px solid var(--orange); background: var(--orange); color: var(--on-orange); }
+.secondaryAction { flex: 1 1 auto; border: 1px solid #72756e; background: transparent; color: #faf9f4; }
+.scheduleOptions {
+  justify-content: center; flex-wrap: wrap; gap: 0 14px; padding: 2px 12px;
+  border-top: 1px solid var(--session-line);
+}
+.scheduleOptions button {
+  display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+  min-height: 44px; padding: 4px 7px; border: 0; border-radius: 8px; color: #e2e3dd;
+  background: transparent; font-size: 13px;
+}
+.scheduleOptions button > span { font-size: 17px; }
+.sessionCard button:focus-visible { outline-color: #ffd5b9; }
+.sessionCard button:enabled:hover { filter: brightness(1.08); }
+.secondaryAction:enabled:hover, .scheduleOptions button:enabled:hover { background: #343733; }
+
+.panel, .overviewPanel {
+  min-width: 0; border: 1px solid var(--line);
+  border-radius: var(--card-radius); background: var(--card);
+}
+.panel { padding: 16px var(--panel-padding) 10px; }
+.overviewPanel { padding: 2px var(--panel-padding); }
+.overviewRow {
+  display: flex; align-items: center; gap: 12px; width: 100%; min-height: 64px;
+  padding: 12px 0; border: 0; background: transparent; color: var(--white); text-align: start;
+}
+.overviewRow + .overviewRow { border-top: 1px solid var(--line); }
+.overviewRow > span:last-child { color: var(--muted); font-size: 20px; }
+.overviewText { flex: 1; min-width: 0; }
+.overviewHeading { display: flex; flex-wrap: wrap; align-items: center; gap: 3px 8px; line-height: 1.4; }
+.overviewHeading strong { font-size: 16px; }
+.overviewHeading :global(.challengeStatus), .unreadCount {
+  min-height: 0; padding: 2px 7px; border-radius: 6px; font-size: 12px; font-weight: 600;
+}
+.unreadCount { background: var(--card-2); color: var(--accent-text); }
+.overviewDescription {
+  display: -webkit-box; margin-top: 4px; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
+  color: var(--muted); font-size: 13px; line-height: 1.5; overflow-wrap: anywhere;
+}
+.overviewLoading { margin: 16px 0; color: var(--muted); font-size: 14px; }
+.challengeGoal { display: grid; gap: 7px; margin-top: 7px; }
+.goalFigures { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 2px 8px; font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.goalFigures strong { color: var(--accent-text); }
+.goalTrack { display: block; height: 5px; overflow: hidden; border-radius: 4px; background: var(--card-2); }
+.goalTrack > span { display: block; height: 100%; border-radius: inherit; background: var(--orange); }
+.challengeGoal small, .goalNotice { color: var(--muted); font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
+.goalNotice { display: block; margin-top: 4px; }
+.overviewRow:enabled:hover strong { text-decoration: underline; text-underline-offset: 3px; }
+.panel h2 { margin: 0 0 6px; font-size: 18px; line-height: 1.45; letter-spacing: -.035em; }
+.toolRow, .memoryRow {
+  width: 100%; min-height: 56px; padding: 10px 0; gap: 12px;
+  border: 0; background: transparent; color: var(--white); text-align: start;
+}
+.toolRow { border-bottom: 1px solid var(--line); }
+.toolRow > strong, .memorySummary { min-width: 0; flex: 1; font-size: 15px; }
+.toolRow > span:last-child, .memoryRow > span:last-child { color: var(--muted); font-size: 20px; }
+.toolIcon, .dateTile { display: grid; place-items: center; flex: none; border-radius: 12px; background: var(--card-2); }
+.toolIcon { width: 36px; height: 36px; }
+.toolIcon > span { font-size: 21px; }
+.dateTile { width: 46px; gap: 2px; padding: 7px 2px; line-height: 1; }
+.dateTile span { color: var(--muted); font-size: 11px; }
+.dateTile b { font-size: 20px; }
+.memorySummary strong {
+  display: -webkit-box; overflow: hidden; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow-wrap: anywhere;
+}
+.memorySummary time { display: block; margin-top: 3px; font-size: 13px; color: var(--muted); }
+.toolRow:enabled:hover strong, .memoryRow:enabled:hover strong { text-decoration: underline; text-underline-offset: 3px; }
+
+@media (max-width: 450px) {
+  .dashboard { --dashboard-gap: 14px; }
+  .pageHeader { margin: 0 0 14px; }
+  .pageHeader > div { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; }
+  .pageHeader time { margin: 0; font-size: 13px; }
+  .sessionActions { margin-top: 14px; }
+}
+@media (max-width: 360px) {
+  .dashboard { --panel-padding: 16px; --dashboard-gap: 12px; }
+  .sessionContent { padding-block: 15px; }
+  .sessionTitle h2 { font-size: 28px; }
+  .sessionTitle .scheduledTime { font-size: 48px; }
+  .coachMessage { margin-top: 8px; }
+}
+@media (min-width: 780px) {
+  .dashboard { --dashboard-gap: 20px; --panel-padding: 24px; }
+  .columns { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); }
+  .pageHeader { margin: 10px 0 24px; }
+  .pageHeader h1 { font-size: 38px; }
+}

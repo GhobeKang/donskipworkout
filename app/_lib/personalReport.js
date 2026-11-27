@@ -13,7 +13,7 @@ const comparison_messages = {
   volume_kg: '총중량 {0} → {1}kg',
 };
 
-export const total_volume_method = '완료한 운동의 세트별 환산 중량 × 반복 수를 합산합니다. 맨몸·보조 운동은 당시 기록된 체중을 반영하며, 체중 기록이 없으면 해당 세트의 중량은 합산되지 않습니다. 여러 타겟 부위가 있는 세트도 한 번만 집계합니다.';
+export const total_volume_method = '완료한 운동의 세트별 환산 중량 × 반복 수를 합산합니다. 복근 0kg은 계산 기준 1kg을 적용하고 다른 부위의 0kg은 제외합니다. 음수는 체중에서 보조중량을 뺀 값(최소 0kg)이며, 당시 체중이 없으면 설정의 현재 체중으로 추정합니다. 여러 타겟 부위가 있는 세트도 한 번만 집계합니다.';
 
 export function comparison_text(item, language) {
   return item.changed_fields.map((field) => translate(comparison_messages[field], [
@@ -94,7 +94,8 @@ export function create_report_document(report, language) {
             if (!records?.length) continue;
             lines.push(`  ${t(label)}`);
             for (const record of records) {
-              const calculation = record.effective_weight_kg === null ? t('체중 기록이 없어 부하 제외')
+              const calculation = record.weight_kg === 0 && record.effective_weight_kg === 0 ? t('0kg 세트 · 총중량 제외')
+                : record.effective_weight_kg === null ? t('체중 기록이 없어 부하 제외')
                 : t('{0}kg × {1}회', [record.effective_weight_kg, record.reps]);
               lines.push(`    ${record.workout_date} | ${calculation} | ${activity_volume_text(record.volume_kg, t)}${record.included_in_reference ? '' : ` | ${t('진행 중인 주와 요일이 달라 이번 기준 계산에서 제외')}`}`);
             }
@@ -140,7 +141,7 @@ const method_messages = {
   muscle_activity: muscle_activity_method,
   performance: '같은 종목·중량에서 최고 반복 수, 같은 종목·반복 수에서 최고 중량을 비교합니다. 같은 날 여러 세트는 반복 확인 1일로 계산합니다.',
   journey_performance: '첫 기록 기간의 동일 조건 수행과 비교합니다. 초기 기록이 적거나 조건이 없으면 비교 자료 부족으로 표시합니다.',
-  recent: '부위별 운동일·세트·반복 수와 총중량(환산 중량 × 반복 수)을 비교합니다. 맨몸·보조 운동은 당시 체중을 반영합니다.',
+  recent: '부위별 운동일·세트·반복 수와 총중량(환산 중량 × 반복 수)을 비교합니다. 복근 0kg은 계산 기준 1kg을 적용하고 다른 부위의 0kg은 제외합니다. 음수는 체중에서 보조중량을 빼고, 당시 체중이 없으면 설정의 현재 체중으로 추정합니다.',
   journey: '첫 운동이 기록된 주 또는 월과 선택한 기간을 비교합니다. 첫 기간은 기록을 시작한 시점에 따라 불완전할 수 있습니다.',
   recovery: '목표 미달 후 다음 목표 주에 운동을 재개하면 복귀 진행 중, 완료된 주의 목표를 채우면 복귀 달성입니다. 휴식 목표 주는 건너뜁니다.',
   challenges: '첫 도전은 선택 기간에 처음으로 세트를 기록한 부위입니다.',

@@ -57,10 +57,10 @@ function RelationshipList({ role, status, on_select, on_unauthorized }) {
   </div>;
 }
 
-export default function MentorshipScreen({ on_unauthorized, on_research_change, initial_relationship_uuid = '', initial_tab = 'messages' }) {
+export default function MentorshipScreen({ on_unauthorized, on_research_change, initial_relationship_uuid = '', initial_tab = 'messages', initial_role = 'apprentice' }) {
   const { t } = useLanguage();
   const [revision, set_revision] = useState(0);
-  const [active_role, set_active_role] = useState('apprentice');
+  const [active_role, set_active_role] = useState(initial_role);
   const [show_history, set_show_history] = useState(false);
   const [selected_relationship_uuid, set_selected_relationship_uuid] = useState(initial_relationship_uuid);
   const [copy_notice, set_copy_notice] = useState('');

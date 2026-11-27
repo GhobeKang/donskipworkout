@@ -160,6 +160,8 @@ def exercise_progress(user: userDependency, database: databaseDependency):
             func.sum(
                 workout_volume_expression(
                     workoutSet.weight_kg, workoutSet.body_weight_kg, workoutSet.reps,
+                    fallback_body_weight_kg=user.body_weight_kg,
+                    target_area=target_area,
                 )
             ).label('volume'),
             func.count(workoutSet.set_id).label('set_count'),

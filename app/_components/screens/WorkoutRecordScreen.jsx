@@ -9,7 +9,7 @@ import RequestState from '../ui/RequestState';
 import { format_workout_duration } from '../../_lib/workoutTime';
 import ExercisePersonalBest from '../workout/ExercisePersonalBest';
 
-export default function WorkoutRecordScreen({ record: initial_record, revision, on_unauthorized, on_back }) {
+export default function WorkoutRecordScreen({ record: initial_record, revision, on_unauthorized, on_back, back_label }) {
   const { t, language } = useLanguage();
   const [reload_count, set_reload_count] = useState(0);
   const record_resource = useApiResource(`/sessions/${initial_record.session_uuid}`, `${revision}:${reload_count}`, on_unauthorized);
@@ -18,7 +18,7 @@ export default function WorkoutRecordScreen({ record: initial_record, revision, 
   const format_duration = (seconds) => format_workout_duration(seconds, language);
   return <section className="viewPanel isVisible">
     <header className="pageHeader simple recordDetailHeader">
-      <button className="backButton" type="button" aria-label={t("운동 목록으로 돌아가기")} onClick={on_back}><MaterialIcon>arrow_back_ios</MaterialIcon></button>
+      <button className="backButton" type="button" aria-label={back_label} onClick={on_back}><MaterialIcon>arrow_back_ios</MaterialIcon></button>
       <div><p className="cardKicker">{record.workout_date}</p><h1>{t("운동 수행 기록")}</h1></div>
       <MaterialIcon>fitness_center</MaterialIcon>
     </header>

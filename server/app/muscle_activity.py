@@ -6,7 +6,7 @@ from types import SimpleNamespace
 
 from sqlalchemy import and_, case, func, select
 
-from .database import exerciseItem, sharedExerciseItem, workoutSession, workoutSet
+from .database import exerciseItem, sharedExerciseItem, userAccount, workoutSession, workoutSet
 from .exercise_subareas import report_training_subareas, subareas_by_exercise
 from .workout_load import effective_weight_kg
 
@@ -29,10 +29,11 @@ def activity_rows(database, user_id, start_date, end_date):
             target_area.label('target_area'),
             workoutSet.set_id,
             workoutSet.weight_kg,
-            workoutSet.body_weight_kg,
+            func.coalesce(workoutSet.body_weight_kg, userAccount.body_weight_kg).label('body_weight_kg'),
             workoutSet.reps,
         )
         .join(workoutSession, workoutSession.session_id == workoutSet.session_id)
+        .join(userAccount, userAccount.user_id == workoutSession.user_id)
         .outerjoin(exerciseItem, and_(
             workoutSet.exercise_source == 'custom',
             exerciseItem.exercise_id == workoutSet.exercise_id,

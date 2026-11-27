@@ -227,7 +227,7 @@ export default function AuthenticatedApp({ user, on_unauthorized, on_logout, on_
       if (!controller.signal.aborted) on_logout(logout_message);
     }
   };
-  const navigate_to = async (view) => {
+  const navigate_to = async (view, { coaching = null, challenge = null } = {}) => {
     if (pending || checkin_preparing_ref.current) return false;
     set_mutation_error('');
     if (view === 'checkin') {
@@ -247,30 +247,24 @@ export default function AuthenticatedApp({ user, on_unauthorized, on_logout, on_
       }
     }
     set_record_navigation(null);
-    set_coaching_navigation(null);
+    set_coaching_navigation(coaching);
     set_coaching_research(null);
-    set_challenge_navigation(null);
+    set_challenge_navigation(challenge);
     set_selected_workout_record(null);
     set_current_view(view);
     return true;
   };
-  const open_memory_record = (record) => {
-    if (pending) return;
-    set_mutation_error('');
-    set_record_navigation({ workout_date: record.workout_date, session_uuid: record.session_uuid });
-    set_current_view('record');
-  };
   const open_workout_record = (record) => {
     if (pending) return;
     set_mutation_error('');
-    set_record_navigation({ workout_date: record.workout_date, session_uuid: record.session_uuid });
+    set_record_navigation({ workout_date: record.workout_date, session_uuid: record.session_uuid, return_view: current_view });
     set_selected_workout_record(record);
     set_current_view('record-detail');
   };
   const today_pending = pending || today.loading || Boolean(today.error);
   return <HelpProvider user_uuid={user.user_uuid} on_unauthorized={on_unauthorized}
     has_completed_checkin={today.data?.session?.session_status === 'completed' || today.data?.weekly_attendance?.completed_count > 0 || Boolean(today.data?.memory)}
-    navigation_pending={pending} on_navigate={(view) => current_view === view ? true : navigate_to(view)}><div className="phoneShell">
+    navigation_pending={pending} on_navigate={(view) => current_view === view ? true : navigate_to(view)}><div className={current_view === 'today' ? 'phoneShell dashboardShell' : 'phoneShell'}>
     <StatusBar on_open_settings={() => navigate_to('settings')} settings_active={current_view === 'settings'} disabled={pending}
       on_open_notifications={() => set_notifications_open(true)} unread_count={notification_inbox.unread_count} notifications_open={notifications_open} />
     <main className="appContent" aria-busy={pending}>
@@ -279,15 +273,17 @@ export default function AuthenticatedApp({ user, on_unauthorized, on_logout, on_
       {(current_view === 'today' || current_view === 'checkin') && <>
         <RequestState loading={today.loading} error={today.error} on_retry={refresh_data} />
         {today.data && (current_view === 'today'
-          ? <TodayScreen user_uuid={user.user_uuid} data={today.data} pending={today_pending} revision={`${revision}:${today_revision}`} on_unauthorized={on_unauthorized} on_action={act_today} on_checkin={() => navigate_to('checkin')} on_open_memory={open_memory_record} on_open_records={() => navigate_to('record')} on_open_workout={() => navigate_to('workout')} on_open_settings={() => navigate_to('settings')} on_open_challenges={() => navigate_to('challenge')} on_refresh={refresh_data} />
+          ? <TodayScreen user_uuid={user.user_uuid} data={today.data} pending={today_pending} revision={`${revision}:${today_revision}`} on_unauthorized={on_unauthorized} on_action={act_today} on_checkin={() => navigate_to('checkin')} on_open_record={open_workout_record} on_open_records={() => navigate_to('record')} on_open_workout={() => navigate_to('workout')} on_open_settings={() => navigate_to('settings')} on_navigate={navigate_to} on_refresh={refresh_data} />
           : <CheckinScreen session={today.data.session} workout_date={today.data.workout_date} pending={today_pending} on_back={() => navigate_to('today')} on_open_workout={() => navigate_to('workout')} on_complete={(note) => act_today('manual', note)} on_unauthorized={on_unauthorized} on_photo_complete={(body) => mutate('/sessions/today/photo', 'POST', body, t("사진 인증을 저장했습니다."))} />)}
       </>}
       {current_view === 'record' && <RecordsScreen revision={revision} on_unauthorized={on_unauthorized} initial_tab={record_navigation ? 'list' : 'calendar'} initial_workout_date={record_navigation?.workout_date} focus_record_uuid={record_navigation?.session_uuid} on_open_record={open_workout_record} timezone={settings.data?.timezone || today.data?.timezone} />}
-      {current_view === 'record-detail' && selected_workout_record && <WorkoutRecordScreen record={selected_workout_record} revision={revision} on_unauthorized={on_unauthorized} on_back={() => set_current_view('record')} />}
+      {current_view === 'record-detail' && selected_workout_record && <WorkoutRecordScreen record={selected_workout_record} revision={revision} on_unauthorized={on_unauthorized}
+        back_label={record_navigation?.return_view === 'today' ? t('오늘 화면으로 돌아가기') : t('운동 목록으로 돌아가기')}
+        on_back={() => set_current_view(record_navigation?.return_view || 'record')} />}
       <WorkoutLogScreen ref={workout_log_ref} user_uuid={user.user_uuid} initial_workout_date={today.data?.workout_date} is_active={current_view === 'workout'} catalog_revision={exercise_catalog_revision} research_revision={exercise_research_revision} on_research_change={refresh_exercise_research} on_unauthorized={on_unauthorized} on_open_library={() => navigate_to('workout-library')} on_open_checkin={() => navigate_to('checkin')} on_saved={refresh_today} timezone={settings.data?.timezone || today.data?.timezone} />
       {current_view === 'workout-library' && <WorkoutScreen on_unauthorized={on_unauthorized} on_back={() => navigate_to('workout')} on_catalog_change={refresh_exercise_catalog} on_research_change={refresh_exercise_research} />}
       {current_view === 'challenge' && <CommunityGate on_unauthorized={on_unauthorized}><ChallengeScreen key={challenge_navigation?.notification_uuid || 'challenge-home'} initial_room_uuid={challenge_navigation?.room_uuid} user_uuid={user.user_uuid} is_active={current_view === 'challenge'} on_unauthorized={on_unauthorized} on_back={() => navigate_to('today')} on_open_mentorship={() => navigate_to('mentorship')} on_open_notifications={() => set_notifications_open(true)} /></CommunityGate>}
-      {current_view === 'mentorship' && <CommunityGate on_unauthorized={on_unauthorized}><MentorshipScreen key={coaching_navigation?.notification_uuid || 'coaching-home'} initial_relationship_uuid={coaching_navigation?.relationship_uuid} initial_tab={coaching_navigation?.target} on_unauthorized={on_unauthorized} on_research_change={refresh_exercise_research} /></CommunityGate>}
+      {current_view === 'mentorship' && <CommunityGate on_unauthorized={on_unauthorized}><MentorshipScreen key={coaching_navigation?.notification_uuid || 'coaching-home'} initial_relationship_uuid={coaching_navigation?.relationship_uuid} initial_tab={coaching_navigation?.target} initial_role={coaching_navigation?.role} on_unauthorized={on_unauthorized} on_research_change={refresh_exercise_research} /></CommunityGate>}
       {coaching_research && <ExerciseResearchModal key={coaching_research.notification_uuid} exercise={coaching_research} on_change={refresh_exercise_research} on_close={() => set_coaching_research(null)} on_unauthorized={on_unauthorized} />}
       {current_view === 'settings' && <>
         <HelpLink entry />

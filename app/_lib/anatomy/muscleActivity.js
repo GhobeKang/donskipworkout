@@ -1,11 +1,11 @@
 import { target_definition } from './exerciseTargets';
 
 export const muscle_activity_method = '활동지수 = 기록한 훈련부하 ÷ 비교 기준 부하 × 100. 기준은 직전 최대 4주의 기록이며, 훈련부하는 세트별 환산 중량 × 반복 수의 합입니다. 실제 근육 활성화나 운동 효과를 측정한 값은 아닙니다.';
-export const activity_bands = [
-  { minimum: 0, maximum: 100, color: '#f5c99b', label: '100 미만' },
-  { minimum: 100, maximum: 120, color: '#ed9961', label: '100–120 미만' },
-  { minimum: 120, maximum: 150, color: '#d96532', label: '120–150 미만' },
-  { minimum: 150, maximum: Infinity, color: '#ad401e', label: '150 이상' },
+export const training_load_bands = [
+  { minimum: 0, maximum: 1000, color: '#f5c99b', label: '0 초과–1,000 미만' },
+  { minimum: 1000, maximum: 5000, color: '#ed9961', label: '1,000–5,000 미만' },
+  { minimum: 5000, maximum: 10000, color: '#d96532', label: '5,000–10,000 미만' },
+  { minimum: 10000, maximum: Infinity, color: '#ad401e', label: '10,000 이상' },
 ];
 
 const score_status_messages = {
@@ -80,7 +80,8 @@ export function muscle_activity_reference_lines(summary, translate_message) {
     ...activity_calculation_lines(summary, translate_message),
     translate_message('100은 비교 기준과 같은 훈련부하입니다. 120은 기준보다 20% 많은 기록량이며, 운동 효과의 우열을 뜻하지 않습니다.'),
     translate_message('기준 기간은 첫 세트 기록일부터 보고 기간 직전까지 최대 28일입니다. 기록이 없는 날도 평균에 포함합니다.'),
-    translate_message('맨몸·보조 운동은 기록 당시 체중을 반영합니다. 체중 정보가 없는 세트가 비교에 포함되면 지수를 계산하지 않습니다.'),
+    translate_message('복근 0kg 세트는 실제 중량 대신 계산 기준 1kg × 반복 수로 집계합니다. 다른 부위의 0kg은 훈련부하에서 제외하며 세트·반복 수에만 포함합니다. 음수는 체중에서 보조중량을 뺀 값(최소 0kg)으로 계산합니다.'),
+    translate_message('보조 운동은 기록 당시 체중을 우선하며, 없으면 설정의 현재 체중으로 추정합니다. 두 체중 모두 없을 때만 해당 세트의 부하를 계산할 수 없습니다.'),
     translate_message('종목이나 기구 구성이 달라지면 부하의 의미도 달라질 수 있습니다. 부위별 지수끼리 더하거나 운동 효과로 해석하지 마세요.'),
   ];
 }
@@ -133,9 +134,9 @@ export function target_muscle_rule(target) {
   return null;
 }
 
-export function activity_color(activity_score) {
-  if (!Number.isFinite(activity_score)) return undefined;
-  return activity_bands.find((band) => activity_score >= band.minimum && activity_score < band.maximum)?.color;
+export function training_load_color(volume_kg) {
+  if (!Number.isFinite(volume_kg) || volume_kg <= 0) return undefined;
+  return training_load_bands.find((band) => volume_kg >= band.minimum && volume_kg < band.maximum)?.color;
 }
 
 export function activity_for_muscles(summary, muscles) {

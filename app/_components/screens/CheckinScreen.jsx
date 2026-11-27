@@ -32,7 +32,7 @@ export default function CheckinScreen({ session, workout_date, pending, on_back,
   const [timer_finish_attempts, set_timer_finish_attempts] = useState(0);
   const timer_request_ref = useRef(null);
   const catalog = useApiResource('/photo-effects', catalog_revision, on_unauthorized);
-  const is_finished = ['completed', 'rest', 'missed'].includes(session?.session_status);
+  const is_finished = ['completed', 'missed'].includes(session?.session_status);
   const checkin_pending = pending || timer_pending;
 
   useEffect(() => () => timer_request_ref.current?.abort(), []);

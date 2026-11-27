@@ -50,7 +50,7 @@ export default function SettingsScreen({ data, options, user_uuid, onboarding_re
         </article>
         <article className="settingsCard">
           <h2><MaterialIcon>monitor_weight</MaterialIcon>{t(' 현재 체중')}</h2>
-          <p className="infoText">{t('맨몸·보조 운동량 계산에 사용해요.')}</p>
+          <p className="infoText">{t('보조 운동량 계산에 사용해요. 기록 당시 체중이 없으면 이 체중으로 추정해요.')}</p>
           <label className="fieldLabel" htmlFor="settings-body-weight">{t('체중 (kg)')}</label>
           <input className="timeInput" id="settings-body-weight" name="body_weight_kg" type="number" inputMode="decimal"
             min="0.01" max="500" step="0.01" placeholder={t('선택 입력')} value={draft.body_weight_kg ?? ''}

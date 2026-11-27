@@ -9,6 +9,7 @@ import HelpLink from '../help/HelpLink';
 import ActionModal from '../ui/ActionModal';
 import ChallengeNotificationSettings from './ChallengeNotificationSettings';
 import ChallengeInbox from './ChallengeInbox';
+import ChallengeStatus from './ChallengeStatus';
 import ChallengeQuestions from './ChallengeQuestions';
 import ChallengeMemberReports from './ChallengeMemberReports';
 import ChallengeProgressMember from './ChallengeProgressMember';
@@ -27,21 +28,6 @@ function format_invite_code(value) {
   return invite_code_chars.length > 4
     ? `${invite_code_chars.slice(0, 4)}-${invite_code_chars.slice(4)}`
     : invite_code_chars;
-}
-
-function ChallengeStatus({ status }) {
-  const { t } = useLanguage();
-  const status_labels = {
-    draft: t('룰북 작성 중'),
-    awaiting_consent: t('참가 동의 대기'),
-    scheduled: t('개시 예약됨'),
-    active: t('진행 중'),
-    settling: t('결과 확인 중'),
-    review_required: t('운영 확인 필요'),
-    completed: t('회차 종료'),
-    cancelled: t('취소됨'),
-  };
-  return <span className="challengeStatus">{status_labels[status] || status}</span>;
 }
 
 function can_delete_room(room, user_is_host) {

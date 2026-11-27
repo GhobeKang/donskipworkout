@@ -4,7 +4,7 @@ from collections import Counter, defaultdict
 from datetime import date, timedelta
 from types import SimpleNamespace
 
-from sqlalchemy import and_, select
+from sqlalchemy import and_, func, select
 
 from .database import (
     exercise_report_area,
@@ -439,13 +439,14 @@ def personal_report_output(
             workoutSet.shared_exercise_id,
             workoutSet.exercise_name,
             workoutSet.weight_kg,
-            workoutSet.body_weight_kg,
+            func.coalesce(workoutSet.body_weight_kg, userAccount.body_weight_kg).label('body_weight_kg'),
             workoutSet.reps,
             workoutSession.workout_date,
             workoutSession.session_status,
             exercise_report_area().label('target_area'),
         )
         .join(workoutSession, workoutSession.session_id == workoutSet.session_id)
+        .join(userAccount, userAccount.user_id == workoutSession.user_id)
         .outerjoin(
             exerciseItem,
             and_(

@@ -144,7 +144,7 @@ export default function OnboardingScreen({ data, pending, error, on_reload, on_s
             <div className={onboarding_styles.weightField}><input id="onboarding-body-weight" name="body_weight_kg" type="number"
               inputMode="decimal" min="0.01" max="500" step="0.01" placeholder="0.0" value={draft.body_weight_kg ?? ''}
               onChange={(event) => change_field('body_weight_kg', event.target.value === '' ? null : event.target.value)} /><span aria-hidden="true">kg</span></div>
-            <p className={onboarding_styles.hint}>{t('맨몸·보조 운동량 계산에 사용해요.')}</p>
+            <p className={onboarding_styles.hint}>{t('보조 운동량 계산에 사용해요. 기록 당시 체중이 없으면 이 체중으로 추정해요.')}</p>
           </article>}
           {current_step === 3 && <article className={`settingsCard ${onboarding_styles.card}`}>
             <div className="toggleRow"><span>{t(notification_fields[0].label)}</span>

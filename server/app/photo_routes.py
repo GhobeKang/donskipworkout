@@ -41,6 +41,7 @@ router = APIRouter(prefix='/api/v1')
 def photo_workout_summary(database, session):
     if session is None or not session.workout_sets:
         return []
+    account = database.get(userAccount, session.user_id)
     area_by_set_id = dict(
         database.execute(
             select(
@@ -80,7 +81,9 @@ def photo_workout_summary(database, session):
             },
         )
         group['set_count'] += 1
-        group['volume_kg'] += workout_volume_kg(workout_set)
+        group['volume_kg'] += workout_volume_kg(
+            workout_set, account.body_weight_kg, target_area=group['target_area'],
+        )
     return [{**group, 'volume_kg': float(group['volume_kg'])} for group in exercise_groups.values()]
 
 

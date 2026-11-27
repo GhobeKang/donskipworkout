@@ -8,10 +8,13 @@ import report_styles from './MuscleActivityReport.module.css';
 
 function ActivitySetRows({ records, t }) {
   return <ul className={report_styles.setEvidence}>{records.map((record) => <li key={record.set_id}>
-    <span>{record.workout_date} · {record.effective_weight_kg === null
+    <span>{record.workout_date} · {record.weight_kg === 0 && record.effective_weight_kg === 0
+      ? t('0kg 세트 · 총중량 제외')
+      : record.effective_weight_kg === null
       ? t('체중 기록이 없어 부하 제외')
       : t('{0}kg × {1}회', [activity_number(record.effective_weight_kg), record.reps])}
-      {record.weight_kg <= 0 && <small>{t('입력 중량 {0}kg · 당시 체중 {1}kg', [activity_number(record.weight_kg), activity_number(record.body_weight_kg)])}</small>}
+      {record.weight_kg === 0 && record.effective_weight_kg === 1 && <small>{t('복근 0kg 세트 · 계산 기준 1kg')}</small>}
+      {record.weight_kg < 0 && <small>{t('입력 중량 {0}kg · 계산 체중 {1}kg', [activity_number(record.weight_kg), activity_number(record.body_weight_kg)])}</small>}
       {!record.included_in_reference && <small>{t('진행 중인 주와 요일이 달라 이번 기준 계산에서 제외')}</small>}
     </span>
     <strong>{activity_volume_text(record.volume_kg, t)}</strong>

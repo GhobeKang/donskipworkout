@@ -1,3 +1,11 @@
+@font-face {
+  font-family: 'Material Symbols Rounded';
+  font-style: normal;
+  font-weight: 500;
+  font-display: block;
+  src: url('/assets/fonts/material-symbols-rounded.woff2') format('woff2');
+}
+
 :root {
   color-scheme: light dark;
   --bg: #f5f5f2;
@@ -71,7 +79,7 @@ img { max-width: 100%; }
 .eyebrow, .cardKicker { margin: 0 0 8px; color: var(--muted); font-size: 13px; font-weight: 500; }
 .pageHeader .infoText { margin: 12px 0 0; }
 .sectionHeading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.sectionHeading h2, .recentHeading h2, .memorySection h2 { margin: 0; font-size: 16px; letter-spacing: -.03em; }
+.sectionHeading h2, .recentHeading h2 { margin: 0; font-size: 16px; letter-spacing: -.03em; }
 .sectionHeading .eyebrow { margin: 0; }
 .infoText { color: var(--muted); font-size: 13px; line-height: 1.7; }
 .infoTooltip { display: inline-flex; vertical-align: middle; flex-shrink: 0; line-height: 1; }
@@ -93,48 +101,7 @@ img { max-width: 100%; }
 .wideButton.danger { color: var(--red); background: transparent; border-color: var(--red); }
 .backButton { display: grid; place-items: center; min-width: 44px; min-height: 44px; padding: 0; border: 0; background: transparent; color: var(--white); }
 
-/* Today: weekly progress, one next action, then the previous record. */
-.weeklyAttendance .sectionHeading { margin-bottom: 12px; }
-.weeklyAttendance .infoText { margin: 12px 0 0; font-size: 12px; }
-.weekStrip { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 7px; }
-.weekDay { text-align: center; }
-.weekDayLabel { display: block; margin-bottom: 8px; color: var(--muted); font-size: 12px; }
-.weekDayMark { display: grid; height: 39px; place-items: center; border: 1px solid transparent; border-radius: 12px; background: var(--card); color: var(--white); font-size: 14px; }
-.weekDayMark.isToday { border-color: var(--accent-text); }
-.weekDayMark.iscompleted { color: var(--on-orange); background: var(--orange); font-weight: 800; }
-.weekDayMark.isrest { color: var(--rest); }
-.weekDayMark.ismissed { color: var(--muted); }
-.todayActionCard { padding: 24px; border-radius: var(--card-radius); background: var(--card); }
-.sessionTime { margin: 14px 0 8px; font-size: clamp(46px, 13vw, 58px); font-weight: 800; letter-spacing: -.055em; line-height: 1.2; font-variant-numeric: tabular-nums; }
-.sessionTime.isMessage { font-size: clamp(27px, 8vw, 36px); overflow-wrap: anywhere; }
-.sessionMessage { margin: 0; color: var(--muted); font-size: 14px; white-space: pre-line; }
-.todayActionCard .wideButton { margin-top: 24px; }
-.secondaryActions { display: flex; justify-content: center; flex-wrap: wrap; gap: 6px 20px; margin-top: 10px; }
-.lateBadge { color: var(--accent-text); font-size: 12px; font-weight: 700; white-space: nowrap; }
-.directCheckin { width: 100%; margin-top: -16px; }
-.memorySection .sectionHeading { margin-bottom: 6px; }
-.memoryRow { display: flex; align-items: center; gap: 12px; width: 100%; padding: 16px 0; border: 0; border-bottom: 1px solid var(--line); background: transparent; color: var(--white); text-align: left; }
-.memoryIcon { display: grid; place-items: center; width: 44px; height: 44px; flex-shrink: 0; border-radius: 14px; background: var(--card); }
-.memorySummary { flex: 1; min-width: 0; }
-.memorySummary strong { display: -webkit-box; overflow: hidden; -webkit-line-clamp: 2; -webkit-box-orient: vertical; font-size: 14px; font-weight: 600; overflow-wrap: anywhere; }
-.memorySummary time { display: block; color: var(--muted); font-size: 12px; margin-top: 4px; }
-.memoryRow > .material-symbols-rounded { color: var(--muted); }
 .refreshButton { width: 100%; }
-.challengeEntry { display: flex; align-items: center; gap: 12px; width: 100%; padding: 14px; border: 1px solid var(--line); border-radius: 18px; background: var(--card); color: var(--white); text-align: left; }
-.challengeEntry > span:nth-child(2) { display: grid; flex: 1; min-width: 0; }
-.challengeEntry strong { font-size: 14px; }
-.challengeEntry small { margin-top: 3px; color: var(--muted); font-size: 12px; }
-.challengeEntry > .material-symbols-rounded { color: var(--muted); }
-.workoutTimerCard { padding: 20px; border: 1px solid var(--line); border-radius: var(--card-radius); background: var(--card); }
-.workoutTimerCard .sectionHeading h2 { margin: 0; font-size: 16px; }
-.workoutTimerReadout { margin: 10px 0 2px; font-size: clamp(36px, 11vw, 48px); font-weight: 800; letter-spacing: -.055em; font-variant-numeric: tabular-nums; line-height: 1.2; }
-.workoutTimerCard > .infoText { margin: 0 0 12px; }
-.workoutTimerCard > .wideButton { margin-top: 14px; }
-.workoutTimerActions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 12px; }
-.workoutTimerActions .wideButton { flex: 1; min-width: 140px; }
-.workoutTimerActions .textButton { display: inline-flex; align-items: center; gap: 6px; min-height: 48px; }
-.workoutTimerCorrection { margin-top: 12px; }
-.timerError { margin: 0 0 10px; color: var(--red); font-size: 12px; }
 
 /* Persistent navigation with a visible label for every destination. */
 .bottomNav { width: min(100%, 430px); min-height: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom)); display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); align-items: stretch; position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); z-index: 20; padding: 8px 8px calc(10px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); background: var(--card); }
@@ -782,10 +749,19 @@ textarea.timeInput { resize: vertical; }
 .modalConfirmButton { font-size: 14px; }
 
 @media (min-width: 700px) { .phoneShell { margin: 24px auto 0; min-height: calc(100dvh - 24px); border-radius: 28px 28px 0 0; } }
+.dashboardShell, .dashboardShell .bottomNav { width: min(100%, 560px); }
+@media (max-width: 450px) {
+  .dashboardShell .statusBar { min-height: calc(60px + env(safe-area-inset-top)); padding-block: calc(8px + env(safe-area-inset-top)) 8px; }
+  .dashboardShell .appContent { padding-top: 6px; }
+}
+@media (min-width: 780px) {
+  .dashboardShell, .dashboardShell .bottomNav { width: min(100%, 980px); }
+  .dashboardShell { --layout-side-gap: 32px; }
+  .dashboardShell .statusBar { padding-block: 16px; border-bottom: 1px solid var(--line); }
+  .dashboardShell .bottomNav { padding-inline: var(--layout-side-gap); }
+}
 @media (max-width: 360px) {
   :root { --layout-side-gap: 16px; }
-  .todayActionCard { padding: 20px; }
-  .weekStrip { gap: 5px; }
   .workoutGroup { padding: 16px 10px; }
   .workoutSetLabels, .workoutSetRow { gap: 5px; grid-template-columns: 20px minmax(0, 1fr) minmax(0, 1fr) 44px; }
   .calendarCard { padding-inline: 8px; }
